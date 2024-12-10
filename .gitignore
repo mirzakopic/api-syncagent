@@ -1,0 +1,6 @@
+/_build/
+/vendor/
+.cover
+*.kubeconfig
+*.pem
+*.key
