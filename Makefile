@@ -34,16 +34,11 @@ build: $(CMD)
 .PHONY: $(CMD)
 $(CMD): %: $(BUILD_DEST)/%
 
-$(BUILD_DEST)/%: cmd/% download-gocache
+$(BUILD_DEST)/%: cmd/%
 	go build $(GOTOOLFLAGS) -o $@ ./cmd/$*
 
-download-gocache:
-	@./hack/ci/download-gocache.sh
-	@# Prevent this from getting executed multiple times
-	@touch download-gocache
-
 .PHONY: test
-test: download-gocache
+test:
 	./hack/run-tests.sh
 
 .PHONY: codegen
