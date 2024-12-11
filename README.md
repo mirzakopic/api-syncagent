@@ -3,7 +3,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/kubermatic-labs/servlet)](https://goreportcard.com/report/github.com/kubermatic-labs/servlet)
 [![GitHub](https://img.shields.io/github/license/kubermatic-labs/servlet)](https://img.shields.io/github/license/kubermatic-labs/servlet)
 [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/kubermatic-labs/servlet?sort=semver)](https://img.shields.io/github/v/release/kubermatic-labs/servlet?sort=semver)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkcp-dev%2Fkcp.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fkcp-dev%2Fkcp?ref=badge_shield)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkubermatic-labs%2Fservlet.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fkubermatic-labs%2Fservlet?ref=badge_shield)
 
 ## Troubleshooting
 
