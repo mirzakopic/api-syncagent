@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+# Copyright 2025 The KCP Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ source hack/lib.sh
 
 BOILERPLATE_HEADER="$(realpath hack/boilerplate/boilerplate.go.txt)"
 
-BASE=k8c.io/servlet
+BASE=github.com/kcp-dev/api-syncagent
 MODULE="$BASE/sdk"
 SDK_DIR=sdk
 SDK_PKG="$MODULE"

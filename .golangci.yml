@@ -1,4 +1,4 @@
-# Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+# Copyright 2025 The KCP Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -73,8 +73,8 @@ linters-settings:
   importas:
     no-unaliased: true
     alias:
-      # Servlet APIs
-      - pkg: k8c.io/servlet/sdk/apis/(\w+)/(v[\w\d]+)
+      # Sync Agent APIs
+      - pkg: github.com/kcp-dev/api-syncagent/sdk/apis/(\w+)/(v[\w\d]+)
         alias: $1$2
       # Kubernetes
       - pkg: k8s.io/api/(\w+)/(v[\w\d]+)

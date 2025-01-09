@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package projection
 import (
 	"testing"
 
-	kdpservicesv1alpha1 "k8c.io/servlet/sdk/apis/services/v1alpha1"
+	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -31,9 +31,9 @@ func TestPublishedResourceSourceGVK(t *testing.T) {
 		kind     = "test"
 	)
 
-	pubRes := kdpservicesv1alpha1.PublishedResource{
-		Spec: kdpservicesv1alpha1.PublishedResourceSpec{
-			Resource: kdpservicesv1alpha1.SourceResourceDescriptor{
+	pubRes := servicesv1alpha1.PublishedResource{
+		Spec: servicesv1alpha1.PublishedResourceSpec{
+			Resource: servicesv1alpha1.SourceResourceDescriptor{
 				APIGroup: apiGroup,
 				Version:  version,
 				Kind:     kind,
@@ -64,9 +64,9 @@ func TestPublishedResourceProjectedGVK(t *testing.T) {
 		kind             = "test"
 	)
 
-	pubRes := &kdpservicesv1alpha1.PublishedResource{
-		Spec: kdpservicesv1alpha1.PublishedResourceSpec{
-			Resource: kdpservicesv1alpha1.SourceResourceDescriptor{
+	pubRes := &servicesv1alpha1.PublishedResource{
+		Spec: servicesv1alpha1.PublishedResourceSpec{
+			Resource: servicesv1alpha1.SourceResourceDescriptor{
 				APIGroup: apiGroup,
 				Version:  version,
 				Kind:     kind,
@@ -76,7 +76,7 @@ func TestPublishedResourceProjectedGVK(t *testing.T) {
 
 	testcases := []struct {
 		name       string
-		projection *kdpservicesv1alpha1.ResourceProjection
+		projection *servicesv1alpha1.ResourceProjection
 		expected   schema.GroupVersionKind
 	}{
 		{
@@ -86,17 +86,17 @@ func TestPublishedResourceProjectedGVK(t *testing.T) {
 		},
 		{
 			name:       "override version",
-			projection: &kdpservicesv1alpha1.ResourceProjection{Version: "v2"},
+			projection: &servicesv1alpha1.ResourceProjection{Version: "v2"},
 			expected:   schema.GroupVersionKind{Group: overrideAPIGroup, Version: "v2", Kind: kind},
 		},
 		{
 			name:       "override kind",
-			projection: &kdpservicesv1alpha1.ResourceProjection{Kind: "dummy"},
+			projection: &servicesv1alpha1.ResourceProjection{Kind: "dummy"},
 			expected:   schema.GroupVersionKind{Group: overrideAPIGroup, Version: version, Kind: "dummy"},
 		},
 		{
 			name:       "override both",
-			projection: &kdpservicesv1alpha1.ResourceProjection{Version: "v2", Kind: "dummy"},
+			projection: &servicesv1alpha1.ResourceProjection{Version: "v2", Kind: "dummy"},
 			expected:   schema.GroupVersionKind{Group: overrideAPIGroup, Version: "v2", Kind: "dummy"},
 		},
 	}

@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ func PublishedResource(name string) *PublishedResourceApplyConfiguration {
 	b := &PublishedResourceApplyConfiguration{}
 	b.WithName(name)
 	b.WithKind("PublishedResource")
-	b.WithAPIVersion("services.kdp.k8c.io/v1alpha1")
+	b.WithAPIVersion("services.syncagent.kcp.io/v1alpha1")
 	return b
 }
 

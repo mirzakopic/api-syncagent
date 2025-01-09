@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import (
 	"crypto/x509"
 	"time"
 
-	"k8c.io/servlet/internal/certificates/triple"
+	"github.com/kcp-dev/api-syncagent/internal/certificates/triple"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 )

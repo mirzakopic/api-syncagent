@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
 
-	servicesv1alpha1 "k8c.io/servlet/sdk/clientset/versioned/typed/services/v1alpha1"
+	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned/typed/services/v1alpha1"
 )
 
 type Interface interface {

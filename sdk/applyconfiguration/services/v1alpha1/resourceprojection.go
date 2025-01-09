@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1alpha1 "k8c.io/servlet/sdk/apis/services/v1alpha1"
+	v1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
 )
 
 // ResourceProjectionApplyConfiguration represents a declarative configuration of the ResourceProjection type for use

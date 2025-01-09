@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,9 +26,9 @@ import (
 	"github.com/kcp-dev/logicalcluster/v3"
 	"go.uber.org/zap"
 
-	dummyv1alpha1 "k8c.io/servlet/internal/sync/apis/dummy/v1alpha1"
-	"k8c.io/servlet/internal/test/diff"
-	kdpservicesv1alpha1 "k8c.io/servlet/sdk/apis/services/v1alpha1"
+	dummyv1alpha1 "github.com/kcp-dev/api-syncagent/internal/sync/apis/dummy/v1alpha1"
+	"github.com/kcp-dev/api-syncagent/internal/test/diff"
+	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
 
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -126,7 +126,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 		name                 string
 		remoteAPIGroup       string
 		localCRD             *apiextensionsv1.CustomResourceDefinition
-		pubRes               *kdpservicesv1alpha1.PublishedResource
+		pubRes               *servicesv1alpha1.PublishedResource
 		remoteObject         *unstructured.Unstructured
 		localObject          *unstructured.Unstructured
 		existingState        string
@@ -139,18 +139,18 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 
 	clusterName := logicalcluster.Name("testcluster")
 
-	remoteThingPR := &kdpservicesv1alpha1.PublishedResource{
-		Spec: kdpservicesv1alpha1.PublishedResourceSpec{
-			Resource: kdpservicesv1alpha1.SourceResourceDescriptor{
+	remoteThingPR := &servicesv1alpha1.PublishedResource{
+		Spec: servicesv1alpha1.PublishedResourceSpec{
+			Resource: servicesv1alpha1.SourceResourceDescriptor{
 				APIGroup: dummyv1alpha1.GroupName,
 				Version:  dummyv1alpha1.GroupVersion,
 				Kind:     "Thing",
 			},
-			Projection: &kdpservicesv1alpha1.ResourceProjection{
+			Projection: &servicesv1alpha1.ResourceProjection{
 				Kind: "RemoteThing",
 			},
 			// include explicit naming rules to be independent of possible changes to the defaults
-			Naming: &kdpservicesv1alpha1.ResourceNaming{
+			Naming: &servicesv1alpha1.ResourceNaming{
 				Name: "$remoteClusterName-$remoteName", // Things are Cluster-scoped
 			},
 		},
@@ -451,7 +451,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 		/////////////////////////////////////////////////////////////////////////////////
 
 		{
-			name:            "labels and annotations should be copied to the local object, except for servlet-relevant fields",
+			name:            "labels and annotations should be copied to the local object, except for syncagent-relevant fields",
 			remoteAPIGroup:  "remote.example.corp",
 			localCRD:        loadCRD("things"),
 			pubRes:          remoteThingPR,
@@ -571,7 +571,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				},
 				Spec: dummyv1alpha1.ThingSpec{
 					Username: "Colonel Mustard",
-					Address:  "Hotdogstr. 13", // we assume this field was set by a local controller/webhook, unrelated to the servlet
+					Address:  "Hotdogstr. 13", // we assume this field was set by a local controller/webhook, unrelated to the Sync Agent
 				},
 			}),
 			existingState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
@@ -908,7 +908,7 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 		name                 string
 		remoteAPIGroup       string
 		localCRD             *apiextensionsv1.CustomResourceDefinition
-		pubRes               *kdpservicesv1alpha1.PublishedResource
+		pubRes               *servicesv1alpha1.PublishedResource
 		remoteObject         *unstructured.Unstructured
 		localObject          *unstructured.Unstructured
 		existingState        string
@@ -921,18 +921,18 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 
 	clusterName := logicalcluster.Name("testcluster")
 
-	remoteThingPR := &kdpservicesv1alpha1.PublishedResource{
-		Spec: kdpservicesv1alpha1.PublishedResourceSpec{
-			Resource: kdpservicesv1alpha1.SourceResourceDescriptor{
+	remoteThingPR := &servicesv1alpha1.PublishedResource{
+		Spec: servicesv1alpha1.PublishedResourceSpec{
+			Resource: servicesv1alpha1.SourceResourceDescriptor{
 				APIGroup: dummyv1alpha1.GroupName,
 				Version:  dummyv1alpha1.GroupVersion,
 				Kind:     "ThingWithStatusSubresource",
 			},
-			Projection: &kdpservicesv1alpha1.ResourceProjection{
+			Projection: &servicesv1alpha1.ResourceProjection{
 				Kind: "RemoteThing",
 			},
 			// include explicit naming rules to be independent of possible changes to the defaults
-			Naming: &kdpservicesv1alpha1.ResourceNaming{
+			Naming: &servicesv1alpha1.ResourceNaming{
 				Name: "$remoteClusterName-$remoteName", // Things are Cluster-scoped
 			},
 		},

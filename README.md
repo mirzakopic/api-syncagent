@@ -1,9 +1,9 @@
-# Servlet
+# kcp API Sync Agent
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/kubermatic-labs/servlet)](https://goreportcard.com/report/github.com/kubermatic-labs/servlet)
-[![GitHub](https://img.shields.io/github/license/kubermatic-labs/servlet)](https://img.shields.io/github/license/kubermatic-labs/servlet)
-[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/kubermatic-labs/servlet?sort=semver)](https://img.shields.io/github/v/release/kubermatic-labs/servlet?sort=semver)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkubermatic-labs%2Fservlet.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fkubermatic-labs%2Fservlet?ref=badge_shield)
+[![Go Report Card](https://goreportcard.com/badge/github.com/kcp-dev/api-syncagent)](https://goreportcard.com/report/github.com/kcp-dev/api-syncagent)
+[![GitHub](https://img.shields.io/github/license/kcp-dev/api-syncagent)](https://img.shields.io/github/license/kcp-dev/api-syncagent)
+[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/kcp-dev/api-syncagent?sort=semver)](https://img.shields.io/github/v/release/kcp-dev/api-syncagent?sort=semver)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkcp-dev%2Fapi-syncagent.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fkcp-dev%2Fapi-syncagent?ref=badge_shield)
 
 ## Troubleshooting
 
@@ -30,7 +30,7 @@ See [the list of releases][3] to find out about feature changes.
 
 Apache 2.0
 
-[1]: https://github.com/kubermatic-labs/servlet/issues
-[2]: https://github.com/kubermatic-labs/servlet/blob/main/CONTRIBUTING.md
-[3]: https://github.com/kubermatic-labs/servlet/releases
-[4]: https://github.com/kubermatic-labs/servlet/blob/main/CODE_OF_CONDUCT.md
+[1]: https://github.com/kcp-dev/api-syncagent/issues
+[2]: https://github.com/kcp-dev/api-syncagent/blob/main/CONTRIBUTING.md
+[3]: https://github.com/kcp-dev/api-syncagent/releases
+[4]: https://github.com/kcp-dev/api-syncagent/blob/main/CODE_OF_CONDUCT.md

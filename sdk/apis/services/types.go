@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,15 +17,14 @@ limitations under the License.
 package services
 
 const (
-	// ServletNameAnnotation records which Servlet has created an APIResourceSchema.
-	ServletNameAnnotation = "services.kdp.k8c.io/servlet-name"
+	// AgentNameAnnotation records which Sync Agent has created an APIResourceSchema.
+	AgentNameAnnotation = "syncagent.kcp.io/agent-name"
 
 	// SourceGenerationAnnotation is the annotation on APIResourceSchemas that tells us
 	// what generation of the CRD it was based on. This can be helpful in debugging,
 	// as ARS resources cannot be updated, i.e. changes to CRDs are not reflected in ARS.
-	SourceGenerationAnnotation = "services.kdp.k8c.io/source-generation"
+	SourceGenerationAnnotation = "syncagent.kcp.io/source-generation"
 
-	// APIGroupLabel contains the API Group an APIResourceSchema is meant for. This
-	// label is meant to help the KDP Dashboard quickly list relevant ARS.
-	APIGroupLabel = "services.kdp.k8c.io/api-group"
+	// APIGroupLabel contains the API Group an APIResourceSchema is meant for.
+	APIGroupLabel = "syncagent.kcp.io/api-group"
 )

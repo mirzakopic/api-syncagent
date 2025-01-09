@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,21 +19,21 @@ limitations under the License.
 package applyconfiguration
 
 import (
-	v1alpha1 "k8c.io/servlet/sdk/apis/services/v1alpha1"
+	v1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
 
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	testing "k8s.io/client-go/testing"
 
-	internal "k8c.io/servlet/sdk/applyconfiguration/internal"
-	servicesv1alpha1 "k8c.io/servlet/sdk/applyconfiguration/services/v1alpha1"
+	internal "github.com/kcp-dev/api-syncagent/sdk/applyconfiguration/internal"
+	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/applyconfiguration/services/v1alpha1"
 )
 
 // ForKind returns an apply configuration type for the given GroupVersionKind, or nil if no
 // apply configuration type exists for the given GroupVersionKind.
 func ForKind(kind schema.GroupVersionKind) interface{} {
 	switch kind {
-	// Group=services.kdp.k8c.io, Version=v1alpha1
+	// Group=services.syncagent.kcp.io, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithKind("PublishedResource"):
 		return &servicesv1alpha1.PublishedResourceApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("PublishedResourceSpec"):

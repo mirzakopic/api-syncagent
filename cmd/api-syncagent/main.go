@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28,12 +28,12 @@ import (
 	"github.com/spf13/pflag"
 	"go.uber.org/zap"
 
-	"k8c.io/servlet/internal/controller/apiexport"
-	"k8c.io/servlet/internal/controller/apiresourceschema"
-	"k8c.io/servlet/internal/controller/syncmanager"
-	"k8c.io/servlet/internal/kcp"
-	kdplog "k8c.io/servlet/internal/log"
-	"k8c.io/servlet/internal/version"
+	"github.com/kcp-dev/api-syncagent/internal/controller/apiexport"
+	"github.com/kcp-dev/api-syncagent/internal/controller/apiresourceschema"
+	"github.com/kcp-dev/api-syncagent/internal/controller/syncmanager"
+	"github.com/kcp-dev/api-syncagent/internal/kcp"
+	syncagentlog "github.com/kcp-dev/api-syncagent/internal/log"
+	"github.com/kcp-dev/api-syncagent/internal/version"
 
 	kcpdevv1alpha1 "github.com/kcp-dev/kcp/sdk/apis/apis/v1alpha1"
 	kcpdevcore "github.com/kcp-dev/kcp/sdk/apis/core"
@@ -68,7 +68,7 @@ func main() {
 		golog.Fatalf("Invalid command line: %v", err)
 	}
 
-	log := kdplog.NewFromOptions(opts.LogOptions)
+	log := syncagentlog.NewFromOptions(opts.LogOptions)
 
 	if err := opts.Complete(); err != nil {
 		log.With(zap.Error(err)).Fatal("Invalid command line")
@@ -80,7 +80,7 @@ func main() {
 	ctrlruntimelog.SetLogger(zapr.NewLogger(log.WithOptions(zap.AddCallerSkip(1))))
 
 	if err := run(ctx, sugar, opts); err != nil {
-		sugar.Fatalw("Servlet has encountered an error", zap.Error(err))
+		sugar.Fatalw("Sync Agent has encountered an error", zap.Error(err))
 	}
 }
 
@@ -88,9 +88,9 @@ func run(ctx context.Context, log *zap.SugaredLogger, opts *Options) error {
 	v := version.NewAppVersion()
 	log.With(
 		"version", v.GitVersion,
-		"name", opts.ServletName,
+		"name", opts.AgentName,
 		"apiexport", opts.APIExportRef,
-	).Info("Moin, I'm the KDP Servlet")
+	).Info("Moin, I'm the kcp Sync Agent")
 
 	// create the ctrl-runtime manager
 	mgr, err := setupLocalManager(ctx, opts)
@@ -98,7 +98,7 @@ func run(ctx context.Context, log *zap.SugaredLogger, opts *Options) error {
 		return fmt.Errorf("failed to setup local manager: %w", err)
 	}
 
-	// load the platform (kcp) kubeconfig
+	// load the kcp kubeconfig
 	platformRestConfig, err := loadKubeconfig(opts.PlatformKubeconfig)
 	if err != nil {
 		return fmt.Errorf("failed to load platform kubeconfig: %w", err)
@@ -129,11 +129,11 @@ func run(ctx context.Context, log *zap.SugaredLogger, opts *Options) error {
 		return fmt.Errorf("failed to add platform cluster runnable: %w", err)
 	}
 
-	if err := apiresourceschema.Add(mgr, platformCluster, lcName, log, 4, opts.ServletName, opts.APIExportRef, opts.PublishedResourceSelector); err != nil {
+	if err := apiresourceschema.Add(mgr, platformCluster, lcName, log, 4, opts.AgentName, opts.APIExportRef, opts.PublishedResourceSelector); err != nil {
 		return fmt.Errorf("failed to add apiresourceschema controller: %w", err)
 	}
 
-	if err := apiexport.Add(mgr, platformCluster, lcName, log, opts.APIExportRef, opts.ServletName, opts.PublishedResourceSelector); err != nil {
+	if err := apiexport.Add(mgr, platformCluster, lcName, log, opts.APIExportRef, opts.AgentName, opts.PublishedResourceSelector); err != nil {
 		return fmt.Errorf("failed to add apiexport controller: %w", err)
 	}
 
@@ -141,7 +141,7 @@ func run(ctx context.Context, log *zap.SugaredLogger, opts *Options) error {
 		return fmt.Errorf("failed to add syncmanager controller: %w", err)
 	}
 
-	log.Info("Starting Servlet…")
+	log.Info("Starting kcp Sync Agent…")
 
 	return mgr.Start(ctx)
 }
@@ -155,7 +155,7 @@ func setupLocalManager(ctx context.Context, opts *Options) (manager.Manager, err
 			return ctx
 		},
 		LeaderElection:          opts.EnableLeaderElection,
-		LeaderElectionID:        "servlet." + opts.ServletName,
+		LeaderElectionID:        "syncagent." + opts.AgentName,
 		LeaderElectionNamespace: opts.Namespace,
 	})
 	if err != nil {
@@ -214,7 +214,7 @@ func resolveAPIExport(ctx context.Context, restConfig *rest.Config, apiExportRef
 }
 
 // setupPlatformCluster sets up a plain, non-kcp-aware ctrl-runtime Cluster object
-// that is solvely used to interact with the KDP APIExport and APIResourceSchemas.
+// that is solvely used to interact with the APIExport and APIResourceSchemas.
 func setupPlatformCluster(restConfig *rest.Config, apiexportRef string) (cluster.Cluster, error) {
 	scheme := runtime.NewScheme()
 

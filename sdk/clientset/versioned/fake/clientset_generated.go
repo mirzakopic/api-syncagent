@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,9 +25,9 @@ import (
 	fakediscovery "k8s.io/client-go/discovery/fake"
 	"k8s.io/client-go/testing"
 
-	clientset "k8c.io/servlet/sdk/clientset/versioned"
-	servicesv1alpha1 "k8c.io/servlet/sdk/clientset/versioned/typed/services/v1alpha1"
-	fakeservicesv1alpha1 "k8c.io/servlet/sdk/clientset/versioned/typed/services/v1alpha1/fake"
+	clientset "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned"
+	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned/typed/services/v1alpha1"
+	fakeservicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned/typed/services/v1alpha1/fake"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.

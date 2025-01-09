@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,11 +24,11 @@ import (
 	"github.com/kcp-dev/logicalcluster/v3"
 	"go.uber.org/zap"
 
-	"k8c.io/servlet/internal/discovery"
-	"k8c.io/servlet/internal/mutation"
-	"k8c.io/servlet/internal/projection"
-	"k8c.io/servlet/internal/sync"
-	kdpservicesv1alpha1 "k8c.io/servlet/sdk/apis/services/v1alpha1"
+	"github.com/kcp-dev/api-syncagent/internal/discovery"
+	"github.com/kcp-dev/api-syncagent/internal/mutation"
+	"github.com/kcp-dev/api-syncagent/internal/projection"
+	"github.com/kcp-dev/api-syncagent/internal/sync"
+	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -42,7 +42,7 @@ import (
 )
 
 const (
-	ControllerName = "servlet-sync"
+	ControllerName = "syncagent-sync"
 )
 
 type Reconciler struct {
@@ -59,7 +59,7 @@ func Create(
 	ctx context.Context,
 	localManager manager.Manager,
 	virtualWorkspaceCluster cluster.Cluster,
-	pubRes *kdpservicesv1alpha1.PublishedResource,
+	pubRes *servicesv1alpha1.PublishedResource,
 	discoveryClient *discovery.Client,
 	apiExportName string,
 	log *zap.SugaredLogger,

@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package mutation
 import (
 	"fmt"
 
-	kdpservicesv1alpha1 "k8c.io/servlet/sdk/apis/services/v1alpha1"
+	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
@@ -36,14 +36,14 @@ type Mutator interface {
 }
 
 type mutator struct {
-	spec *kdpservicesv1alpha1.ResourceMutationSpec
+	spec *servicesv1alpha1.ResourceMutationSpec
 }
 
 var _ Mutator = &mutator{}
 
 // NewMutator creates a new mutator, which will apply the mutation rules to a synced object, in
 // both directions. A nil spec is supported and will simply make the mutator not do anything.
-func NewMutator(spec *kdpservicesv1alpha1.ResourceMutationSpec) Mutator {
+func NewMutator(spec *servicesv1alpha1.ResourceMutationSpec) Mutator {
 	return &mutator{
 		spec: spec,
 	}

@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,10 +23,10 @@ import (
 	"github.com/kcp-dev/logicalcluster/v3"
 	"go.uber.org/zap"
 
-	"k8c.io/servlet/internal/controllerutil"
-	predicateutil "k8c.io/servlet/internal/controllerutil/predicate"
-	"k8c.io/servlet/internal/resources/reconciling"
-	kdpservicesv1alpha1 "k8c.io/servlet/sdk/apis/services/v1alpha1"
+	"github.com/kcp-dev/api-syncagent/internal/controllerutil"
+	predicateutil "github.com/kcp-dev/api-syncagent/internal/controllerutil/predicate"
+	"github.com/kcp-dev/api-syncagent/internal/resources/reconciling"
+	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
 
 	kcpdevv1alpha1 "github.com/kcp-dev/kcp/sdk/apis/apis/v1alpha1"
 
@@ -46,7 +46,7 @@ import (
 )
 
 const (
-	ControllerName = "servlet-apiexport"
+	ControllerName = "syncagent-apiexport"
 )
 
 type Reconciler struct {
@@ -56,7 +56,7 @@ type Reconciler struct {
 	recorder       record.EventRecorder
 	lcName         logicalcluster.Name
 	apiExportName  string
-	servletName    string
+	agentName      string
 	prFilter       labels.Selector
 }
 
@@ -67,7 +67,7 @@ func Add(
 	lcName logicalcluster.Name,
 	log *zap.SugaredLogger,
 	apiExportName string,
-	servletName string,
+	agentName string,
 	prFilter labels.Selector,
 ) error {
 	reconciler := &Reconciler{
@@ -77,12 +77,12 @@ func Add(
 		log:            log.Named(ControllerName),
 		recorder:       mgr.GetEventRecorderFor(ControllerName),
 		apiExportName:  apiExportName,
-		servletName:    servletName,
+		agentName:      agentName,
 		prFilter:       prFilter,
 	}
 
 	hasARS := predicate.NewPredicateFuncs(func(object ctrlruntimeclient.Object) bool {
-		publishedResource, ok := object.(*kdpservicesv1alpha1.PublishedResource)
+		publishedResource, ok := object.(*servicesv1alpha1.PublishedResource)
 		if !ok {
 			return false
 		}
@@ -93,7 +93,7 @@ func Add(
 	_, err := builder.ControllerManagedBy(mgr).
 		Named(ControllerName).
 		WithOptions(controller.Options{
-			// we reconcile a single object in the KDP platform, no need for parallel workers
+			// we reconcile a single object in kcp, no need for parallel workers
 			MaxConcurrentReconciles: 1,
 		}).
 		// Watch for changes to APIExport on the platform side to start/restart the actual syncing controllers;
@@ -101,7 +101,7 @@ func Add(
 		// so there is no need here to add an additional filter.
 		WatchesRawSource(source.Kind(platformCluster.GetCache(), &kcpdevv1alpha1.APIExport{}, controllerutil.EnqueueConst[*kcpdevv1alpha1.APIExport]("dummy"))).
 		// Watch for changes to PublishedResources on the local service cluster
-		Watches(&kdpservicesv1alpha1.PublishedResource{}, controllerutil.EnqueueConst[ctrlruntimeclient.Object]("dummy"), builder.WithPredicates(predicateutil.ByLabels(prFilter), hasARS)).
+		Watches(&servicesv1alpha1.PublishedResource{}, controllerutil.EnqueueConst[ctrlruntimeclient.Object]("dummy"), builder.WithPredicates(predicateutil.ByLabels(prFilter), hasARS)).
 		Build(reconciler)
 	return err
 }
@@ -113,7 +113,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 func (r *Reconciler) reconcile(ctx context.Context) error {
 	// find all PublishedResources
-	pubResources := &kdpservicesv1alpha1.PublishedResourceList{}
+	pubResources := &servicesv1alpha1.PublishedResourceList{}
 	if err := r.localClient.List(ctx, pubResources, &ctrlruntimeclient.ListOptions{
 		LabelSelector: r.prFilter,
 	}); err != nil {
@@ -121,7 +121,7 @@ func (r *Reconciler) reconcile(ctx context.Context) error {
 	}
 
 	// filter out those PRs that have not yet been processed into an ARS
-	filteredPubResources := []kdpservicesv1alpha1.PublishedResource{}
+	filteredPubResources := []servicesv1alpha1.PublishedResource{}
 	for i, pubResource := range pubResources.Items {
 		if pubResource.Status.ResourceSchemaName != "" {
 			filteredPubResources = append(filteredPubResources, pubResources.Items[i])
@@ -151,7 +151,7 @@ func (r *Reconciler) reconcile(ctx context.Context) error {
 		}
 	}
 
-	// Related resources (Secrets, ConfigMaps) are namespaced and so the Servlet will
+	// Related resources (Secrets, ConfigMaps) are namespaced and so the Sync Agent will
 	// always need to be able to see and manage namespaces.
 	if claimedResources.Len() > 0 {
 		claimedResources.Insert("namespaces")
@@ -164,7 +164,7 @@ func (r *Reconciler) reconcile(ctx context.Context) error {
 
 	// reconcile an APIExport in the platform
 	factories := []reconciling.NamedAPIExportReconcilerFactory{
-		r.createAPIExportReconciler(arsList, claimedResources, r.servletName, r.apiExportName),
+		r.createAPIExportReconciler(arsList, claimedResources, r.agentName, r.apiExportName),
 	}
 
 	wsCtx := kontext.WithCluster(ctx, r.lcName)

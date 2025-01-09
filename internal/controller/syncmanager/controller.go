@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,12 +24,12 @@ import (
 	"github.com/kcp-dev/logicalcluster/v3"
 	"go.uber.org/zap"
 
-	"k8c.io/servlet/internal/controller/sync"
-	"k8c.io/servlet/internal/controller/syncmanager/lifecycle"
-	"k8c.io/servlet/internal/controllerutil"
-	"k8c.io/servlet/internal/controllerutil/predicate"
-	"k8c.io/servlet/internal/discovery"
-	kdpservicesv1alpha1 "k8c.io/servlet/sdk/apis/services/v1alpha1"
+	"github.com/kcp-dev/api-syncagent/internal/controller/sync"
+	"github.com/kcp-dev/api-syncagent/internal/controller/syncmanager/lifecycle"
+	"github.com/kcp-dev/api-syncagent/internal/controllerutil"
+	"github.com/kcp-dev/api-syncagent/internal/controllerutil/predicate"
+	"github.com/kcp-dev/api-syncagent/internal/discovery"
+	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
 
 	kcpdevv1alpha1 "github.com/kcp-dev/kcp/sdk/apis/apis/v1alpha1"
 
@@ -49,7 +49,7 @@ import (
 )
 
 const (
-	ControllerName = "servlet-syncmanager"
+	ControllerName = "syncagent-syncmanager"
 
 	// numSyncWorkers is the number of concurrent workers within each sync controller.
 	numSyncWorkers = 4
@@ -58,7 +58,7 @@ const (
 type Reconciler struct {
 	// choose to break good practice of never storing a context in a struct,
 	// and instead opt to use the app's root context for the dynamically
-	// started clusters, so when the servlet shuts down, their shutdown is
+	// started clusters, so when the Sync Agent shuts down, their shutdown is
 	// also triggered.
 	ctx context.Context
 
@@ -118,7 +118,7 @@ func Add(
 		// so there is no need here to add an additional filter.
 		WatchesRawSource(source.Kind(platformCluster.GetCache(), &kcpdevv1alpha1.APIExport{}, controllerutil.EnqueueConst[*kcpdevv1alpha1.APIExport]("dummy"))).
 		// Watch for changes to the PublishedResources
-		Watches(&kdpservicesv1alpha1.PublishedResource{}, controllerutil.EnqueueConst[ctrlruntimeclient.Object]("dummy"), builder.WithPredicates(predicate.ByLabels(prFilter))).
+		Watches(&servicesv1alpha1.PublishedResource{}, controllerutil.EnqueueConst[ctrlruntimeclient.Object]("dummy"), builder.WithPredicates(predicate.ByLabels(prFilter))).
 		Build(reconciler)
 	return err
 }
@@ -169,7 +169,7 @@ func (r *Reconciler) reconcile(ctx context.Context, log *zap.SugaredLogger, apiE
 	}
 
 	// find all PublishedResources
-	pubResources := &kdpservicesv1alpha1.PublishedResourceList{}
+	pubResources := &servicesv1alpha1.PublishedResourceList{}
 	if err := r.localManager.GetClient().List(ctx, pubResources, &ctrlruntimeclient.ListOptions{
 		LabelSelector: r.prFilter,
 	}); err != nil {
@@ -220,11 +220,11 @@ func (r *Reconciler) stopVirtualWorkspaceCluster(log *zap.SugaredLogger) {
 	r.vwURL = ""
 }
 
-func getPublishedResourceKey(pr *kdpservicesv1alpha1.PublishedResource) string {
+func getPublishedResourceKey(pr *servicesv1alpha1.PublishedResource) string {
 	return fmt.Sprintf("%s-%s", pr.UID, pr.ResourceVersion)
 }
 
-func (r *Reconciler) ensureSyncControllers(ctx context.Context, log *zap.SugaredLogger, publishedResources []kdpservicesv1alpha1.PublishedResource) error {
+func (r *Reconciler) ensureSyncControllers(ctx context.Context, log *zap.SugaredLogger, publishedResources []servicesv1alpha1.PublishedResource) error {
 	currentPRWorkers := sets.New[string]()
 	for _, pr := range publishedResources {
 		currentPRWorkers.Insert(getPublishedResourceKey(&pr))

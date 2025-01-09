@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,14 +20,14 @@ import (
 	"encoding/json"
 	"testing"
 
-	kdpservicesv1alpha1 "k8c.io/servlet/sdk/apis/services/v1alpha1"
+	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
 )
 
 func TestApplyResourceMutation(t *testing.T) {
 	testcases := []struct {
 		name      string
 		inputData string
-		mutation  kdpservicesv1alpha1.ResourceMutation
+		mutation  servicesv1alpha1.ResourceMutation
 		ctx       *TemplateMutationContext
 		expected  string
 	}{
@@ -36,8 +36,8 @@ func TestApplyResourceMutation(t *testing.T) {
 		{
 			name:      "regex: replace one existing value",
 			inputData: `{"spec":{"secretName":"foo"}}`,
-			mutation: kdpservicesv1alpha1.ResourceMutation{
-				Regex: &kdpservicesv1alpha1.ResourceRegexMutation{
+			mutation: servicesv1alpha1.ResourceMutation{
+				Regex: &servicesv1alpha1.ResourceRegexMutation{
 					Path:        "spec.secretName",
 					Pattern:     "",
 					Replacement: "new-value",
@@ -48,8 +48,8 @@ func TestApplyResourceMutation(t *testing.T) {
 		{
 			name:      "regex: rewrite one existing value",
 			inputData: `{"spec":{"secretName":"foo"}}`,
-			mutation: kdpservicesv1alpha1.ResourceMutation{
-				Regex: &kdpservicesv1alpha1.ResourceRegexMutation{
+			mutation: servicesv1alpha1.ResourceMutation{
+				Regex: &servicesv1alpha1.ResourceRegexMutation{
 					Path:        "spec.secretName",
 					Pattern:     "o",
 					Replacement: "u",
@@ -60,8 +60,8 @@ func TestApplyResourceMutation(t *testing.T) {
 		{
 			name:      "regex: should support grouping",
 			inputData: `{"spec":{"secretName":"foo"}}`,
-			mutation: kdpservicesv1alpha1.ResourceMutation{
-				Regex: &kdpservicesv1alpha1.ResourceRegexMutation{
+			mutation: servicesv1alpha1.ResourceMutation{
+				Regex: &servicesv1alpha1.ResourceRegexMutation{
 					Path:        "spec.secretName",
 					Pattern:     "(f)oo",
 					Replacement: "oo$1",
@@ -72,8 +72,8 @@ func TestApplyResourceMutation(t *testing.T) {
 		{
 			name:      "regex: coalesces to strings",
 			inputData: `{"spec":{"aNumber":24}}`,
-			mutation: kdpservicesv1alpha1.ResourceMutation{
-				Regex: &kdpservicesv1alpha1.ResourceRegexMutation{
+			mutation: servicesv1alpha1.ResourceMutation{
+				Regex: &servicesv1alpha1.ResourceRegexMutation{
 					Path:        "spec.aNumber",
 					Pattern:     "4",
 					Replacement: "5",
@@ -84,8 +84,8 @@ func TestApplyResourceMutation(t *testing.T) {
 		{
 			name:      "regex: can change types",
 			inputData: `{"spec":{"aNumber":24}}`,
-			mutation: kdpservicesv1alpha1.ResourceMutation{
-				Regex: &kdpservicesv1alpha1.ResourceRegexMutation{
+			mutation: servicesv1alpha1.ResourceMutation{
+				Regex: &servicesv1alpha1.ResourceRegexMutation{
 					Path:        "spec",
 					Replacement: "new-value",
 				},
@@ -95,8 +95,8 @@ func TestApplyResourceMutation(t *testing.T) {
 		{
 			name:      "regex: can change types /2",
 			inputData: `{"spec":{"aNumber":24}}`,
-			mutation: kdpservicesv1alpha1.ResourceMutation{
-				Regex: &kdpservicesv1alpha1.ResourceRegexMutation{
+			mutation: servicesv1alpha1.ResourceMutation{
+				Regex: &servicesv1alpha1.ResourceRegexMutation{
 					Path: "spec",
 					// Due to the string coalescing, this will turn the {aNumber:42} object
 					// into a string, of which we match every character and return it,
@@ -110,8 +110,8 @@ func TestApplyResourceMutation(t *testing.T) {
 		{
 			name:      "regex: can empty values",
 			inputData: `{"spec":{"aNumber":24}}`,
-			mutation: kdpservicesv1alpha1.ResourceMutation{
-				Regex: &kdpservicesv1alpha1.ResourceRegexMutation{
+			mutation: servicesv1alpha1.ResourceMutation{
+				Regex: &servicesv1alpha1.ResourceRegexMutation{
 					Path:        "spec",
 					Replacement: "",
 				},
@@ -121,8 +121,8 @@ func TestApplyResourceMutation(t *testing.T) {
 		{
 			name:      "regex: can empty values /2",
 			inputData: `{"spec":{"aNumber":24}}`,
-			mutation: kdpservicesv1alpha1.ResourceMutation{
-				Regex: &kdpservicesv1alpha1.ResourceRegexMutation{
+			mutation: servicesv1alpha1.ResourceMutation{
+				Regex: &servicesv1alpha1.ResourceRegexMutation{
 					Path:        "spec",
 					Pattern:     ".+",
 					Replacement: "",
@@ -136,8 +136,8 @@ func TestApplyResourceMutation(t *testing.T) {
 		{
 			name:      "template: empty template returns empty value",
 			inputData: `{"spec":{"secretName":"foo"}}`,
-			mutation: kdpservicesv1alpha1.ResourceMutation{
-				Template: &kdpservicesv1alpha1.ResourceTemplateMutation{
+			mutation: servicesv1alpha1.ResourceMutation{
+				Template: &servicesv1alpha1.ResourceTemplateMutation{
 					Path: "spec.secretName",
 				},
 			},
@@ -146,8 +146,8 @@ func TestApplyResourceMutation(t *testing.T) {
 		{
 			name:      "template: can change value type",
 			inputData: `{"spec":{"secretName":"foo"}}`,
-			mutation: kdpservicesv1alpha1.ResourceMutation{
-				Template: &kdpservicesv1alpha1.ResourceTemplateMutation{
+			mutation: servicesv1alpha1.ResourceMutation{
+				Template: &servicesv1alpha1.ResourceTemplateMutation{
 					Path: "spec",
 				},
 			},
@@ -156,8 +156,8 @@ func TestApplyResourceMutation(t *testing.T) {
 		{
 			name:      "template: execute basic template",
 			inputData: `{"spec":{"secretName":"foo"}}`,
-			mutation: kdpservicesv1alpha1.ResourceMutation{
-				Template: &kdpservicesv1alpha1.ResourceTemplateMutation{
+			mutation: servicesv1alpha1.ResourceMutation{
+				Template: &servicesv1alpha1.ResourceTemplateMutation{
 					Path:     "spec.secretName",
 					Template: `{{ upper .Value.String }}`,
 				},
@@ -170,8 +170,8 @@ func TestApplyResourceMutation(t *testing.T) {
 		{
 			name:      "delete: can remove object keys",
 			inputData: `{"spec":{"secretName":"foo"}}`,
-			mutation: kdpservicesv1alpha1.ResourceMutation{
-				Delete: &kdpservicesv1alpha1.ResourceDeleteMutation{
+			mutation: servicesv1alpha1.ResourceMutation{
+				Delete: &servicesv1alpha1.ResourceDeleteMutation{
 					Path: "spec.secretName",
 				},
 			},
@@ -180,8 +180,8 @@ func TestApplyResourceMutation(t *testing.T) {
 		{
 			name:      "delete: can remove array items",
 			inputData: `{"spec":[1,2,3]}`,
-			mutation: kdpservicesv1alpha1.ResourceMutation{
-				Delete: &kdpservicesv1alpha1.ResourceDeleteMutation{
+			mutation: servicesv1alpha1.ResourceMutation{
+				Delete: &servicesv1alpha1.ResourceDeleteMutation{
 					Path: "spec.1",
 				},
 			},
@@ -193,8 +193,8 @@ func TestApplyResourceMutation(t *testing.T) {
 		{
 			name:      "Rudi: empty script",
 			inputData: `{"spec":{"secretName":"foo"}}`,
-			mutation: kdpservicesv1alpha1.ResourceMutation{
-				Rudi: &kdpservicesv1alpha1.ResourceRudiMutation{
+			mutation: servicesv1alpha1.ResourceMutation{
+				Rudi: &servicesv1alpha1.ResourceRudiMutation{
 					Script: `.`,
 				},
 			},
@@ -203,8 +203,8 @@ func TestApplyResourceMutation(t *testing.T) {
 		{
 			name:      "Rudi: set one new key",
 			inputData: `{"spec":{"secretName":"foo"}}`,
-			mutation: kdpservicesv1alpha1.ResourceMutation{
-				Rudi: &kdpservicesv1alpha1.ResourceRudiMutation{
+			mutation: servicesv1alpha1.ResourceMutation{
+				Rudi: &servicesv1alpha1.ResourceRudiMutation{
 					Script: `(set! .foo "bar")`,
 				},
 			},
@@ -213,8 +213,8 @@ func TestApplyResourceMutation(t *testing.T) {
 		{
 			name:      "Rudi: update existing key",
 			inputData: `{"spec":{"secretName":"foo"}}`,
-			mutation: kdpservicesv1alpha1.ResourceMutation{
-				Rudi: &kdpservicesv1alpha1.ResourceRudiMutation{
+			mutation: servicesv1alpha1.ResourceMutation{
+				Rudi: &servicesv1alpha1.ResourceRudiMutation{
 					Script: `(set! .spec.secretName "bar")`,
 				},
 			},
@@ -223,8 +223,8 @@ func TestApplyResourceMutation(t *testing.T) {
 		{
 			name:      "Rudi: remove a key",
 			inputData: `{"spec":{"secretName":"foo"}}`,
-			mutation: kdpservicesv1alpha1.ResourceMutation{
-				Rudi: &kdpservicesv1alpha1.ResourceRudiMutation{
+			mutation: servicesv1alpha1.ResourceMutation{
+				Rudi: &servicesv1alpha1.ResourceRudiMutation{
 					Script: `(delete! .spec.secretName)`,
 				},
 			},
@@ -233,8 +233,8 @@ func TestApplyResourceMutation(t *testing.T) {
 		{
 			name:      "Rudi: result value is ignored, only document counts",
 			inputData: `{"spec":{"secretName":"foo"}}`,
-			mutation: kdpservicesv1alpha1.ResourceMutation{
-				Rudi: &kdpservicesv1alpha1.ResourceRudiMutation{
+			mutation: servicesv1alpha1.ResourceMutation{
+				Rudi: &servicesv1alpha1.ResourceRudiMutation{
 					Script: `(delete! .spec.secretName) false`,
 				},
 			},
@@ -243,8 +243,8 @@ func TestApplyResourceMutation(t *testing.T) {
 		{
 			name:      "Rudi: local object becomes $localObj",
 			inputData: `{"spec":{"secretName":"foo"}}`,
-			mutation: kdpservicesv1alpha1.ResourceMutation{
-				Rudi: &kdpservicesv1alpha1.ResourceRudiMutation{
+			mutation: servicesv1alpha1.ResourceMutation{
+				Rudi: &servicesv1alpha1.ResourceRudiMutation{
 					Script: `(set! .spec $localObj.local)`,
 				},
 			},
@@ -258,8 +258,8 @@ func TestApplyResourceMutation(t *testing.T) {
 		{
 			name:      "Rudi: remote object becomes $remoteObj",
 			inputData: `{"spec":{"secretName":"foo"}}`,
-			mutation: kdpservicesv1alpha1.ResourceMutation{
-				Rudi: &kdpservicesv1alpha1.ResourceRudiMutation{
+			mutation: servicesv1alpha1.ResourceMutation{
+				Rudi: &servicesv1alpha1.ResourceRudiMutation{
 					Script: `(set! .spec $remoteObj.remote)`,
 				},
 			},

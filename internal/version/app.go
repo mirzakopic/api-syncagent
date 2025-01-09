@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ package version
 var (
 	// gitVersion is a variable containing the git commit identifier
 	// (usually the output of `git describe`, i.e. not necessarily a
-	// static tag name); for a tagged KDP release, this value is identical
+	// static tag name); for a tagged Sync Agent release, this value is identical
 	// to kubermaticDockerTag, for untagged builds this is the `git describe`
 	// output.
 	// Importantly, this value will only ever go up, even for untagged builds,

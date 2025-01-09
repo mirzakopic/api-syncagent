@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,12 +27,12 @@ import (
 
 func init() {
 	if err := AddToScheme(scheme.Scheme); err != nil {
-		panic(fmt.Sprintf("failed to add KDP services scheme: %v", err))
+		panic(fmt.Sprintf("failed to add sync agent services scheme: %v", err))
 	}
 }
 
 // GroupName is the group name use in this package.
-const GroupName = "services.kdp.k8c.io"
+const GroupName = "services.syncagent.k8c.io"
 const GroupVersion = "v1alpha1"
 
 var (

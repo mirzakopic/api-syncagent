@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,14 +17,14 @@ limitations under the License.
 package projection
 
 import (
-	kdpservicesv1alpha1 "k8c.io/servlet/sdk/apis/services/v1alpha1"
+	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // PublishedResourceSourceGVK returns the source GVK of the local resources
 // that are supposed to be published.
-func PublishedResourceSourceGVK(pubRes *kdpservicesv1alpha1.PublishedResource) schema.GroupVersionKind {
+func PublishedResourceSourceGVK(pubRes *servicesv1alpha1.PublishedResource) schema.GroupVersionKind {
 	return schema.GroupVersionKind{
 		Group:   pubRes.Spec.Resource.APIGroup,
 		Version: pubRes.Spec.Resource.Version,
@@ -34,7 +34,7 @@ func PublishedResourceSourceGVK(pubRes *kdpservicesv1alpha1.PublishedResource) s
 
 // PublishedResourceProjectedGVK returns the effective GVK after the projection
 // rules have been applied according to the PublishedResource.
-func PublishedResourceProjectedGVK(pubRes *kdpservicesv1alpha1.PublishedResource, platformAPIGroup string) schema.GroupVersionKind {
+func PublishedResourceProjectedGVK(pubRes *servicesv1alpha1.PublishedResource, platformAPIGroup string) schema.GroupVersionKind {
 	apiVersion := pubRes.Spec.Resource.Version
 	kind := pubRes.Spec.Resource.Kind
 

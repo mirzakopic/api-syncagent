@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,10 +30,10 @@ import (
 	"github.com/tidwall/sjson"
 	"go.xrstf.de/rudi"
 
-	kdpservicesv1alpha1 "k8c.io/servlet/sdk/apis/services/v1alpha1"
+	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
 )
 
-func ApplyResourceMutations(value any, mutations []kdpservicesv1alpha1.ResourceMutation, ctx *TemplateMutationContext) (any, error) {
+func ApplyResourceMutations(value any, mutations []servicesv1alpha1.ResourceMutation, ctx *TemplateMutationContext) (any, error) {
 	for _, mut := range mutations {
 		var err error
 		value, err = ApplyResourceMutation(value, mut, ctx)
@@ -45,7 +45,7 @@ func ApplyResourceMutations(value any, mutations []kdpservicesv1alpha1.ResourceM
 	return value, nil
 }
 
-func ApplyResourceMutation(value any, mut kdpservicesv1alpha1.ResourceMutation, ctx *TemplateMutationContext) (any, error) {
+func ApplyResourceMutation(value any, mut servicesv1alpha1.ResourceMutation, ctx *TemplateMutationContext) (any, error) {
 	// for Rudi scripts we can skip all the JSON encoding/decoding
 	if mut.Rudi != nil {
 		return applyResourceRudiMigration(value, *mut.Rudi, ctx)
@@ -73,7 +73,7 @@ func ApplyResourceMutation(value any, mut kdpservicesv1alpha1.ResourceMutation, 
 	return result, nil
 }
 
-func applyResourceMutationToJSON(jsonData string, mut kdpservicesv1alpha1.ResourceMutation, ctx *TemplateMutationContext) (string, error) {
+func applyResourceMutationToJSON(jsonData string, mut servicesv1alpha1.ResourceMutation, ctx *TemplateMutationContext) (string, error) {
 	switch {
 	case mut.Delete != nil:
 		return applyResourceDeleteMutation(jsonData, *mut.Delete)
@@ -86,7 +86,7 @@ func applyResourceMutationToJSON(jsonData string, mut kdpservicesv1alpha1.Resour
 	}
 }
 
-func applyResourceRudiMigration(value any, mut kdpservicesv1alpha1.ResourceRudiMutation, ctx *TemplateMutationContext) (any, error) {
+func applyResourceRudiMigration(value any, mut servicesv1alpha1.ResourceRudiMutation, ctx *TemplateMutationContext) (any, error) {
 	program, err := rudi.Parse("myscript", mut.Script)
 	if err != nil {
 		return nil, fmt.Errorf("invalid script: %w", err)
@@ -109,7 +109,7 @@ func applyResourceRudiMigration(value any, mut kdpservicesv1alpha1.ResourceRudiM
 	return processed, nil
 }
 
-func applyResourceDeleteMutation(jsonData string, mut kdpservicesv1alpha1.ResourceDeleteMutation) (string, error) {
+func applyResourceDeleteMutation(jsonData string, mut servicesv1alpha1.ResourceDeleteMutation) (string, error) {
 	jsonData, err := sjson.Delete(jsonData, mut.Path)
 	if err != nil {
 		return "", fmt.Errorf("failed to delete value @ %s: %w", mut.Path, err)
@@ -118,7 +118,7 @@ func applyResourceDeleteMutation(jsonData string, mut kdpservicesv1alpha1.Resour
 	return jsonData, nil
 }
 
-func applyResourceRegexMutation(jsonData string, mut kdpservicesv1alpha1.ResourceRegexMutation) (string, error) {
+func applyResourceRegexMutation(jsonData string, mut servicesv1alpha1.ResourceRegexMutation) (string, error) {
 	if mut.Pattern == "" {
 		return sjson.Set(jsonData, mut.Path, mut.Replacement)
 	}
@@ -155,7 +155,7 @@ type TemplateMutationContext struct {
 	RemoteObject map[string]any
 }
 
-func applyResourceTemplateMutation(jsonData string, mut kdpservicesv1alpha1.ResourceTemplateMutation, ctx *TemplateMutationContext) (string, error) {
+func applyResourceTemplateMutation(jsonData string, mut servicesv1alpha1.ResourceTemplateMutation, ctx *TemplateMutationContext) (string, error) {
 	// get the current value
 	value := gjson.Get(jsonData, mut.Path)
 	if !value.Exists() {

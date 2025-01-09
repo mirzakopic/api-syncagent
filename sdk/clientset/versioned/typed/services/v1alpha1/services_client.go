@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,11 +21,11 @@ package v1alpha1
 import (
 	"net/http"
 
-	v1alpha1 "k8c.io/servlet/sdk/apis/services/v1alpha1"
+	v1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
 
 	rest "k8s.io/client-go/rest"
 
-	"k8c.io/servlet/sdk/clientset/versioned/scheme"
+	"github.com/kcp-dev/api-syncagent/sdk/clientset/versioned/scheme"
 )
 
 type ServicesV1alpha1Interface interface {
@@ -33,7 +33,7 @@ type ServicesV1alpha1Interface interface {
 	PublishedResourcesGetter
 }
 
-// ServicesV1alpha1Client is used to interact with features provided by the services.kdp.k8c.io group.
+// ServicesV1alpha1Client is used to interact with features provided by the services.syncagent.kcp.io group.
 type ServicesV1alpha1Client struct {
 	restClient rest.Interface
 }

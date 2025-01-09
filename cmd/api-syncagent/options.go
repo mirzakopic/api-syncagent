@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import (
 
 	"github.com/spf13/pflag"
 
-	"k8c.io/servlet/internal/log"
+	"github.com/kcp-dev/api-syncagent/internal/log"
 
 	"k8s.io/apimachinery/pkg/labels"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
@@ -35,26 +35,26 @@ type Options struct {
 	// work.
 	// KubeconfigFile string
 
-	// PlatformKubeconfig is the kubeconfig that gives access
-	// to the KDP platform cluster. This kubeconfig's cluster URL has to point to
-	// the workspace where the KDP Service referenced via ServiceReference lives.
+	// PlatformKubeconfig is the kubeconfig that gives access to kcp. This
+	// kubeconfig's cluster URL has to point to the workspace where the APIExport
+	// referenced via APIExportRef lives.
 	PlatformKubeconfig string
 
-	// Namespace is the namespace that the Servlet runs in.
+	// Namespace is the namespace that the Sync Agent runs in.
 	Namespace string
 
 	// Whether or not to perform leader election (requires permissions to
 	// manage coordination/v1 leases)
 	EnableLeaderElection bool
 
-	// ServletName can be used to give this Servlet a custom name. This name is used
-	// for the Servlet resource inside the KDP platform. This value must not be changed
-	// after a Servlet has registered for the first time in the platform.
-	// If not given, defaults to "<service ref>-servlet".
-	ServletName string
+	// AgentName can be used to give this Sync Agent instance a custom name. This name is used
+	// for the Sync Agent resource inside kcp. This value must not be changed after a Sync Agent
+	// has registered for the first time in the platform.
+	// If not given, defaults to "<service ref>-syncagent".
+	AgentName string
 
-	// APIExportRef references the APIExport within a KDP organization workspace that this
-	// servlet should work with by name. The APIExport has to already exist, but it must not have
+	// APIExportRef references the APIExport within a kcp workspace that this
+	// Sync Agent should work with by name. The APIExport has to already exist, but it must not have
 	// pre-existing resource schemas configured.
 	APIExportRef string
 
@@ -74,11 +74,11 @@ func NewOptions() *Options {
 func (o *Options) AddFlags(flags *pflag.FlagSet) {
 	o.LogOptions.AddPFlags(flags)
 
-	flags.StringVar(&o.PlatformKubeconfig, "platform-kubeconfig", o.PlatformKubeconfig, "kubeconfig file of the KDP platform")
-	flags.StringVar(&o.Namespace, "namespace", o.Namespace, "Kubernetes namespace the Servlet is running in")
-	flags.StringVar(&o.ServletName, "servlet-name", o.ServletName, "name of this Servlet agent, must not be changed after the first run, can be left blank to auto-generate a name")
-	flags.StringVar(&o.APIExportRef, "apiexport-ref", o.APIExportRef, "name of the APIExport in KDP that this Servlet is powering")
-	flags.StringVar(&o.PublishedResourceSelectorString, "published-resource-selector", o.PublishedResourceSelectorString, "restrict this Servlet to only process PublishedResources matching this label selector (optional)")
+	flags.StringVar(&o.PlatformKubeconfig, "platform-kubeconfig", o.PlatformKubeconfig, "kubeconfig file of kcp")
+	flags.StringVar(&o.Namespace, "namespace", o.Namespace, "Kubernetes namespace the Sync Agent is running in")
+	flags.StringVar(&o.AgentName, "agent-name", o.AgentName, "name of this Sync Agent, must not be changed after the first run, can be left blank to auto-generate a name")
+	flags.StringVar(&o.APIExportRef, "apiexport-ref", o.APIExportRef, "name of the APIExport in kcp that this Sync Agent is powering")
+	flags.StringVar(&o.PublishedResourceSelectorString, "published-resource-selector", o.PublishedResourceSelectorString, "restrict this Sync Agent to only process PublishedResources matching this label selector (optional)")
 	flags.BoolVar(&o.EnableLeaderElection, "enable-leader-election", o.EnableLeaderElection, "whether to perform leader election")
 }
 
@@ -93,9 +93,9 @@ func (o *Options) Validate() error {
 		errs = append(errs, errors.New("--namespace is required"))
 	}
 
-	if len(o.ServletName) > 0 {
-		if e := validation.IsDNS1035Label(o.ServletName); len(e) > 0 {
-			errs = append(errs, fmt.Errorf("--servlet-name is invalid: %v", e))
+	if len(o.AgentName) > 0 {
+		if e := validation.IsDNS1035Label(o.AgentName); len(e) > 0 {
+			errs = append(errs, fmt.Errorf("--agent-name is invalid: %v", e))
 		}
 	}
 
@@ -119,8 +119,8 @@ func (o *Options) Validate() error {
 func (o *Options) Complete() error {
 	errs := []error{}
 
-	if len(o.ServletName) == 0 {
-		o.ServletName = o.APIExportRef + "-servlet"
+	if len(o.AgentName) == 0 {
+		o.AgentName = o.APIExportRef + "-syncagent"
 	}
 
 	if s := o.PublishedResourceSelectorString; len(s) > 0 {

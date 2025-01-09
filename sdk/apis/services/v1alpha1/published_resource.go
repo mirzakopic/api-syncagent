@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -35,10 +35,10 @@ const (
 // +kubebuilder:subresource:status
 
 // PublishedResource describes how an API type (usually defined by a CRD)
-// on the service cluster should be exposed in KDP workspaces. Besides
+// on the service cluster should be exposed in kcp workspaces. Besides
 // controlling how namespaced and cluster-wide resources should be mapped,
 // the GVK can also be transformed to provide a uniform, implementation-independent
-// access to the APIs inside KDP.
+// access to the APIs inside kcp.
 type PublishedResource struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -50,25 +50,25 @@ type PublishedResource struct {
 }
 
 // PublishedResourceSpec describes the desired resource publication from a service
-// cluster to the KDP platform.
+// cluster to kcp.
 type PublishedResourceSpec struct {
 	// Describes the "source" Resource that exists on this, the service cluster,
-	// that should be exposed in KDP workspaces. All fields have to be specified.
+	// that should be exposed in kcp workspaces. All fields have to be specified.
 	Resource SourceResourceDescriptor `json:"resource"`
 
-	// If specified, the filter will be applied to the resources in a KDP workspace
-	// and allow restricting which of them will be handled by the KDP Servlet.
+	// If specified, the filter will be applied to the resources in a workspace
+	// and allow restricting which of them will be handled by the Sync Agent.
 	Filter *ResourceFilter `json:"filter,omitempty"`
 
 	// Naming can be used to control how the namespace and names for local objects
-	// are formed. If not specified, the Servlet will use defensive defaults to
+	// are formed. If not specified, the Sync Agent will use defensive defaults to
 	// prevent naming collisions in the service cluster.
 	// When configuring this, great care must be taken to not allow for naming
 	// collisions to happen; keep in mind that the same name/namespace can exists in
-	// many different KDP workspaces.
+	// many different kcp workspaces.
 	Naming *ResourceNaming `json:"naming,omitempty"`
 
-	// Projection is used to change the GVK of a published resource within KDP.
+	// Projection is used to change the GVK of a published resource within kcp.
 	// This can be used to hide implementation details and provide a customized API
 	// experience to the user.
 	// All fields in the projection are optional. If a field is set, it will overwrite
@@ -87,18 +87,18 @@ type PublishedResourceSpec struct {
 
 // ResourceNaming describes how the names for local objects should be formed.
 type ResourceNaming struct {
-	// The name field allows to control the name the local objects created by the Servlet.
+	// The name field allows to control the name the local objects created by the Sync Agent.
 	// If left empty, "$remoteNamespaceHash-$remoteNameHash" is assumed. This guarantees unique
 	// names as long as the cluster name ($remoteClusterName) is used for the local namespace
 	// (the default unless configured otherwise).
 	// This is a string with placeholders. The following placeholders can be used:
 	//
-	//   - $remoteClusterName   -- the KDP workspace's cluster name (e.g. "1084s8ceexsehjm2")
-	//   - $remoteNamespace     -- the original namespace used by the consumer inside the KDP
+	//   - $remoteClusterName   -- the kcp workspace's cluster name (e.g. "1084s8ceexsehjm2")
+	//   - $remoteNamespace     -- the original namespace used by the consumer inside the kcp
 	//                             workspace (if targetNamespace is left empty, it's equivalent
 	//                             to setting "$remote_ns")
 	//   - $remoteNamespaceHash -- first 20 hex characters of the SHA-1 hash of $remoteNamespace
-	//   - $remoteName          -- the original name of the object inside the KDP workspace
+	//   - $remoteName          -- the original name of the object inside the kcp workspace
 	//                             (rarely used to construct local namespace names)
 	//   - $remoteNameHash      -- first 20 hex characters of the SHA-1 hash of $remoteName
 	//
@@ -108,12 +108,12 @@ type ResourceNaming struct {
 	// be created. If left empty, "$remoteClusterName" is assumed.
 	// This is a string with placeholders. The following placeholders can be used:
 	//
-	//   - $remoteClusterName   -- the KDP workspace's cluster name (e.g. "1084s8ceexsehjm2")
-	//   - $remoteNamespace     -- the original namespace used by the consumer inside the KDP
+	//   - $remoteClusterName   -- the kcp workspace's cluster name (e.g. "1084s8ceexsehjm2")
+	//   - $remoteNamespace     -- the original namespace used by the consumer inside the kcp
 	//                             workspace (if targetNamespace is left empty, it's equivalent
 	//                             to setting "$remote_ns")
 	//   - $remoteNamespaceHash -- first 20 hex characters of the SHA-1 hash of $remoteNamespace
-	//   - $remoteName          -- the original name of the object inside the KDP workspace
+	//   - $remoteName          -- the original name of the object inside the kcp workspace
 	//                             (rarely used to construct local namespace names)
 	//   - $remoteNameHash      -- first 20 hex characters of the SHA-1 hash of $remoteName
 	//
@@ -221,8 +221,7 @@ const (
 	NamespaceScoped ResourceScope = "Namespaced"
 )
 
-// ResourceProjection describes how the source GVK should be modified before it's published
-// in the KDP platform.
+// ResourceProjection describes how the source GVK should be modified before it's published in kcp.
 type ResourceProjection struct {
 	// The API version, for example "v1beta1".
 	Version string `json:"version,omitempty"`

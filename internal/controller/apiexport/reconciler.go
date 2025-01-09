@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,19 +20,18 @@ import (
 	"cmp"
 	"slices"
 
-	"k8c.io/servlet/internal/resources/reconciling"
-	"k8c.io/servlet/sdk/apis/services"
+	"github.com/kcp-dev/api-syncagent/internal/resources/reconciling"
+	"github.com/kcp-dev/api-syncagent/sdk/apis/services"
 
 	kcpdevv1alpha1 "github.com/kcp-dev/kcp/sdk/apis/apis/v1alpha1"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
-// createAPIExportReconciler creates the servlet reconciler for the APIExport.
-// WARNING: The APIExport in this is NOT created by the servlet, it's created
-// by a controller in cmd/kdp-controller-manager. Make sure you don't create a
-// reconciling conflict!
-func (r *Reconciler) createAPIExportReconciler(availableResourceSchemas sets.Set[string], claimedResourceKinds sets.Set[string], servletName string, apiExportName string) reconciling.NamedAPIExportReconcilerFactory {
+// createAPIExportReconciler creates the reconciler for the APIExport.
+// WARNING: The APIExport in this is NOT created by the Sync Agent, it's created
+// by a controller in kcp. Make sure you don't create a reconciling conflict!
+func (r *Reconciler) createAPIExportReconciler(availableResourceSchemas sets.Set[string], claimedResourceKinds sets.Set[string], agentName string, apiExportName string) reconciling.NamedAPIExportReconcilerFactory {
 	return func() (string, reconciling.APIExportReconciler) {
 		return apiExportName, func(existing *kcpdevv1alpha1.APIExport) (*kcpdevv1alpha1.APIExport, error) {
 			known := sets.New[string](existing.Spec.LatestResourceSchemas...)
@@ -40,7 +39,7 @@ func (r *Reconciler) createAPIExportReconciler(availableResourceSchemas sets.Set
 			if existing.Annotations == nil {
 				existing.Annotations = map[string]string{}
 			}
-			existing.Annotations[services.ServletNameAnnotation] = servletName
+			existing.Annotations[services.AgentNameAnnotation] = agentName
 
 			// we only ever add new schemas
 			result := known.Union(availableResourceSchemas)

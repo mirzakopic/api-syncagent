@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ type ObjectStateStore interface {
 
 // objectStateStore is capable of creating/updating a target Kubernetes object
 // based on a source object. It keeps track of the source's state so that fields
-// that are changed after/outside of the Servlet are not undone by accident.
+// that are changed after/outside of the Sync Agent are not undone by accident.
 // This is the same logic as kubectl has using its last-known annotation.
 type objectStateStore struct {
 	backend backend
@@ -134,7 +134,7 @@ func newKubernetesBackend(primaryObject, stateCluster syncSide) *kubernetesBacke
 		secretName: types.NamespacedName{
 			// trim hash down; 20 was chosen at random
 			Name:      fmt.Sprintf("obj-state-%s-%s", primaryObject.clusterName, keyHash[:20]),
-			Namespace: "kdp-system",
+			Namespace: "kcp-system",
 		},
 		labels:       secretLabels,
 		stateCluster: stateCluster,

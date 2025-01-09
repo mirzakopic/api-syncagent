@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28,11 +28,11 @@ import (
 	"github.com/kcp-dev/logicalcluster/v3"
 	"go.uber.org/zap"
 
-	"k8c.io/servlet/internal/controllerutil/predicate"
-	"k8c.io/servlet/internal/discovery"
-	"k8c.io/servlet/internal/projection"
-	"k8c.io/servlet/sdk/apis/services"
-	kdpservicesv1alpha1 "k8c.io/servlet/sdk/apis/services/v1alpha1"
+	"github.com/kcp-dev/api-syncagent/internal/controllerutil/predicate"
+	"github.com/kcp-dev/api-syncagent/internal/discovery"
+	"github.com/kcp-dev/api-syncagent/internal/projection"
+	"github.com/kcp-dev/api-syncagent/sdk/apis/services"
+	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
 
 	kcpdevv1alpha1 "github.com/kcp-dev/kcp/sdk/apis/apis/v1alpha1"
 
@@ -52,7 +52,7 @@ import (
 )
 
 const (
-	ControllerName = "servlet-apiresourceschema"
+	ControllerName = "syncagent-apiresourceschema"
 )
 
 type Reconciler struct {
@@ -61,7 +61,7 @@ type Reconciler struct {
 	log            *zap.SugaredLogger
 	recorder       record.EventRecorder
 	lcName         logicalcluster.Name
-	servletName    string
+	agentName      string
 	apiExportName  string
 }
 
@@ -72,7 +72,7 @@ func Add(
 	lcName logicalcluster.Name,
 	log *zap.SugaredLogger,
 	numWorkers int,
-	servletName string,
+	agentName string,
 	apiExportName string,
 	prFilter labels.Selector,
 ) error {
@@ -82,7 +82,7 @@ func Add(
 		lcName:         lcName,
 		log:            log.Named(ControllerName),
 		recorder:       mgr.GetEventRecorderFor(ControllerName),
-		servletName:    servletName,
+		agentName:      agentName,
 		apiExportName:  apiExportName,
 	}
 
@@ -90,7 +90,7 @@ func Add(
 		Named(ControllerName).
 		WithOptions(controller.Options{MaxConcurrentReconciles: numWorkers}).
 		// Watch for changes to PublishedResources on the local service cluster
-		For(&kdpservicesv1alpha1.PublishedResource{}, builder.WithPredicates(predicate.ByLabels(prFilter))).
+		For(&servicesv1alpha1.PublishedResource{}, builder.WithPredicates(predicate.ByLabels(prFilter))).
 		Build(reconciler)
 	return err
 }
@@ -99,7 +99,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	log := r.log.With("publishedresource", request)
 	log.Debug("Processing")
 
-	pubResource := &kdpservicesv1alpha1.PublishedResource{}
+	pubResource := &servicesv1alpha1.PublishedResource{}
 	if err := r.localClient.Get(ctx, request.NamespacedName, pubResource); err != nil {
 		return reconcile.Result{}, ctrlruntimeclient.IgnoreNotFound(err)
 	}
@@ -123,7 +123,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	return *result, err
 }
 
-func (r *Reconciler) reconcile(ctx context.Context, log *zap.SugaredLogger, pubResource *kdpservicesv1alpha1.PublishedResource) (*reconcile.Result, error) {
+func (r *Reconciler) reconcile(ctx context.Context, log *zap.SugaredLogger, pubResource *servicesv1alpha1.PublishedResource) (*reconcile.Result, error) {
 	// find the resource that the PublishedResource is referring to
 	localGVK := projection.PublishedResourceSourceGVK(pubResource)
 
@@ -181,7 +181,7 @@ func (r *Reconciler) createAPIResourceSchema(ctx context.Context, log *zap.Sugar
 	ars.Name = arsName
 	ars.Annotations = map[string]string{
 		services.SourceGenerationAnnotation: fmt.Sprintf("%d", projectedCRD.Generation),
-		services.ServletNameAnnotation:      r.servletName,
+		services.AgentNameAnnotation:        r.agentName,
 	}
 	ars.Labels = map[string]string{
 		services.APIGroupLabel: apigroup,
@@ -196,7 +196,7 @@ func (r *Reconciler) createAPIResourceSchema(ctx context.Context, log *zap.Sugar
 	return r.platformClient.Create(ctx, ars)
 }
 
-func (r *Reconciler) projectResourceNames(apiGroup string, crd *apiextensionsv1.CustomResourceDefinition, projection *kdpservicesv1alpha1.ResourceProjection) *apiextensionsv1.CustomResourceDefinition {
+func (r *Reconciler) projectResourceNames(apiGroup string, crd *apiextensionsv1.CustomResourceDefinition, projection *servicesv1alpha1.ResourceProjection) *apiextensionsv1.CustomResourceDefinition {
 	result := crd.DeepCopy()
 	result.Spec.Group = apiGroup
 

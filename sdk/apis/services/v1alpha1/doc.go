@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// +groupName=services.kdp.k8c.io
+// +groupName=services.syncagent.kcp.io
 // +versionName=v1alpha1
 // +kubebuilder:object:generate=true
 package v1alpha1

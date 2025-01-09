@@ -1,4 +1,4 @@
-# Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+# Copyright 2025 The KCP Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ GOBUILDFLAGS ?= -v
 GIT_HEAD ?= $(shell git log -1 --format=%H)
 GIT_VERSION = $(shell git describe --tags --always)
 LDFLAGS += -extldflags '-static' \
-  -X k8c.io/servlet/internal/version.gitVersion=$(GIT_VERSION) \
-  -X k8c.io/servlet/internal/version.gitHead=$(GIT_HEAD)
+  -X github.com/kcp-dev/api-syncagent/internal/version.gitVersion=$(GIT_VERSION) \
+  -X github.com/kcp-dev/api-syncagent/internal/version.gitHead=$(GIT_HEAD)
 BUILD_DEST ?= _build
 GOTOOLFLAGS ?= $(GOBUILDFLAGS) -ldflags '-w $(LDFLAGS)' $(GOTOOLFLAGS_EXTRA)
 

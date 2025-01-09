@@ -1,4 +1,4 @@
-# Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+# Copyright 2025 The KCP Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,14 +19,13 @@ FROM docker.io/golang:1.23.4 as builder
 ARG GOPROXY=
 ENV GOPROXY=$GOPROXY
 
-WORKDIR /go/src/k8c.io/servlet
+WORKDIR /go/src/github.com/kcp-dev/api-syncagent
 COPY . .
-RUN make clean servlet
+RUN make clean api-syncagent
 
 FROM gcr.io/distroless/static-debian12:debug
-LABEL maintainer="support@kubermatic.com"
 
-COPY --from=builder /go/src/k8c.io/servlet/_build/servlet /usr/local/bin/servlet
+COPY --from=builder /go/src/github.com/kcp-dev/api-syncagent/_build/api-syncagent /usr/local/bin/api-syncagent
 
 USER nobody
-ENTRYPOINT [ "servlet" ]
+ENTRYPOINT [ "api-syncagent" ]

@@ -1,38 +1,36 @@
-# The Servlet
+# The kcp Sync Agent
 
-The Servlet is a Kubernetes agent responsible for integrating external Kubernetes clusters.
+The Sync Agent is a Kubernetes agent responsible for integrating external Kubernetes clusters.
 It runs on a Kubernetes cluster, is configured with credentials to a kcp instance and will then
 synchronize data out of kcp (i.e. out of kcp workspaces) onto the local cluster, and vice versa.
-
-The name Servlet is an obvious reference to the "kubelet" in a regular Kubernetes cluster.
 
 ## High-level Overview
 
 The intended usecase follows roughly these steps:
 
-1. A user in KDP with sufficient permissions creates an `APIExport` object and provides appropriate
-   credentials for the Servlet (e.g. by creating a Kubernetes Secret with a preconfigured kubeconfig
+1. A user in kcp with sufficient permissions creates an `APIExport` object and provides appropriate
+   credentials for the Sync Agent (e.g. by creating a Kubernetes Secret with a preconfigured kubeconfig
    in it).
 3. A service owner will now take these credentials and the configured API group (the `APIExport`'s
-   name) and use them to setup the Servlet. It is assumed that the service owner (i.e. the
+   name) and use them to setup the Sync Agent. It is assumed that the service owner (i.e. the
    cluster-admin in a service cluster) wants to make some resources (usually CRDs) available to use
    inside of kcp.
-4. The service owner uses the Servlet Helm chart (or similar deployment technique) to install the
-   Servlet in their cluster.
+4. The service owner uses the Sync Agent Helm chart (or similar deployment technique) to install the
+   Sync Agent in their cluster.
 5. To actually make resources available in the platform, the service owner now has to create a
    set of `PublishedResource` objects. The configuration happens from their point of view, meaning
    they define how to publish a CRD to the platform, defining renaming rules and other projection
    settings.
-6. Once a `PublishedResource` is created in the service cluster, the Servlet will pick it up,
+6. Once a `PublishedResource` is created in the service cluster, the Sync Agent will pick it up,
    find the referenced CRD, convert/project this CRD into an `APIResourceSchema` (ARS) for kcp and
    then create the ARS in org workspace.
-7. Finally the Servlet will take all `PublishedResources` and bundle them into the pre-existing
+7. Finally the Sync Agent will take all `PublishedResources` and bundle them into the pre-existing
    `APIExport` in the org workspace. This APIExport can then be bound in the org workspace itself
    (or later any workspaces (depending on permissions)) and be used there.
-8. kcp automatically provides a virtual workspace for the `APIExport` and this is what the Servlet
+8. kcp automatically provides a virtual workspace for the `APIExport` and this is what the Sync Agent
    then uses to watch all objects for the relevant resources in the platform (i.e. in all workspaces).
-9. The Servlet will now begin to synchronize objects back and forth between the service cluster
-   and KDP.
+9. The Sync Agent will now begin to synchronize objects back and forth between the service cluster
+   and kcp.
 
 ## Details
 
@@ -52,25 +50,25 @@ acquire the certificate and create a Kubernetes `Secret`, which will have to be 
 a kcp workspace, where the certificate originated from). So the source of truth can also be, for
 auxiliary resources, on the service cluster.
 
-### Servlet Naming
+### Sync Agent Naming
 
-Each Servlet must have a name, like "nora" or "oskar". The FQ name for a Servlet is
-`<servletname>.<apigroup>`, so if the user in KDP had created a new `APIExport` named
-`databases.examplecorp`, the name of the Servlet that serves this Service (sic) could be
+Each Sync Agent must have a name, like "nora" or "oskar". The FQ name for a Sync Agent is
+`<agentname>.<apigroup>`, so if the user in kcp had created a new `APIExport` named
+`databases.examplecorp`, the name of the Sync Agent that serves this Service (sic) could be
 `nora.databases.examplecorp`.
 
 ### Uniqueness
 
-A single `APIExport` in kcp must only be processed by exactly 1 Servlet. There is currently no
+A single `APIExport` in kcp must only be processed by exactly 1 Sync Agent. There is currently no
 mechanism planned to subdivide an `APIExport` into shards, where multiple service clusters (and
-therefore multiple Servlets) could process each shard.
+therefore multiple Sync Agents) could process each shard.
 
-Later the Servlet might be extended with Label Selectors, alternatively they might also "claim" any
+Later the Sync Agent might be extended with Label Selectors, alternatively they might also "claim" any
 object by annotating it in the kcp workspace. These things are not yet worked out, so for now we have
 this 1:1 restriction.
 
-Servlets make use of leader election, so it's perfectly fine to have multiple Servlet replicas, as
-long as only one them is leader and actually doing work.
+Sync Agents make use of leader election, so it's perfectly fine to have multiple Sync Agent replicas,
+as long as only one them is leader and actually doing work.
 
 ### kcp-awareness
 
@@ -79,14 +77,14 @@ aware of the workspace information. This however is neither well tested upstream
 require shard-admin permissions to behave like this work regular kcp workspaces. The controller-runtime
 fork's kcp-awareness is really more geared towards working in virtual workspaces.
 
-Because of this the Servlet needs to get a kubeconfig to kcp that already points to the `APIExport`'s
+Because of this the Sync Agent needs to get a kubeconfig to kcp that already points to the `APIExport`'s
 workspace (i.e. the `server` URL already contains a `/clusters/root:myorg` path). The basic
-controllers in the Servlet then treat this as a plain ol', regular Kubernetes cluster
+controllers in the Sync Agent then treat this as a plain ol', regular Kubernetes cluster
 (no kcp-awareness).
 
-To this end, the Servlet will, upon startup, try to access the `cluster` object in the target
+To this end, the Sync Agent will, upon startup, try to access the `cluster` object in the target
 workspace. This is to resolve the cluster name (e.g. `root:myorg`) into a logicalcluster name (e.g.
-`gibd3r1sh`). The Servlet has to know which logicalcluster the target workspace represents in order
+`gibd3r1sh`). The Sync Agent has to know which logicalcluster the target workspace represents in order
 to query resources properly.
 
 Only the controllers that are later responsible for interacting with the virtual workspace are
@@ -99,15 +97,15 @@ projected (i.e. renamed), so a `kubermatic.k8c.io/v1 Cluster` can become a
 `cloud.examplecorp/v1 KubernetesCluster`.
 
 In addition to projecting (mapping) the GVK, the `PublishedResource` also contains optional naming
-rules, which influence how the local objects that the Servlet is creating are named.
+rules, which influence how the local objects that the Sync Agent is creating are named.
 
-As a single Servlet serves a single service, the API group used in kcp is the same for all
+As a single Sync Agent serves a single service, the API group used in kcp is the same for all
 `PublishedResources`. It's the API group configured in the `APIExport` inside the platform (created
 in step 1 in the overview above).
 
 To prevent chaos, `PublishedResources` are immutable: handling the case that a PR first wants to
 publish `kubermatic.k8c.io/v1 Cluster` and then suddenly `kubermatic.k8c.io/v1 User` resources would
-mean to re-sync and cleanup everything in all affected kcp workspaces. The Servlet would need to be
+mean to re-sync and cleanup everything in all affected kcp workspaces. The Sync Agent would need to be
 able to delete and recreate objects to follow this GVK change, which is a level of complexity we
 simply do not want to deal with at this point in time. Also, `APIResourceSchemas` are immutable
 themselves.
@@ -121,20 +119,20 @@ An `APIExport` in kcp combines multiple `APIResourceSchemas` (ARS). Each ARS is 
 
 To prevent data loss, ARS are never removed from an `APIExport`. We simply do not have enough
 experience to really know what happens when an ARS would suddenly become unavailable. To prevent
-damage and confusion, the Servlet will only ever add new ARS to the one `APIExport` it manages.
+damage and confusion, the Sync Agent will only ever add new ARS to the one `APIExport` it manages.
 
 ## Controllers
 
-The Servlet consists of a number of independent controllers.
+The Sync Agent consists of a number of independent controllers.
 
 ### apiexport
 
-This controller aggregates the `PublishedResources` and manages a single `APIExport` in KDP.
+This controller aggregates the `PublishedResources` and manages a single `APIExport` in kcp.
 
 ### apiresourceschema
 
 This controller takes `PublishedResources`, projects and converts them and creates `APIResourceSchemas`
-in KDP.
+in kcp.
 
 ### syncmanager
 

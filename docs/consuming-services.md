@@ -1,6 +1,6 @@
 # Consuming Services
 
-This document describes how to use (consume) services offered by a Servlet.
+This document describes how to use (consume) services offered by a Sync Agent.
 
 ## Background
 
@@ -12,8 +12,8 @@ Services are provided by service owners, who run their own Kubernetes clusters a
 maintenance and scaling tasks for the workload provisioned by all users of the service(s) they
 offer.
 
-A Service provided by a Servlet should not be confused with a Kubernetes Service. Internally, a
-"Servlet Service" is ultimately translated into a kcp `APIExport` with a number of
+A Service provided by a Sync Agent should not be confused with a Kubernetes Service. Internally, a
+"Sync Agent Service" is ultimately translated into a kcp `APIExport` with a number of
 `APIResourceSchemas` (which are more or less equivalent to CRDs).
 
 ## Consuming a Service
@@ -29,7 +29,7 @@ kubeconfig up, make sure you're in the correct namespace by using
 To enable a Service, use `kcp bind apiexport` and specify the path to and name of the `APIExport`.
 
 ```bash
-# kubectl kcp bind apiexport <path to KDP Service>:<API Group of the Service>
+# kubectl kcp bind apiexport <path to APIExport>:<API Group of the Service>
 kubectl kcp bind apiexport :root:my-org:my.fancy.api
 ```
 
@@ -59,7 +59,7 @@ the claimed resources, you have to accept or reject them:
 ```yaml
 spec:
   permissionClaims:
-    # Nearly all Servlets require access to namespaces, rejecting this will
+    # Nearly all Sync Agents require access to namespaces, rejecting this will
     # most likely break the Service, even more than rejecting any other claim.
     - all: true
       resources: namespaces

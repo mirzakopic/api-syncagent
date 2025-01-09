@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubermatic Kubernetes Platform contributors.
+Copyright 2025 The KCP Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import (
 	"go.uber.org/zap"
 	"k8c.io/reconciler/pkg/equality"
 
-	"k8c.io/servlet/internal/mutation"
+	"github.com/kcp-dev/api-syncagent/internal/mutation"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -139,7 +139,7 @@ func (s *objectSyncer) applyMutations(source, dest syncSide) (syncSide, syncSide
 
 	// if the destination object already exists, we can mutate its status as well
 	// (this is mostly only relevant for the primary object sync, which goes
-	// kdp->service cluster; related resources do not backsync the status subresource).
+	// kcp->service cluster; related resources do not backsync the status subresource).
 	if dest.object != nil {
 		destObject, err = s.mutator.MutateStatus(dest.object.DeepCopy(), sourceObj)
 		if err != nil {
