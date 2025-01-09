@@ -17,9 +17,8 @@ limitations under the License.
 package sync
 
 import (
+	"maps"
 	"strings"
-
-	"golang.org/x/exp/maps"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"

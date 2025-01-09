@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"slices"
 
-	jsonpatch "github.com/evanphx/json-patch"
+	jsonpatch "github.com/evanphx/json-patch/v5"
 	"go.uber.org/zap"
 	"k8c.io/reconciler/pkg/equality"
 
