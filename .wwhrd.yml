@@ -27,7 +27,9 @@ allowlist:
   - ISC
 
 exceptions:
-  - github.com/muhlemmer/gu # public domain, required for zitadel/oidc
+  - github.com/hashicorp/golang-lru/v2 # MPL 2.0
+  - github.com/hashicorp/golang-lru/v2/internal # MPL 2.0
+  - github.com/hashicorp/golang-lru/v2/simplelru # MPL 2.0
   - github.com/hashicorp/hcl # MPL 2.0
   - github.com/hashicorp/hcl/hcl/ast # MPL 2.0
   - github.com/hashicorp/hcl/hcl/parser # MPL 2.0

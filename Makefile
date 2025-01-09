@@ -24,6 +24,8 @@ LDFLAGS += -extldflags '-static' \
   -X github.com/kcp-dev/api-syncagent/internal/version.gitHead=$(GIT_HEAD)
 BUILD_DEST ?= _build
 GOTOOLFLAGS ?= $(GOBUILDFLAGS) -ldflags '-w $(LDFLAGS)' $(GOTOOLFLAGS_EXTRA)
+GOARCH ?= $(shell go env GOARCH)
+GOOS ?= $(shell go env GOOS)
 
 .PHONY: all
 all: build test
@@ -36,6 +38,47 @@ $(CMD): %: $(BUILD_DEST)/%
 
 $(BUILD_DEST)/%: cmd/%
 	go build $(GOTOOLFLAGS) -o $@ ./cmd/$*
+
+GOLANGCI_LINT = _tools/golangci-lint
+GOLANGCI_LINT_VERSION = 1.63.4
+
+.PHONY: $(GOLANGCI_LINT)
+$(GOLANGCI_LINT):
+	@hack/download-tool.sh \
+	  https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_LINT_VERSION}/golangci-lint-${GOLANGCI_LINT_VERSION}-${GOOS}-${GOARCH}.tar.gz \
+	  golangci-lint \
+	  ${GOLANGCI_LINT_VERSION}
+
+GIMPS = _tools/gimps
+GIMPS_VERSION = 0.6.0
+
+.PHONY: $(GIMPS)
+$(GIMPS):
+	@hack/download-tool.sh \
+	  https://github.com/xrstf/gimps/releases/download/v${GIMPS_VERSION}/gimps_${GIMPS_VERSION}_${GOOS}_${GOARCH}.tar.gz \
+	  gimps \
+	  ${GIMPS_VERSION}
+
+WWHRD = _tools/wwhrd
+WWHRD_VERSION = 0.4.0
+
+.PHONY: $(WWHRD)
+$(WWHRD):
+	@hack/download-tool.sh \
+	  https://github.com/frapposelli/wwhrd/releases/download/v${WWHRD_VERSION}/wwhrd_${WWHRD_VERSION}_${GOOS}_${GOARCH}.tar.gz \
+	  wwhrd \
+	  ${WWHRD_VERSION} \
+	  wwhrd
+
+BOILERPLATE = _tools/boilerplate
+BOILERPLATE_VERSION = 0.3.0
+
+.PHONY: $(BOILERPLATE)
+$(BOILERPLATE):
+	@hack/download-tool.sh \
+	  https://github.com/kubermatic-labs/boilerplate/releases/download/v${BOILERPLATE_VERSION}/boilerplate_${BOILERPLATE_VERSION}_${GOOS}_${GOARCH}.tar.gz \
+	  boilerplate \
+	  ${BOILERPLATE_VERSION}
 
 .PHONY: test
 test:
@@ -56,14 +99,17 @@ clean:
 	@echo "Cleaned $(BUILD_DEST)"
 
 .PHONY: lint
-lint:
-	golangci-lint run \
+lint: $(GOLANGCI_LINT)
+	$(GOLANGCI_LINT) run \
 		--verbose \
 		--print-resources-usage \
 		./...
 
+.PHONY: imports
+imports: $(GIMPS)
+	$(GIMPS) .
+
 .PHONY: verify
 verify:
 	./hack/verify-boilerplate.sh
-	./hack/verify-import-order.sh
 	./hack/verify-licenses.sh
