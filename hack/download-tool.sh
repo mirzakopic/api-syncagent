@@ -44,8 +44,8 @@ fi
   mkdir -p tmp
   cd tmp
 
-  echo "Downloading $BINARY…" >&2
-  curl --fail -LO "$URL"
+  echo "Downloading $BINARY version $VERSION…" >&2
+  curl --fail --silent -LO "$URL"
   archive="$(ls)"
 
   UNCOMPRESSED=${UNCOMPRESSED:-false}
@@ -71,4 +71,4 @@ fi
 rm -rf tmp
 echo "$VERSION" > "$versionFile"
 
-echo "Installed $BINARY version $VERSION." >&2
+echo "Installed at _tools/$BINARY." >&2
