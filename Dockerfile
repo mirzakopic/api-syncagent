@@ -12,16 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM docker.io/golang:1.23.4 as builder
-
-# import the GOPROXY variable via an arg and then use
-# that arg to define the environment variable later on
-ARG GOPROXY=
-ENV GOPROXY=$GOPROXY
+FROM --platform=${BUILDPLATFORM} docker.io/golang:1.23.4 AS builder
+ARG TARGETOS
+ARG TARGETARCH
 
 WORKDIR /go/src/github.com/kcp-dev/api-syncagent
 COPY . .
-RUN make clean api-syncagent
+RUN GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} make clean api-syncagent
 
 FROM gcr.io/distroless/static-debian12:debug
 
