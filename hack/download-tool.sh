@@ -48,17 +48,21 @@ fi
   curl --fail -LO "$URL"
   archive="$(ls)"
 
-  case "$archive" in
-    *.tar.gz | *.tgz)
-      tar xzf "$archive"
-      ;;
-    *.zip)
-      unzip "$archive"
-      ;;
-    *)
-      echo "Unknown file type: $archive" >&2
-      exit 1
-  esac
+  UNCOMPRESSED=${UNCOMPRESSED:-false}
+
+  if ! $UNCOMPRESSED; then
+    case "$archive" in
+      *.tar.gz | *.tgz)
+        tar xzf "$archive"
+        ;;
+      *.zip)
+        unzip "$archive"
+        ;;
+      *)
+        echo "Unknown file type: $archive" >&2
+        exit 1
+    esac
+  fi
 
   mv $BINARY_PATTERN ../$BINARY
   chmod +x ../$BINARY

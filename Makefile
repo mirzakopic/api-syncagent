@@ -80,12 +80,23 @@ $(BOILERPLATE):
 	  boilerplate \
 	  ${BOILERPLATE_VERSION}
 
+YQ = _tools/yq
+YQ_VERSION = 4.44.6
+
+.PHONY: $(YQ)
+$(YQ):
+	@UNCOMPRESSED=true hack/download-tool.sh \
+	  https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_${GOOS}_${GOARCH} \
+	  yq \
+	  ${YQ_VERSION} \
+	  yq_*
+
 .PHONY: test
 test:
 	./hack/run-tests.sh
 
 .PHONY: codegen
-codegen:
+codegen: $(YQ)
 	hack/update-codegen-crds.sh
 	hack/update-codegen-sdk.sh
 
