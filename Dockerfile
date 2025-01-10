@@ -16,6 +16,10 @@ FROM --platform=${BUILDPLATFORM} docker.io/golang:1.23.4 AS builder
 ARG TARGETOS
 ARG TARGETARCH
 
+LABEL org.opencontainers.image.source=https://github.com/kcp-dev/api-syncagent
+LABEL org.opencontainers.image.description="A Kubernetes agent to synchronize APIs and their objects between Kubernetes clusters and kcp"
+LABEL org.opencontainers.image.licenses=Apache-2.0
+
 WORKDIR /go/src/github.com/kcp-dev/api-syncagent
 COPY . .
 RUN GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} make clean api-syncagent
