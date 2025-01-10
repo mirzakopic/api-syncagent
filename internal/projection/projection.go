@@ -17,14 +17,14 @@ limitations under the License.
 package projection
 
 import (
-	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
+	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // PublishedResourceSourceGVK returns the source GVK of the local resources
 // that are supposed to be published.
-func PublishedResourceSourceGVK(pubRes *servicesv1alpha1.PublishedResource) schema.GroupVersionKind {
+func PublishedResourceSourceGVK(pubRes *syncagentv1alpha1.PublishedResource) schema.GroupVersionKind {
 	return schema.GroupVersionKind{
 		Group:   pubRes.Spec.Resource.APIGroup,
 		Version: pubRes.Spec.Resource.Version,
@@ -34,7 +34,7 @@ func PublishedResourceSourceGVK(pubRes *servicesv1alpha1.PublishedResource) sche
 
 // PublishedResourceProjectedGVK returns the effective GVK after the projection
 // rules have been applied according to the PublishedResource.
-func PublishedResourceProjectedGVK(pubRes *servicesv1alpha1.PublishedResource, platformAPIGroup string) schema.GroupVersionKind {
+func PublishedResourceProjectedGVK(pubRes *syncagentv1alpha1.PublishedResource, platformAPIGroup string) schema.GroupVersionKind {
 	apiVersion := pubRes.Spec.Resource.Version
 	kind := pubRes.Spec.Resource.Kind
 

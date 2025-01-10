@@ -19,7 +19,7 @@ package mutation
 import (
 	"fmt"
 
-	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
+	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
@@ -36,14 +36,14 @@ type Mutator interface {
 }
 
 type mutator struct {
-	spec *servicesv1alpha1.ResourceMutationSpec
+	spec *syncagentv1alpha1.ResourceMutationSpec
 }
 
 var _ Mutator = &mutator{}
 
 // NewMutator creates a new mutator, which will apply the mutation rules to a synced object, in
 // both directions. A nil spec is supported and will simply make the mutator not do anything.
-func NewMutator(spec *servicesv1alpha1.ResourceMutationSpec) Mutator {
+func NewMutator(spec *syncagentv1alpha1.ResourceMutationSpec) Mutator {
 	return &mutator{
 		spec: spec,
 	}

@@ -24,7 +24,7 @@ package informers
 import (
 	"fmt"
 
-	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
+	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
 	kcpcache "github.com/kcp-dev/apimachinery/v2/pkg/cache"
 	"github.com/kcp-dev/logicalcluster/v3"
 
@@ -85,9 +85,9 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericClusterInformer, error) {
 	switch resource {
-	// Group=services.syncagent.kcp.io, Version=V1alpha1
-	case servicesv1alpha1.SchemeGroupVersion.WithResource("publishedresources"):
-		return &genericClusterInformer{resource: resource.GroupResource(), informer: f.Services().V1alpha1().PublishedResources().Informer()}, nil
+	// Group=syncagent.kcp.io, Version=V1alpha1
+	case syncagentv1alpha1.SchemeGroupVersion.WithResource("publishedresources"):
+		return &genericClusterInformer{resource: resource.GroupResource(), informer: f.Syncagent().V1alpha1().PublishedResources().Informer()}, nil
 	}
 
 	return nil, fmt.Errorf("no informer found for %v", resource)
@@ -97,9 +97,9 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 // TODO extend this to unknown resources with a client pool
 func (f *sharedScopedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=services.syncagent.kcp.io, Version=V1alpha1
-	case servicesv1alpha1.SchemeGroupVersion.WithResource("publishedresources"):
-		informer := f.Services().V1alpha1().PublishedResources().Informer()
+	// Group=syncagent.kcp.io, Version=V1alpha1
+	case syncagentv1alpha1.SchemeGroupVersion.WithResource("publishedresources"):
+		informer := f.Syncagent().V1alpha1().PublishedResources().Informer()
 		return &genericInformer{lister: cache.NewGenericLister(informer.GetIndexer(), resource.GroupResource()), informer: informer}, nil
 	}
 

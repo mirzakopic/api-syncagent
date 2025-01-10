@@ -24,7 +24,7 @@ import (
 
 	"github.com/kcp-dev/api-syncagent/internal/mutation"
 	"github.com/kcp-dev/api-syncagent/internal/projection"
-	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
+	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
 
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -39,7 +39,7 @@ type ResourceSyncer struct {
 
 	localClient  ctrlruntimeclient.Client
 	remoteClient ctrlruntimeclient.Client
-	pubRes       *servicesv1alpha1.PublishedResource
+	pubRes       *syncagentv1alpha1.PublishedResource
 	localCRD     *apiextensionsv1.CustomResourceDefinition
 	subresources []string
 
@@ -55,7 +55,7 @@ func NewResourceSyncer(
 	log *zap.SugaredLogger,
 	localClient ctrlruntimeclient.Client,
 	remoteClient ctrlruntimeclient.Client,
-	pubRes *servicesv1alpha1.PublishedResource,
+	pubRes *syncagentv1alpha1.PublishedResource,
 	localCRD *apiextensionsv1.CustomResourceDefinition,
 	remoteAPIGroup string,
 	mutator mutation.Mutator,
@@ -211,17 +211,17 @@ func (s *ResourceSyncer) createLocalObjectCreator(ctx Context) objectCreatorFunc
 		destObj.SetGroupVersionKind(s.destDummy.GroupVersionKind())
 
 		// change scope if desired
-		destScope := servicesv1alpha1.ResourceScope(s.localCRD.Spec.Scope)
+		destScope := syncagentv1alpha1.ResourceScope(s.localCRD.Spec.Scope)
 
 		// map namespace/name
 		mappedName := projection.GenerateLocalObjectName(s.pubRes, remoteObj, logicalcluster.Name(ctx.clusterName))
 
 		switch destScope {
-		case servicesv1alpha1.ClusterScoped:
+		case syncagentv1alpha1.ClusterScoped:
 			destObj.SetNamespace("")
 			destObj.SetName(mappedName.Name)
 
-		case servicesv1alpha1.NamespaceScoped:
+		case syncagentv1alpha1.NamespaceScoped:
 			destObj.SetNamespace(mappedName.Namespace)
 			destObj.SetName(mappedName.Name)
 		}

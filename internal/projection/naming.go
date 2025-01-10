@@ -24,30 +24,30 @@ import (
 
 	"github.com/kcp-dev/logicalcluster/v3"
 
-	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
+	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var DefaultNamingScheme = servicesv1alpha1.ResourceNaming{
-	Namespace: servicesv1alpha1.PlaceholderRemoteClusterName,
-	Name:      fmt.Sprintf("%s-%s", servicesv1alpha1.PlaceholderRemoteNamespaceHash, servicesv1alpha1.PlaceholderRemoteNameHash),
+var DefaultNamingScheme = syncagentv1alpha1.ResourceNaming{
+	Namespace: syncagentv1alpha1.PlaceholderRemoteClusterName,
+	Name:      fmt.Sprintf("%s-%s", syncagentv1alpha1.PlaceholderRemoteNamespaceHash, syncagentv1alpha1.PlaceholderRemoteNameHash),
 }
 
-func GenerateLocalObjectName(pr *servicesv1alpha1.PublishedResource, object metav1.Object, clusterName logicalcluster.Name) types.NamespacedName {
+func GenerateLocalObjectName(pr *syncagentv1alpha1.PublishedResource, object metav1.Object, clusterName logicalcluster.Name) types.NamespacedName {
 	naming := pr.Spec.Naming
 	if naming == nil {
-		naming = &servicesv1alpha1.ResourceNaming{}
+		naming = &syncagentv1alpha1.ResourceNaming{}
 	}
 
 	replacer := strings.NewReplacer(
 		// order of elements is important here, "$fooHash" needs to be defined before "$foo"
-		servicesv1alpha1.PlaceholderRemoteClusterName, clusterName.String(),
-		servicesv1alpha1.PlaceholderRemoteNamespaceHash, shortSha1Hash(object.GetNamespace()),
-		servicesv1alpha1.PlaceholderRemoteNamespace, object.GetNamespace(),
-		servicesv1alpha1.PlaceholderRemoteNameHash, shortSha1Hash(object.GetName()),
-		servicesv1alpha1.PlaceholderRemoteName, object.GetName(),
+		syncagentv1alpha1.PlaceholderRemoteClusterName, clusterName.String(),
+		syncagentv1alpha1.PlaceholderRemoteNamespaceHash, shortSha1Hash(object.GetNamespace()),
+		syncagentv1alpha1.PlaceholderRemoteNamespace, object.GetNamespace(),
+		syncagentv1alpha1.PlaceholderRemoteNameHash, shortSha1Hash(object.GetName()),
+		syncagentv1alpha1.PlaceholderRemoteName, object.GetName(),
 	)
 
 	result := types.NamespacedName{}

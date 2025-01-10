@@ -28,7 +28,7 @@ import (
 
 	dummyv1alpha1 "github.com/kcp-dev/api-syncagent/internal/sync/apis/dummy/v1alpha1"
 	"github.com/kcp-dev/api-syncagent/internal/test/diff"
-	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
+	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
 
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -126,7 +126,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 		name                 string
 		remoteAPIGroup       string
 		localCRD             *apiextensionsv1.CustomResourceDefinition
-		pubRes               *servicesv1alpha1.PublishedResource
+		pubRes               *syncagentv1alpha1.PublishedResource
 		remoteObject         *unstructured.Unstructured
 		localObject          *unstructured.Unstructured
 		existingState        string
@@ -139,18 +139,18 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 
 	clusterName := logicalcluster.Name("testcluster")
 
-	remoteThingPR := &servicesv1alpha1.PublishedResource{
-		Spec: servicesv1alpha1.PublishedResourceSpec{
-			Resource: servicesv1alpha1.SourceResourceDescriptor{
+	remoteThingPR := &syncagentv1alpha1.PublishedResource{
+		Spec: syncagentv1alpha1.PublishedResourceSpec{
+			Resource: syncagentv1alpha1.SourceResourceDescriptor{
 				APIGroup: dummyv1alpha1.GroupName,
 				Version:  dummyv1alpha1.GroupVersion,
 				Kind:     "Thing",
 			},
-			Projection: &servicesv1alpha1.ResourceProjection{
+			Projection: &syncagentv1alpha1.ResourceProjection{
 				Kind: "RemoteThing",
 			},
 			// include explicit naming rules to be independent of possible changes to the defaults
-			Naming: &servicesv1alpha1.ResourceNaming{
+			Naming: &syncagentv1alpha1.ResourceNaming{
 				Name: "$remoteClusterName-$remoteName", // Things are Cluster-scoped
 			},
 		},
@@ -908,7 +908,7 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 		name                 string
 		remoteAPIGroup       string
 		localCRD             *apiextensionsv1.CustomResourceDefinition
-		pubRes               *servicesv1alpha1.PublishedResource
+		pubRes               *syncagentv1alpha1.PublishedResource
 		remoteObject         *unstructured.Unstructured
 		localObject          *unstructured.Unstructured
 		existingState        string
@@ -921,18 +921,18 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 
 	clusterName := logicalcluster.Name("testcluster")
 
-	remoteThingPR := &servicesv1alpha1.PublishedResource{
-		Spec: servicesv1alpha1.PublishedResourceSpec{
-			Resource: servicesv1alpha1.SourceResourceDescriptor{
+	remoteThingPR := &syncagentv1alpha1.PublishedResource{
+		Spec: syncagentv1alpha1.PublishedResourceSpec{
+			Resource: syncagentv1alpha1.SourceResourceDescriptor{
 				APIGroup: dummyv1alpha1.GroupName,
 				Version:  dummyv1alpha1.GroupVersion,
 				Kind:     "ThingWithStatusSubresource",
 			},
-			Projection: &servicesv1alpha1.ResourceProjection{
+			Projection: &syncagentv1alpha1.ResourceProjection{
 				Kind: "RemoteThing",
 			},
 			// include explicit naming rules to be independent of possible changes to the defaults
-			Naming: &servicesv1alpha1.ResourceNaming{
+			Naming: &syncagentv1alpha1.ResourceNaming{
 				Name: "$remoteClusterName-$remoteName", // Things are Cluster-scoped
 			},
 		},

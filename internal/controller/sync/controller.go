@@ -28,7 +28,7 @@ import (
 	"github.com/kcp-dev/api-syncagent/internal/mutation"
 	"github.com/kcp-dev/api-syncagent/internal/projection"
 	"github.com/kcp-dev/api-syncagent/internal/sync"
-	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
+	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -59,7 +59,7 @@ func Create(
 	ctx context.Context,
 	localManager manager.Manager,
 	virtualWorkspaceCluster cluster.Cluster,
-	pubRes *servicesv1alpha1.PublishedResource,
+	pubRes *syncagentv1alpha1.PublishedResource,
 	discoveryClient *discovery.Client,
 	apiExportName string,
 	log *zap.SugaredLogger,

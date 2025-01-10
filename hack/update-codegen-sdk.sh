@@ -34,11 +34,11 @@ go run k8s.io/code-generator/cmd/applyconfiguration-gen \
   --go-header-file "$BOILERPLATE_HEADER" \
   --output-dir $SDK_DIR/applyconfiguration \
   --output-pkg $SDK_PKG/applyconfiguration \
-  $APIS_PKG/services/v1alpha1
+  $APIS_PKG/syncagent/v1alpha1
 
 go run k8s.io/code-generator/cmd/client-gen \
   --input-base "" \
-  --input $APIS_PKG/services/v1alpha1 \
+  --input $APIS_PKG/syncagent/v1alpha1 \
   --clientset-name versioned \
   --go-header-file "$BOILERPLATE_HEADER" \
   --output-dir $SDK_DIR/clientset \

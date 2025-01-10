@@ -21,7 +21,7 @@ import (
 	"slices"
 
 	"github.com/kcp-dev/api-syncagent/internal/resources/reconciling"
-	"github.com/kcp-dev/api-syncagent/sdk/apis/services"
+	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
 
 	kcpdevv1alpha1 "github.com/kcp-dev/kcp/sdk/apis/apis/v1alpha1"
 
@@ -39,7 +39,7 @@ func (r *Reconciler) createAPIExportReconciler(availableResourceSchemas sets.Set
 			if existing.Annotations == nil {
 				existing.Annotations = map[string]string{}
 			}
-			existing.Annotations[services.AgentNameAnnotation] = agentName
+			existing.Annotations[syncagentv1alpha1.AgentNameAnnotation] = agentName
 
 			// we only ever add new schemas
 			result := known.Union(availableResourceSchemas)

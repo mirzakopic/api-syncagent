@@ -1,6 +1,6 @@
-# The kcp Sync Agent
+# Documentation
 
-The Sync Agent is a Kubernetes agent responsible for integrating external Kubernetes clusters.
+kcp-api-syncagent is a Kubernetes agent responsible for integrating external Kubernetes clusters.
 It runs on a Kubernetes cluster, is configured with credentials to a kcp instance and will then
 synchronize data out of kcp (i.e. out of kcp workspaces) onto the local cluster, and vice versa.
 
