@@ -120,10 +120,10 @@ following ruleset:
 Once this `values.yaml` file is prepared, install a recent development build of the Sync Agent:
 
 ```sh
-helm install kcp-sync-agent oci://github.com/kcp-dev/helm-charts/api-syncagent --version 9.9.9-9fc9a430d95f95f4b2210f91ef67b3ec153b5cab -f values.yaml -n kcp-system
+helm install kcp-api-syncagent oci://github.com/kcp-dev/helm-charts/api-syncagent --version 9.9.9-9fc9a430d95f95f4b2210f91ef67b3ec153b5cab -f values.yaml -n kcp-system
 ```
 
-Two `kcp-sync-agent` Pods should start in the `kcp-system` namespace. If they crash you will need to
+Two `kcp-api-syncagent` Pods should start in the `kcp-system` namespace. If they crash you will need to
 identify the reason from container logs. A possible issue is that the provided kubeconfig does not
 have permissions against the target kcp workspace.
 
