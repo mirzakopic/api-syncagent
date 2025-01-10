@@ -14,21 +14,19 @@
 
 run:
   modules-download-mode: readonly
-  deadline: 20m
-  skip-files:
-    - zz_generated.*.go
+  timeout: 20m
 
 linters:
   enable:
     - asciicheck
     - bidichk
     - bodyclose
+    - copyloopvar
     - depguard
     - durationcheck
     - errcheck
     - errname
     - errorlint
-    - exportloopref
     - goconst
     - gocritic
     - gocyclo
@@ -51,10 +49,14 @@ linters:
     - wastedassign
     - whitespace
   disable-all: true
+
 issues:
   # defaults to 3, which often needlessly hides issues and forces
   # to re-run the linter across the entire repo many times
-  max-same-issues: 50
+  max-same-issues: 0
+
+  exclude-files:
+    - zz_generated.*.go
 
   # NOTE: Do not use commas in the exclude patterns, or else the regex will be
   # split and you will be sad: https://github.com/golangci/golangci-lint/issues/665
