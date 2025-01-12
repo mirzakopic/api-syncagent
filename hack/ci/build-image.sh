@@ -83,8 +83,19 @@ for arch in $architectures; do
     .
 done
 
+function create_manifest() {
+  local name="$1"
+
+  # deleting the previous manifest makes it possible to re-run this script locally
+  if buildah manifest exists "$name"; then
+    buildah manifest rm "$name"
+  fi
+
+  buildah manifest create "$name"
+}
+
 echo "Creating manifest $image…"
-buildah manifest create "$image"
+create_manifest "$image"
 for arch in $architectures; do
   buildah manifest add "$image" "$image-$arch"
 done
@@ -97,7 +108,7 @@ if [ -n "$branchName" ]; then
   branchImage="$repository:$branchName"
 
   echo "Creating manifest $branchImage…"
-  buildah manifest create "$branchImage"
+  create_manifest "$branchImage"
   for arch in $architectures; do
     buildah manifest add "$branchImage" "$image-$arch"
   done
