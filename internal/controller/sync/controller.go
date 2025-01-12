@@ -31,6 +31,7 @@ import (
 	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/utils/ptr"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -102,6 +103,7 @@ func Create(
 	ctrlOptions := controller.Options{
 		Reconciler:              reconciler,
 		MaxConcurrentReconciles: numWorkers,
+		SkipNameValidation:      ptr.To(true),
 	}
 
 	// It doesn't really matter what manager is used here, as starting/stopping happens
