@@ -32,7 +32,7 @@ func init() {
 }
 
 // GroupName is the group name use in this package.
-const GroupName = "syncagent.k8c.io"
+const GroupName = "syncagent.kcp.io"
 const GroupVersion = "v1alpha1"
 
 var (
