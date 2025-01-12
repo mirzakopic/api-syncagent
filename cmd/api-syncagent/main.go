@@ -34,6 +34,7 @@ import (
 	"github.com/kcp-dev/api-syncagent/internal/kcp"
 	syncagentlog "github.com/kcp-dev/api-syncagent/internal/log"
 	"github.com/kcp-dev/api-syncagent/internal/version"
+	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
 
 	kcpdevv1alpha1 "github.com/kcp-dev/kcp/sdk/apis/apis/v1alpha1"
 	kcpdevcore "github.com/kcp-dev/kcp/sdk/apis/core"
@@ -168,6 +169,10 @@ func setupLocalManager(ctx context.Context, opts *Options) (manager.Manager, err
 
 	if err := apiextensionsv1.AddToScheme(scheme); err != nil {
 		return nil, fmt.Errorf("failed to register local scheme %s: %w", apiextensionsv1.SchemeGroupVersion, err)
+	}
+
+	if err := syncagentv1alpha1.AddToScheme(scheme); err != nil {
+		return nil, fmt.Errorf("failed to register local scheme %s: %w", syncagentv1alpha1.SchemeGroupVersion, err)
 	}
 
 	return mgr, nil
