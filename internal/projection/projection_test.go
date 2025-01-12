@@ -19,7 +19,7 @@ package projection
 import (
 	"testing"
 
-	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
+	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -31,9 +31,9 @@ func TestPublishedResourceSourceGVK(t *testing.T) {
 		kind     = "test"
 	)
 
-	pubRes := servicesv1alpha1.PublishedResource{
-		Spec: servicesv1alpha1.PublishedResourceSpec{
-			Resource: servicesv1alpha1.SourceResourceDescriptor{
+	pubRes := syncagentv1alpha1.PublishedResource{
+		Spec: syncagentv1alpha1.PublishedResourceSpec{
+			Resource: syncagentv1alpha1.SourceResourceDescriptor{
 				APIGroup: apiGroup,
 				Version:  version,
 				Kind:     kind,
@@ -64,9 +64,9 @@ func TestPublishedResourceProjectedGVK(t *testing.T) {
 		kind             = "test"
 	)
 
-	pubRes := &servicesv1alpha1.PublishedResource{
-		Spec: servicesv1alpha1.PublishedResourceSpec{
-			Resource: servicesv1alpha1.SourceResourceDescriptor{
+	pubRes := &syncagentv1alpha1.PublishedResource{
+		Spec: syncagentv1alpha1.PublishedResourceSpec{
+			Resource: syncagentv1alpha1.SourceResourceDescriptor{
 				APIGroup: apiGroup,
 				Version:  version,
 				Kind:     kind,
@@ -76,7 +76,7 @@ func TestPublishedResourceProjectedGVK(t *testing.T) {
 
 	testcases := []struct {
 		name       string
-		projection *servicesv1alpha1.ResourceProjection
+		projection *syncagentv1alpha1.ResourceProjection
 		expected   schema.GroupVersionKind
 	}{
 		{
@@ -86,17 +86,17 @@ func TestPublishedResourceProjectedGVK(t *testing.T) {
 		},
 		{
 			name:       "override version",
-			projection: &servicesv1alpha1.ResourceProjection{Version: "v2"},
+			projection: &syncagentv1alpha1.ResourceProjection{Version: "v2"},
 			expected:   schema.GroupVersionKind{Group: overrideAPIGroup, Version: "v2", Kind: kind},
 		},
 		{
 			name:       "override kind",
-			projection: &servicesv1alpha1.ResourceProjection{Kind: "dummy"},
+			projection: &syncagentv1alpha1.ResourceProjection{Kind: "dummy"},
 			expected:   schema.GroupVersionKind{Group: overrideAPIGroup, Version: version, Kind: "dummy"},
 		},
 		{
 			name:       "override both",
-			projection: &servicesv1alpha1.ResourceProjection{Version: "v2", Kind: "dummy"},
+			projection: &syncagentv1alpha1.ResourceProjection{Version: "v2", Kind: "dummy"},
 			expected:   schema.GroupVersionKind{Group: overrideAPIGroup, Version: "v2", Kind: "dummy"},
 		},
 	}

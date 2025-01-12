@@ -31,8 +31,7 @@ import (
 	"github.com/kcp-dev/api-syncagent/internal/controllerutil/predicate"
 	"github.com/kcp-dev/api-syncagent/internal/discovery"
 	"github.com/kcp-dev/api-syncagent/internal/projection"
-	"github.com/kcp-dev/api-syncagent/sdk/apis/services"
-	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
+	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
 
 	kcpdevv1alpha1 "github.com/kcp-dev/kcp/sdk/apis/apis/v1alpha1"
 
@@ -90,7 +89,7 @@ func Add(
 		Named(ControllerName).
 		WithOptions(controller.Options{MaxConcurrentReconciles: numWorkers}).
 		// Watch for changes to PublishedResources on the local service cluster
-		For(&servicesv1alpha1.PublishedResource{}, builder.WithPredicates(predicate.ByLabels(prFilter))).
+		For(&syncagentv1alpha1.PublishedResource{}, builder.WithPredicates(predicate.ByLabels(prFilter))).
 		Build(reconciler)
 	return err
 }
@@ -99,7 +98,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	log := r.log.With("publishedresource", request)
 	log.Debug("Processing")
 
-	pubResource := &servicesv1alpha1.PublishedResource{}
+	pubResource := &syncagentv1alpha1.PublishedResource{}
 	if err := r.localClient.Get(ctx, request.NamespacedName, pubResource); err != nil {
 		return reconcile.Result{}, ctrlruntimeclient.IgnoreNotFound(err)
 	}
@@ -123,7 +122,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	return *result, err
 }
 
-func (r *Reconciler) reconcile(ctx context.Context, log *zap.SugaredLogger, pubResource *servicesv1alpha1.PublishedResource) (*reconcile.Result, error) {
+func (r *Reconciler) reconcile(ctx context.Context, log *zap.SugaredLogger, pubResource *syncagentv1alpha1.PublishedResource) (*reconcile.Result, error) {
 	// find the resource that the PublishedResource is referring to
 	localGVK := projection.PublishedResourceSourceGVK(pubResource)
 
@@ -180,11 +179,11 @@ func (r *Reconciler) createAPIResourceSchema(ctx context.Context, log *zap.Sugar
 	ars := &kcpdevv1alpha1.APIResourceSchema{}
 	ars.Name = arsName
 	ars.Annotations = map[string]string{
-		services.SourceGenerationAnnotation: fmt.Sprintf("%d", projectedCRD.Generation),
-		services.AgentNameAnnotation:        r.agentName,
+		syncagentv1alpha1.SourceGenerationAnnotation: fmt.Sprintf("%d", projectedCRD.Generation),
+		syncagentv1alpha1.AgentNameAnnotation:        r.agentName,
 	}
 	ars.Labels = map[string]string{
-		services.APIGroupLabel: apigroup,
+		syncagentv1alpha1.APIGroupLabel: apigroup,
 	}
 	ars.Spec.Group = converted.Spec.Group
 	ars.Spec.Names = converted.Spec.Names
@@ -196,7 +195,7 @@ func (r *Reconciler) createAPIResourceSchema(ctx context.Context, log *zap.Sugar
 	return r.platformClient.Create(ctx, ars)
 }
 
-func (r *Reconciler) projectResourceNames(apiGroup string, crd *apiextensionsv1.CustomResourceDefinition, projection *servicesv1alpha1.ResourceProjection) *apiextensionsv1.CustomResourceDefinition {
+func (r *Reconciler) projectResourceNames(apiGroup string, crd *apiextensionsv1.CustomResourceDefinition, projection *syncagentv1alpha1.ResourceProjection) *apiextensionsv1.CustomResourceDefinition {
 	result := crd.DeepCopy()
 	result.Spec.Group = apiGroup
 

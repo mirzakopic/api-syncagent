@@ -29,7 +29,7 @@ import (
 	"github.com/kcp-dev/api-syncagent/internal/controllerutil"
 	"github.com/kcp-dev/api-syncagent/internal/controllerutil/predicate"
 	"github.com/kcp-dev/api-syncagent/internal/discovery"
-	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
+	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
 
 	kcpdevv1alpha1 "github.com/kcp-dev/kcp/sdk/apis/apis/v1alpha1"
 
@@ -118,7 +118,7 @@ func Add(
 		// so there is no need here to add an additional filter.
 		WatchesRawSource(source.Kind(platformCluster.GetCache(), &kcpdevv1alpha1.APIExport{}, controllerutil.EnqueueConst[*kcpdevv1alpha1.APIExport]("dummy"))).
 		// Watch for changes to the PublishedResources
-		Watches(&servicesv1alpha1.PublishedResource{}, controllerutil.EnqueueConst[ctrlruntimeclient.Object]("dummy"), builder.WithPredicates(predicate.ByLabels(prFilter))).
+		Watches(&syncagentv1alpha1.PublishedResource{}, controllerutil.EnqueueConst[ctrlruntimeclient.Object]("dummy"), builder.WithPredicates(predicate.ByLabels(prFilter))).
 		Build(reconciler)
 	return err
 }
@@ -169,7 +169,7 @@ func (r *Reconciler) reconcile(ctx context.Context, log *zap.SugaredLogger, apiE
 	}
 
 	// find all PublishedResources
-	pubResources := &servicesv1alpha1.PublishedResourceList{}
+	pubResources := &syncagentv1alpha1.PublishedResourceList{}
 	if err := r.localManager.GetClient().List(ctx, pubResources, &ctrlruntimeclient.ListOptions{
 		LabelSelector: r.prFilter,
 	}); err != nil {
@@ -220,11 +220,11 @@ func (r *Reconciler) stopVirtualWorkspaceCluster(log *zap.SugaredLogger) {
 	r.vwURL = ""
 }
 
-func getPublishedResourceKey(pr *servicesv1alpha1.PublishedResource) string {
+func getPublishedResourceKey(pr *syncagentv1alpha1.PublishedResource) string {
 	return fmt.Sprintf("%s-%s", pr.UID, pr.ResourceVersion)
 }
 
-func (r *Reconciler) ensureSyncControllers(ctx context.Context, log *zap.SugaredLogger, publishedResources []servicesv1alpha1.PublishedResource) error {
+func (r *Reconciler) ensureSyncControllers(ctx context.Context, log *zap.SugaredLogger, publishedResources []syncagentv1alpha1.PublishedResource) error {
 	currentPRWorkers := sets.New[string]()
 	for _, pr := range publishedResources {
 		currentPRWorkers.Insert(getPublishedResourceKey(&pr))

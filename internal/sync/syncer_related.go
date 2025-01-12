@@ -25,7 +25,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/kcp-dev/api-syncagent/internal/mutation"
-	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
+	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -55,7 +55,7 @@ type relatedObjectAnnotation struct {
 	Kind       string `json:"kind"`
 }
 
-func (s *ResourceSyncer) processRelatedResource(log *zap.SugaredLogger, stateStore ObjectStateStore, remote, local syncSide, relRes servicesv1alpha1.RelatedResourceSpec) (requeue bool, err error) {
+func (s *ResourceSyncer) processRelatedResource(log *zap.SugaredLogger, stateStore ObjectStateStore, remote, local syncSide, relRes syncagentv1alpha1.RelatedResourceSpec) (requeue bool, err error) {
 	// decide what direction to sync (local->remote vs. remote->local)
 	var (
 		source syncSide
@@ -197,7 +197,7 @@ func (s *ResourceSyncer) processRelatedResource(log *zap.SugaredLogger, stateSto
 	return false, nil
 }
 
-func resolveResourceReference(obj *unstructured.Unstructured, ref servicesv1alpha1.RelatedResourceReference) (*ctrlruntimeclient.ObjectKey, error) {
+func resolveResourceReference(obj *unstructured.Unstructured, ref syncagentv1alpha1.RelatedResourceReference) (*ctrlruntimeclient.ObjectKey, error) {
 	jsonData, err := obj.MarshalJSON()
 	if err != nil {
 		return nil, err
@@ -222,7 +222,7 @@ func resolveResourceReference(obj *unstructured.Unstructured, ref servicesv1alph
 	}, nil
 }
 
-func resolveResourceLocator(jsonData string, loc servicesv1alpha1.ResourceLocator) (string, error) {
+func resolveResourceLocator(jsonData string, loc syncagentv1alpha1.ResourceLocator) (string, error) {
 	gval := gjson.Get(jsonData, loc.Path)
 	if !gval.Exists() {
 		return "", fmt.Errorf("cannot find %s in document", loc.Path)

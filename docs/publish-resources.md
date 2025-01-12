@@ -38,7 +38,7 @@ resources that need to be synced down to the service cluster.
 In its simplest form (which is rarely practical) a `PublishedResource` looks like this:
 
 ```yaml
-apiVersion: services.syncagent.kcp.io/v1alpha1
+apiVersion: syncagent.kcp.io/v1alpha1
 kind: PublishedResource
 metadata:
   name: publish-certmanager-certs # name can be freely chosen
@@ -57,7 +57,7 @@ The Sync Agent can be instructed to only work on a subset of resources in kcp. T
 by namespace and/or label selector.
 
 ```yaml
-apiVersion: services.syncagent.kcp.io/v1alpha1
+apiVersion: syncagent.kcp.io/v1alpha1
 kind: PublishedResource
 metadata:
   name: publish-certmanager-certs # name can be freely chosen
@@ -96,7 +96,7 @@ It is also possible to change the scope of resources, i.e. turning a namespaced 
 cluster-wide. This should be used carefully and might require extensive mutations.
 
 ```yaml
-apiVersion: services.syncagent.kcp.io/v1alpha1
+apiVersion: syncagent.kcp.io/v1alpha1
 kind: PublishedResource
 metadata:
   name: publish-certmanager-certs # name can be freely chosen
@@ -138,7 +138,7 @@ the platform will create a namespace on the local cluster, with a combination of
 name hashes used for the actual resource names.
 
 ```yaml
-apiVersion: services.syncagent.kcp.io/v1alpha1
+apiVersion: syncagent.kcp.io/v1alpha1
 kind: PublishedResource
 metadata:
   name: publish-certmanager-certs # name can be freely chosen
@@ -170,7 +170,7 @@ Mutation is always done as a series of steps. Each step does exactly one thing a
 be configured per step.
 
 ```yaml
-apiVersion: services.syncagent.kcp.io/v1alpha1
+apiVersion: syncagent.kcp.io/v1alpha1
 kind: PublishedResource
 metadata:
   name: publish-certmanager-certs # name can be freely chosen
@@ -262,7 +262,7 @@ and `"jk...."` as the name on the service cluster. Once the object exists with t
 originating side, the Sync Agent will begin to sync it to the other side.
 
 ```yaml
-apiVersion: services.syncagent.kcp.io/v1alpha1
+apiVersion: syncagent.kcp.io/v1alpha1
 kind: PublishedResource
 metadata:
   name: publish-certmanager-certs
@@ -337,7 +337,7 @@ spec: {}
 ```
 
 ```yaml
-apiVersion: services.syncagent.kcp.io/v1alpha1
+apiVersion: syncagent.kcp.io/v1alpha1
 kind: PublishedResource
 metadata:
   name: publish-certmanager-certs

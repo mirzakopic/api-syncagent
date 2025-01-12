@@ -26,7 +26,7 @@ import (
 	"github.com/kcp-dev/api-syncagent/internal/controllerutil"
 	predicateutil "github.com/kcp-dev/api-syncagent/internal/controllerutil/predicate"
 	"github.com/kcp-dev/api-syncagent/internal/resources/reconciling"
-	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/services/v1alpha1"
+	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
 
 	kcpdevv1alpha1 "github.com/kcp-dev/kcp/sdk/apis/apis/v1alpha1"
 
@@ -82,7 +82,7 @@ func Add(
 	}
 
 	hasARS := predicate.NewPredicateFuncs(func(object ctrlruntimeclient.Object) bool {
-		publishedResource, ok := object.(*servicesv1alpha1.PublishedResource)
+		publishedResource, ok := object.(*syncagentv1alpha1.PublishedResource)
 		if !ok {
 			return false
 		}
@@ -101,7 +101,7 @@ func Add(
 		// so there is no need here to add an additional filter.
 		WatchesRawSource(source.Kind(platformCluster.GetCache(), &kcpdevv1alpha1.APIExport{}, controllerutil.EnqueueConst[*kcpdevv1alpha1.APIExport]("dummy"))).
 		// Watch for changes to PublishedResources on the local service cluster
-		Watches(&servicesv1alpha1.PublishedResource{}, controllerutil.EnqueueConst[ctrlruntimeclient.Object]("dummy"), builder.WithPredicates(predicateutil.ByLabels(prFilter), hasARS)).
+		Watches(&syncagentv1alpha1.PublishedResource{}, controllerutil.EnqueueConst[ctrlruntimeclient.Object]("dummy"), builder.WithPredicates(predicateutil.ByLabels(prFilter), hasARS)).
 		Build(reconciler)
 	return err
 }
@@ -113,7 +113,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 func (r *Reconciler) reconcile(ctx context.Context) error {
 	// find all PublishedResources
-	pubResources := &servicesv1alpha1.PublishedResourceList{}
+	pubResources := &syncagentv1alpha1.PublishedResourceList{}
 	if err := r.localClient.List(ctx, pubResources, &ctrlruntimeclient.ListOptions{
 		LabelSelector: r.prFilter,
 	}); err != nil {
@@ -121,7 +121,7 @@ func (r *Reconciler) reconcile(ctx context.Context) error {
 	}
 
 	// filter out those PRs that have not yet been processed into an ARS
-	filteredPubResources := []servicesv1alpha1.PublishedResource{}
+	filteredPubResources := []syncagentv1alpha1.PublishedResource{}
 	for i, pubResource := range pubResources.Items {
 		if pubResource.Status.ResourceSchemaName != "" {
 			filteredPubResources = append(filteredPubResources, pubResources.Items[i])

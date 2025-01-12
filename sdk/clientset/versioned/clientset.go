@@ -26,23 +26,23 @@ import (
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
 
-	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned/typed/services/v1alpha1"
+	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned/typed/syncagent/v1alpha1"
 )
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
-	ServicesV1alpha1() servicesv1alpha1.ServicesV1alpha1Interface
+	SyncagentV1alpha1() syncagentv1alpha1.SyncagentV1alpha1Interface
 }
 
 // Clientset contains the clients for groups.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	servicesV1alpha1 *servicesv1alpha1.ServicesV1alpha1Client
+	syncagentV1alpha1 *syncagentv1alpha1.SyncagentV1alpha1Client
 }
 
-// ServicesV1alpha1 retrieves the ServicesV1alpha1Client
-func (c *Clientset) ServicesV1alpha1() servicesv1alpha1.ServicesV1alpha1Interface {
-	return c.servicesV1alpha1
+// SyncagentV1alpha1 retrieves the SyncagentV1alpha1Client
+func (c *Clientset) SyncagentV1alpha1() syncagentv1alpha1.SyncagentV1alpha1Interface {
+	return c.syncagentV1alpha1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -89,7 +89,7 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 
 	var cs Clientset
 	var err error
-	cs.servicesV1alpha1, err = servicesv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
+	cs.syncagentV1alpha1, err = syncagentv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
-	cs.servicesV1alpha1 = servicesv1alpha1.New(c)
+	cs.syncagentV1alpha1 = syncagentv1alpha1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

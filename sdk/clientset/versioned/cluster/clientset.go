@@ -33,20 +33,20 @@ import (
 	"k8s.io/client-go/util/flowcontrol"
 
 	client "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned"
-	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned/cluster/typed/services/v1alpha1"
+	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned/cluster/typed/syncagent/v1alpha1"
 )
 
 type ClusterInterface interface {
 	Cluster(logicalcluster.Path) client.Interface
 	Discovery() discovery.DiscoveryInterface
-	ServicesV1alpha1() servicesv1alpha1.ServicesV1alpha1ClusterInterface
+	SyncagentV1alpha1() syncagentv1alpha1.SyncagentV1alpha1ClusterInterface
 }
 
 // ClusterClientset contains the clients for groups.
 type ClusterClientset struct {
 	*discovery.DiscoveryClient
-	clientCache      kcpclient.Cache[*client.Clientset]
-	servicesV1alpha1 *servicesv1alpha1.ServicesV1alpha1ClusterClient
+	clientCache       kcpclient.Cache[*client.Clientset]
+	syncagentV1alpha1 *syncagentv1alpha1.SyncagentV1alpha1ClusterClient
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -57,9 +57,9 @@ func (c *ClusterClientset) Discovery() discovery.DiscoveryInterface {
 	return c.DiscoveryClient
 }
 
-// ServicesV1alpha1 retrieves the ServicesV1alpha1ClusterClient.
-func (c *ClusterClientset) ServicesV1alpha1() servicesv1alpha1.ServicesV1alpha1ClusterInterface {
-	return c.servicesV1alpha1
+// SyncagentV1alpha1 retrieves the SyncagentV1alpha1ClusterClient.
+func (c *ClusterClientset) SyncagentV1alpha1() syncagentv1alpha1.SyncagentV1alpha1ClusterInterface {
+	return c.syncagentV1alpha1
 }
 
 // Cluster scopes this clientset to one cluster.
@@ -114,7 +114,7 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*ClusterCli
 	var cs ClusterClientset
 	cs.clientCache = cache
 	var err error
-	cs.servicesV1alpha1, err = servicesv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
+	cs.syncagentV1alpha1, err = syncagentv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
 	}

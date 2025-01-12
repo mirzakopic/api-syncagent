@@ -26,8 +26,8 @@ import (
 	"k8s.io/client-go/testing"
 
 	clientset "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned"
-	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned/typed/services/v1alpha1"
-	fakeservicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned/typed/services/v1alpha1/fake"
+	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned/typed/syncagent/v1alpha1"
+	fakesyncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned/typed/syncagent/v1alpha1/fake"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.
@@ -84,7 +84,7 @@ var (
 	_ testing.FakeClient  = &Clientset{}
 )
 
-// ServicesV1alpha1 retrieves the ServicesV1alpha1Client
-func (c *Clientset) ServicesV1alpha1() servicesv1alpha1.ServicesV1alpha1Interface {
-	return &fakeservicesv1alpha1.FakeServicesV1alpha1{Fake: &c.Fake}
+// SyncagentV1alpha1 retrieves the SyncagentV1alpha1Client
+func (c *Clientset) SyncagentV1alpha1() syncagentv1alpha1.SyncagentV1alpha1Interface {
+	return &fakesyncagentv1alpha1.FakeSyncagentV1alpha1{Fake: &c.Fake}
 }

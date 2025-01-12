@@ -37,7 +37,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/kcp-dev/api-syncagent/sdk/informers/externalversions/internalinterfaces"
-	servicesinformers "github.com/kcp-dev/api-syncagent/sdk/informers/externalversions/services"
+	syncagentinformers "github.com/kcp-dev/api-syncagent/sdk/informers/externalversions/syncagent"
 )
 
 // SharedInformerOption defines the functional option type for SharedInformerFactory.
@@ -269,11 +269,11 @@ type SharedInformerFactory interface {
 	// InformerFor returns the SharedIndexInformer for obj.
 	InformerFor(obj runtime.Object, newFunc internalinterfaces.NewInformerFunc) kcpcache.ScopeableSharedIndexInformer
 
-	Services() servicesinformers.ClusterInterface
+	Syncagent() syncagentinformers.ClusterInterface
 }
 
-func (f *sharedInformerFactory) Services() servicesinformers.ClusterInterface {
-	return servicesinformers.New(f, f.tweakListOptions)
+func (f *sharedInformerFactory) Syncagent() syncagentinformers.ClusterInterface {
+	return syncagentinformers.New(f, f.tweakListOptions)
 }
 
 func (f *sharedInformerFactory) Cluster(clusterName logicalcluster.Name) ScopedDynamicSharedInformerFactory {
@@ -420,9 +420,9 @@ type SharedScopedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	Services() servicesinformers.Interface
+	Syncagent() syncagentinformers.Interface
 }
 
-func (f *sharedScopedInformerFactory) Services() servicesinformers.Interface {
-	return servicesinformers.NewScoped(f, f.namespace, f.tweakListOptions)
+func (f *sharedScopedInformerFactory) Syncagent() syncagentinformers.Interface {
+	return syncagentinformers.NewScoped(f, f.namespace, f.tweakListOptions)
 }

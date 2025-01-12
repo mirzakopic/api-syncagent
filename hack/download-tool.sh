@@ -44,7 +44,7 @@ fi
   mkdir -p tmp
   cd tmp
 
-  echo "Downloading $BINARY version $VERSION…" >&2
+  echo "Downloading $BINARY version $VERSION …" >&2
   curl --fail --silent -LO "$URL"
   archive="$(ls)"
 

@@ -31,10 +31,10 @@ import (
 
 	client "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned"
 	kcpclient "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned/cluster"
-	kcpservicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned/cluster/typed/services/v1alpha1"
-	fakeservicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned/cluster/typed/services/v1alpha1/fake"
+	kcpsyncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned/cluster/typed/syncagent/v1alpha1"
+	fakesyncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned/cluster/typed/syncagent/v1alpha1/fake"
 	clientscheme "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned/scheme"
-	servicesv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned/typed/services/v1alpha1"
+	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/clientset/versioned/typed/syncagent/v1alpha1"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.
@@ -71,9 +71,9 @@ func (c *ClusterClientset) Tracker() kcptesting.ObjectTracker {
 	return c.tracker
 }
 
-// ServicesV1alpha1 retrieves the ServicesV1alpha1ClusterClient.
-func (c *ClusterClientset) ServicesV1alpha1() kcpservicesv1alpha1.ServicesV1alpha1ClusterInterface {
-	return &fakeservicesv1alpha1.ServicesV1alpha1ClusterClient{Fake: c.Fake}
+// SyncagentV1alpha1 retrieves the SyncagentV1alpha1ClusterClient.
+func (c *ClusterClientset) SyncagentV1alpha1() kcpsyncagentv1alpha1.SyncagentV1alpha1ClusterInterface {
+	return &fakesyncagentv1alpha1.SyncagentV1alpha1ClusterClient{Fake: c.Fake}
 }
 
 // Cluster scopes this clientset to one cluster.
@@ -108,7 +108,7 @@ func (c *Clientset) Tracker() kcptesting.ScopedObjectTracker {
 	return c.tracker
 }
 
-// ServicesV1alpha1 retrieves the ServicesV1alpha1Client.
-func (c *Clientset) ServicesV1alpha1() servicesv1alpha1.ServicesV1alpha1Interface {
-	return &fakeservicesv1alpha1.ServicesV1alpha1Client{Fake: c.Fake, ClusterPath: c.clusterPath}
+// SyncagentV1alpha1 retrieves the SyncagentV1alpha1Client.
+func (c *Clientset) SyncagentV1alpha1() syncagentv1alpha1.SyncagentV1alpha1Interface {
+	return &fakesyncagentv1alpha1.SyncagentV1alpha1Client{Fake: c.Fake, ClusterPath: c.clusterPath}
 }

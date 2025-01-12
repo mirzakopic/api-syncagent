@@ -2,8 +2,6 @@ module github.com/kcp-dev/api-syncagent
 
 go 1.22.0
 
-toolchain go1.22.5
-
 require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/evanphx/json-patch/v5 v5.9.0
