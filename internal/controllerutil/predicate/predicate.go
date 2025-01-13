@@ -18,7 +18,6 @@ package predicate
 
 import (
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/util/sets"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -43,39 +42,6 @@ func Factory(filter func(o ctrlruntimeclient.Object) bool) predicate.Funcs {
 			return filter(e.Object)
 		},
 	}
-}
-
-// ByNamespace returns a predicate func that only includes objects in the given namespace.
-func ByNamespace(namespace string) predicate.Funcs {
-	return Factory(func(o ctrlruntimeclient.Object) bool {
-		return o.GetNamespace() == namespace
-	})
-}
-
-// ByName returns a predicate func that only includes objects in the given names.
-func ByName(names ...string) predicate.Funcs {
-	namesSet := sets.New[string](names...)
-	return Factory(func(o ctrlruntimeclient.Object) bool {
-		return namesSet.Has(o.GetName())
-	})
-}
-
-// ByAnnotation returns a predicate func that only includes objects with the given annotation.
-func ByAnnotation(key, value string, checkValue bool) predicate.Funcs {
-	return Factory(func(o ctrlruntimeclient.Object) bool {
-		annotations := o.GetAnnotations()
-		if annotations != nil {
-			if existingValue, ok := annotations[key]; ok {
-				if !checkValue {
-					return true
-				}
-				if existingValue == value {
-					return true
-				}
-			}
-		}
-		return false
-	})
 }
 
 func ByLabels(selector labels.Selector) predicate.Funcs {
