@@ -792,6 +792,8 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 		},
 	}
 
+	const stateNamespace = "kcp-system"
+
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
 			localClient := buildFakeClient(testcase.localObject)
@@ -806,6 +808,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				testcase.localCRD,
 				testcase.remoteAPIGroup,
 				nil,
+				stateNamespace,
 			)
 			if err != nil {
 				t.Fatalf("Failed to create syncer: %v", err)
@@ -820,7 +823,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 			syncer.newObjectStateStore = func(primaryObject, stateCluster syncSide) ObjectStateStore {
 				// .Process() is called multiple times, but we want the state to persist between reconciles.
 				if backend == nil {
-					backend = newKubernetesBackend(primaryObject, stateCluster)
+					backend = newKubernetesBackend(stateNamespace, primaryObject, stateCluster)
 					if testcase.existingState != "" {
 						if err := backend.Put(testcase.remoteObject, clusterName.String(), []byte(testcase.existingState)); err != nil {
 							t.Fatalf("Failed to prime state store: %v", err)
@@ -1086,6 +1089,8 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 		},
 	}
 
+	const stateNamespace = "kcp-system"
+
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
 			localClient := buildFakeClientWithStatus(testcase.localObject)
@@ -1100,6 +1105,7 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 				testcase.localCRD,
 				testcase.remoteAPIGroup,
 				nil,
+				stateNamespace,
 			)
 			if err != nil {
 				t.Fatalf("Failed to create syncer: %v", err)
@@ -1114,7 +1120,7 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 			syncer.newObjectStateStore = func(primaryObject, stateCluster syncSide) ObjectStateStore {
 				// .Process() is called multiple times, but we want the state to persist between reconciles.
 				if backend == nil {
-					backend = newKubernetesBackend(primaryObject, stateCluster)
+					backend = newKubernetesBackend(stateNamespace, primaryObject, stateCluster)
 					if testcase.existingState != "" {
 						if err := backend.Put(testcase.remoteObject, clusterName.String(), []byte(testcase.existingState)); err != nil {
 							t.Fatalf("Failed to prime state store: %v", err)

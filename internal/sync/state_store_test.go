@@ -38,6 +38,7 @@ func TestStateStoreBasics(t *testing.T) {
 
 	serviceClusterClient := buildFakeClient()
 	ctx := context.Background()
+	stateNamespace := "kcp-system"
 
 	primaryObjectSide := syncSide{
 		object: primaryObject,
@@ -48,7 +49,8 @@ func TestStateStoreBasics(t *testing.T) {
 		client: serviceClusterClient,
 	}
 
-	store := newObjectStateStore(primaryObjectSide, stateSide)
+	storeCreator := newKubernetesStateStoreCreator(stateNamespace)
+	store := storeCreator(primaryObjectSide, stateSide)
 
 	///////////////////////////////////////
 	// get nil from empty store

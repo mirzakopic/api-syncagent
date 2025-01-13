@@ -43,11 +43,15 @@ type objectStateStore struct {
 	backend backend
 }
 
-func newObjectStateStore(primaryObject, stateCluster syncSide) ObjectStateStore {
-	kubernetes := newKubernetesBackend(primaryObject, stateCluster)
-
+func newObjectStateStore(backend backend) ObjectStateStore {
 	return &objectStateStore{
-		backend: kubernetes,
+		backend: backend,
+	}
+}
+
+func newKubernetesStateStoreCreator(namespace string) newObjectStateStoreFunc {
+	return func(primaryObject, stateCluster syncSide) ObjectStateStore {
+		return newObjectStateStore(newKubernetesBackend(namespace, primaryObject, stateCluster))
 	}
 }
 
@@ -124,7 +128,7 @@ func hashObject(obj *unstructured.Unstructured) string {
 	return hex.EncodeToString(hash.Sum(nil))
 }
 
-func newKubernetesBackend(primaryObject, stateCluster syncSide) *kubernetesBackend {
+func newKubernetesBackend(namespace string, primaryObject, stateCluster syncSide) *kubernetesBackend {
 	keyHash := hashObject(primaryObject.object)
 
 	secretLabels := newObjectKey(primaryObject.object, primaryObject.clusterName).Labels()
@@ -134,7 +138,7 @@ func newKubernetesBackend(primaryObject, stateCluster syncSide) *kubernetesBacke
 		secretName: types.NamespacedName{
 			// trim hash down; 20 was chosen at random
 			Name:      fmt.Sprintf("obj-state-%s-%s", primaryObject.clusterName, keyHash[:20]),
-			Namespace: "kcp-system",
+			Namespace: namespace,
 		},
 		labels:       secretLabels,
 		stateCluster: stateCluster,

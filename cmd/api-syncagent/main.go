@@ -138,7 +138,7 @@ func run(ctx context.Context, log *zap.SugaredLogger, opts *Options) error {
 		return fmt.Errorf("failed to add apiexport controller: %w", err)
 	}
 
-	if err := syncmanager.Add(ctx, mgr, kcpCluster, kcpRestConfig, log, apiExport, opts.PublishedResourceSelector); err != nil {
+	if err := syncmanager.Add(ctx, mgr, kcpCluster, kcpRestConfig, log, apiExport, opts.PublishedResourceSelector, opts.Namespace); err != nil {
 		return fmt.Errorf("failed to add syncmanager controller: %w", err)
 	}
 

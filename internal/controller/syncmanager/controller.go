@@ -69,6 +69,7 @@ type Reconciler struct {
 	recorder        record.EventRecorder
 	discoveryClient *discovery.Client
 	prFilter        labels.Selector
+	stateNamespace  string
 
 	apiExport *kcpdevv1alpha1.APIExport
 
@@ -93,6 +94,7 @@ func Add(
 	log *zap.SugaredLogger,
 	apiExport *kcpdevv1alpha1.APIExport,
 	prFilter labels.Selector,
+	stateNamespace string,
 ) error {
 	reconciler := &Reconciler{
 		ctx:             ctx,
@@ -105,6 +107,7 @@ func Add(
 		syncWorkers:     map[string]lifecycle.Controller{},
 		discoveryClient: discovery.NewClient(localManager.GetClient()),
 		prFilter:        prFilter,
+		stateNamespace:  stateNamespace,
 	}
 
 	_, err := builder.ControllerManagedBy(localManager).
@@ -276,6 +279,7 @@ func (r *Reconciler) ensureSyncControllers(ctx context.Context, log *zap.Sugared
 			&pubRes,
 			r.discoveryClient,
 			r.apiExport.Name,
+			r.stateNamespace,
 			r.log,
 			numSyncWorkers,
 		)
