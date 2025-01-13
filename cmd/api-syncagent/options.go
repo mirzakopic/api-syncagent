@@ -35,10 +35,10 @@ type Options struct {
 	// work.
 	// KubeconfigFile string
 
-	// PlatformKubeconfig is the kubeconfig that gives access to kcp. This
+	// KcpKubeconfig is the kubeconfig that gives access to kcp. This
 	// kubeconfig's cluster URL has to point to the workspace where the APIExport
 	// referenced via APIExportRef lives.
-	PlatformKubeconfig string
+	KcpKubeconfig string
 
 	// Namespace is the namespace that the Sync Agent runs in.
 	Namespace string
@@ -49,7 +49,7 @@ type Options struct {
 
 	// AgentName can be used to give this Sync Agent instance a custom name. This name is used
 	// for the Sync Agent resource inside kcp. This value must not be changed after a Sync Agent
-	// has registered for the first time in the platform.
+	// has registered for the first time in kcp.
 	// If not given, defaults to "<service ref>-syncagent".
 	AgentName string
 
@@ -77,7 +77,7 @@ func NewOptions() *Options {
 func (o *Options) AddFlags(flags *pflag.FlagSet) {
 	o.LogOptions.AddPFlags(flags)
 
-	flags.StringVar(&o.PlatformKubeconfig, "platform-kubeconfig", o.PlatformKubeconfig, "kubeconfig file of kcp")
+	flags.StringVar(&o.KcpKubeconfig, "kcp-kubeconfig", o.KcpKubeconfig, "kubeconfig file of kcp")
 	flags.StringVar(&o.Namespace, "namespace", o.Namespace, "Kubernetes namespace the Sync Agent is running in")
 	flags.StringVar(&o.AgentName, "agent-name", o.AgentName, "name of this Sync Agent, must not be changed after the first run, can be left blank to auto-generate a name")
 	flags.StringVar(&o.APIExportRef, "apiexport-ref", o.APIExportRef, "name of the APIExport in kcp that this Sync Agent is powering")
@@ -108,8 +108,8 @@ func (o *Options) Validate() error {
 		errs = append(errs, errors.New("--apiexport-ref is required"))
 	}
 
-	if len(o.PlatformKubeconfig) == 0 {
-		errs = append(errs, errors.New("--platform-kubeconfig is required"))
+	if len(o.KcpKubeconfig) == 0 {
+		errs = append(errs, errors.New("--kcp-kubeconfig is required"))
 	}
 
 	if s := o.PublishedResourceSelectorString; len(s) > 0 {

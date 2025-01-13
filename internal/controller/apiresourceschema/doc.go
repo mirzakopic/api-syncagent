@@ -26,7 +26,7 @@ with an editor and re-applied, it won't turn into the same ARS, as we cannot sim
 turn an ARS for a Pod into an ARS for a StorageClass.
 
 There is no extra cleanup procedure in either of the clusters when a PublishedResource
-is deleted. This is to prevent accidental data loss in the platform in case a
-service owner accidentally (and temporarily) removed a PublishedResource.
+is deleted. This is to prevent accidental data loss in kcp in case a service owner
+accidentally (and temporarily) removed a PublishedResource.
 */
 package apiresourceschema

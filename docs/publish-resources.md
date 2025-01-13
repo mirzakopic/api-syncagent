@@ -1,9 +1,9 @@
 # Publishing Resources
 
 The guide describes the process of making a resource (usually defined by a CustomResourceDefinition)
-of one Kubernetes cluster (the "service cluster" or "local cluster") available for use in kcp (the
-"platform cluster" or "workspaces"). This involves setting up an `APIExport` and then installing
-the Sync Agent and defining `PublishedResources` in the local cluster.
+of one Kubernetes cluster (the "service cluster" or "local cluster") available for use in kcp. This
+involves setting up an `APIExport` and then installing the Sync Agent and defining
+`PublishedResources` in the local cluster.
 
 All of the documentation and API types are worded and named from the perspective of a service owner,
 the person(s) who own a service and want to make it available to consumers in kcp.
@@ -12,7 +12,7 @@ the person(s) who own a service and want to make it available to consumers in kc
 
 A "service" comprises a set of resources within a single Kubernetes API group. It doesn't need to be
 _all_ of the resources in that group, service owners are free and encouraged to only make a subset
-of resources (i.e. a subset of CRDs) available for use in the platform.
+of resources (i.e. a subset of CRDs) available for use in kcp.
 
 For each of the CRDs on the service cluster that should be published, the service owner creates a
 `PublishedResource` object, which will contain both which CRD to publish, as well as numerous other
@@ -80,15 +80,15 @@ CRD.
 ### Projection
 
 For stronger separation of concerns and to enable whitelabelling of services, the type meta for
-can be projected, i.e. changed between the local service cluster and the platform. You could for
-example rename `Certificate` from cert-manager to `Sertifikat` inside the platform.
+can be projected, i.e. changed between the local service cluster and kcp. You could for example
+rename `Certificate` from cert-manager to `Sertifikat` inside kcp.
 
 Note that the API group of all published resources is always changed to the one defined in the
-APIExport object (meaning 1 Sync Agent serves all the selected published resources under the
-same API group). That is why changing the API group cannot be configured in the projection.
+APIExport object (meaning 1 Sync Agent serves all the selected published resources under the same
+API group). That is why changing the API group cannot be configured in the projection.
 
 Besides renaming the Kind and Version, dependent fields like Plural, ShortNames and Categories
-can be adjusted to fit the desired naming scheme in the platform. The Plural name is computed
+can be adjusted to fit the desired naming scheme in kcp. The Plural name is computed
 automatically, but can be overridden. ShortNames and Categories are copied unless overwritten in the
 `PublishedResource`.
 
@@ -111,7 +111,7 @@ spec:
     # scope: Namespaced # change only when you know what you're doing
 ```
 
-Consumers (end users) in the platform would then ultimately see projected names only. Note that GVK
+Consumers (end users) in kcp would then ultimately see projected names only. Note that GVK
 projection applies only to the synced object itself and has no effect on the contents of these
 objects. To change the contents, use external solutions like Crossplane to transform objects.
 <!-- To change the contents, use *Mutations*. -->
@@ -134,8 +134,8 @@ are available:
 * `$remoteNameHash` – first 20 hex characters of the SHA-1 hash of `$remoteName`
 
 If nothing is configured, the default ensures that no collisions will happen: Each workspace in
-the platform will create a namespace on the local cluster, with a combination of namespace and
-name hashes used for the actual resource names.
+kcp will create a namespace on the local cluster, with a combination of namespace and name hashes
+used for the actual resource names.
 
 ```yaml
 apiVersion: syncagent.kcp.io/v1alpha1
@@ -162,7 +162,7 @@ Configuration happens `spec.mutation` and there are two fields:
   be other top-level fields) from the remote side to the local side. Use this to apply defaulting,
   normalising, and enforcing rules.
 * `status` contains the mutation rules when syncing the `status` subresource back from the local
-  cluster up into the platform. Use this to normalize names and values (e.g. if you rewrote
+  cluster up into kcp. Use this to normalize names and values (e.g. if you rewrote
   `.spec.secretName` from `"foo"` to `"dfkbssbfh"`, make sure the status does not "leak" this name
   by accident).
 
@@ -285,7 +285,7 @@ spec:
       # "connection-details" or "credentials".
       identifier: tls-secret
 
-      # "service" or "platform"
+      # "service" or "kcp"
       origin: service
 
       # for now, only "Secret" and "ConfigMap" are supported;
@@ -354,7 +354,7 @@ spec:
     name: "$remoteClusterName-$remoteNamespaceHash-$remoteNameHash"
 
   related:
-    - origin: service # service or platform
+    - origin: service # service or kcp
       kind: Secret # for now, only "Secret" and "ConfigMap" are supported;
                    # there is no GVK projection for related resources
 
@@ -383,10 +383,9 @@ The following sections go into more details of the behind the scenes magic.
 ### Synchronization
 
 Even though the whole configuration is written from the standpoint of the service owner, the actual
-synchronization logic considers the platform side as the canonical source of truth. The Sync Agent
-continuously tries to make the local objects look like the ones in the platform, while pushing
-status updates back into the platform (if the given `PublishedResource` (i.e. CRD) has a `status`
-subresource enabled).
+synchronization logic considers the kcp side as the canonical source of truth. The Sync Agent
+continuously tries to make the local objects look like the ones in kcp, while pushing status updates
+back into kcp (if the given `PublishedResource` (i.e. CRD) has a `status` subresource enabled).
 
 ### Local <-> Remote Connection
 
@@ -399,7 +398,7 @@ reconciliations, the (potentially costly, but probably not) renaming logic does 
 applied again. This allows the Sync Agent to change defaults and also allows the service owner to make
 changes to the naming rules without breaking existing objects.
 
-Since we do not want to store metadata on the platform side, we instead rely on label selectors on
+Since we do not want to store metadata on the kcp side, we instead rely on label selectors on
 the local objects. Each object on the service cluster has a label for the remote cluster name,
 namespace and object name, and when trying to find the matching local object, the Sync Agent simply
 does a label-based search.
@@ -432,8 +431,8 @@ service cluster is called the `destination object`.
 
 #### Phase 2: Handle Deletion
 
-A finalizer is used in the platform workspaces to prevent orphans in the service cluster side. This
-is the only real evidence in the platform side that the Sync Agent is even doing things. When a remote
+A finalizer is used in the kcp workspaces to prevent orphans in the service cluster side. This
+is the only real evidence in the kcp side that the Sync Agent is even doing things. When a remote
 (source) object is deleted, the corresponding local object is deleted as well. Once the local object
 is gone, the finalizer is removed from the source object.
 

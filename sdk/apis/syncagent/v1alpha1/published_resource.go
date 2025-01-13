@@ -165,7 +165,7 @@ type RelatedResourceSpec struct {
 	// The identifier must be an alphanumeric string.
 	Identifier string `json:"identifier"`
 
-	// "service" or "platform"
+	// "service" or "kcp"
 	Origin string `json:"origin"`
 
 	// ConfigMap or Secret

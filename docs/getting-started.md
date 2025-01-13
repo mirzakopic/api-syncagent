@@ -73,7 +73,7 @@ syncAgent:
 
   # Required: Name of the Kubernetes Secret that contains a "kubeconfig" key, with the kubeconfig
   # provided by kcp to access it.
-  platformKubeconfig: kcp-kubeconfig
+  kcpKubeconfig: kcp-kubeconfig
 
   # Create additional RBAC on the service cluster. These rules depend somewhat on the Sync Agent
   # configuration, but the following two rules are very common. If you configure the Sync Agent to

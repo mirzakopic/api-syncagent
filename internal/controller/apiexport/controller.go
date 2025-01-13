@@ -50,20 +50,20 @@ const (
 )
 
 type Reconciler struct {
-	localClient    ctrlruntimeclient.Client
-	platformClient ctrlruntimeclient.Client
-	log            *zap.SugaredLogger
-	recorder       record.EventRecorder
-	lcName         logicalcluster.Name
-	apiExportName  string
-	agentName      string
-	prFilter       labels.Selector
+	localClient   ctrlruntimeclient.Client
+	kcpClient     ctrlruntimeclient.Client
+	log           *zap.SugaredLogger
+	recorder      record.EventRecorder
+	lcName        logicalcluster.Name
+	apiExportName string
+	agentName     string
+	prFilter      labels.Selector
 }
 
 // Add creates a new controller and adds it to the given manager.
 func Add(
 	mgr manager.Manager,
-	platformCluster cluster.Cluster,
+	kcpCluster cluster.Cluster,
 	lcName logicalcluster.Name,
 	log *zap.SugaredLogger,
 	apiExportName string,
@@ -71,14 +71,14 @@ func Add(
 	prFilter labels.Selector,
 ) error {
 	reconciler := &Reconciler{
-		localClient:    mgr.GetClient(),
-		platformClient: platformCluster.GetClient(),
-		lcName:         lcName,
-		log:            log.Named(ControllerName),
-		recorder:       mgr.GetEventRecorderFor(ControllerName),
-		apiExportName:  apiExportName,
-		agentName:      agentName,
-		prFilter:       prFilter,
+		localClient:   mgr.GetClient(),
+		kcpClient:     kcpCluster.GetClient(),
+		lcName:        lcName,
+		log:           log.Named(ControllerName),
+		recorder:      mgr.GetEventRecorderFor(ControllerName),
+		apiExportName: apiExportName,
+		agentName:     agentName,
+		prFilter:      prFilter,
 	}
 
 	hasARS := predicate.NewPredicateFuncs(func(object ctrlruntimeclient.Object) bool {
@@ -96,10 +96,10 @@ func Add(
 			// we reconcile a single object in kcp, no need for parallel workers
 			MaxConcurrentReconciles: 1,
 		}).
-		// Watch for changes to APIExport on the platform side to start/restart the actual syncing controllers;
+		// Watch for changes to APIExport on the kcp side to start/restart the actual syncing controllers;
 		// the cache is already restricted by a fieldSelector in the main.go to respect the RBC restrictions,
 		// so there is no need here to add an additional filter.
-		WatchesRawSource(source.Kind(platformCluster.GetCache(), &kcpdevv1alpha1.APIExport{}, controllerutil.EnqueueConst[*kcpdevv1alpha1.APIExport]("dummy"))).
+		WatchesRawSource(source.Kind(kcpCluster.GetCache(), &kcpdevv1alpha1.APIExport{}, controllerutil.EnqueueConst[*kcpdevv1alpha1.APIExport]("dummy"))).
 		// Watch for changes to PublishedResources on the local service cluster
 		Watches(&syncagentv1alpha1.PublishedResource{}, controllerutil.EnqueueConst[ctrlruntimeclient.Object]("dummy"), builder.WithPredicates(predicateutil.ByLabels(prFilter), hasARS)).
 		Build(reconciler)
@@ -134,7 +134,7 @@ func (r *Reconciler) reconcile(ctx context.Context) error {
 
 	// PublishedResources use kinds, but the PermissionClaims use resource names (plural),
 	// so we must translate accordingly
-	mapper := r.platformClient.RESTMapper()
+	mapper := r.kcpClient.RESTMapper()
 
 	for _, pubResource := range filteredPubResources {
 		arsList.Insert(pubResource.Status.ResourceSchemaName)
@@ -162,14 +162,14 @@ func (r *Reconciler) reconcile(ctx context.Context) error {
 		return nil
 	}
 
-	// reconcile an APIExport in the platform
+	// reconcile an APIExport in kcp
 	factories := []reconciling.NamedAPIExportReconcilerFactory{
 		r.createAPIExportReconciler(arsList, claimedResources, r.agentName, r.apiExportName),
 	}
 
 	wsCtx := kontext.WithCluster(ctx, r.lcName)
 
-	if err := reconciling.ReconcileAPIExports(wsCtx, factories, "", r.platformClient); err != nil {
+	if err := reconciling.ReconcileAPIExports(wsCtx, factories, "", r.kcpClient); err != nil {
 		return fmt.Errorf("failed to reconcile APIExport: %w", err)
 	}
 
@@ -180,7 +180,7 @@ func (r *Reconciler) reconcile(ctx context.Context) error {
 	// 	apiExport := &kcpdevv1alpha1.APIExport{}
 	// 	key := types.NamespacedName{Name: exportName}
 
-	// 	if err := r.platformClient.Get(wsCtx, key, apiExport); ctrlruntimeclient.IgnoreNotFound(err) != nil {
+	// 	if err := r.kcpClient.Get(wsCtx, key, apiExport); ctrlruntimeclient.IgnoreNotFound(err) != nil {
 	// 		return false, err
 	// 	}
 

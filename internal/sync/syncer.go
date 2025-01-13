@@ -152,7 +152,7 @@ func (s *ResourceSyncer) Process(ctx Context, remoteObj *unstructured.Unstructur
 		// status subresource even exists whether an update happens)
 		syncStatusBack: true,
 		// perform cleanup on the service cluster side when the source object
-		// in the platform is deleted
+		// in kcp is deleted
 		blockSourceDeletion: true,
 		// use the configured mutations from the PublishedResource
 		mutator: s.mutator,

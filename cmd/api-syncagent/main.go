@@ -100,45 +100,45 @@ func run(ctx context.Context, log *zap.SugaredLogger, opts *Options) error {
 	}
 
 	// load the kcp kubeconfig
-	platformRestConfig, err := loadKubeconfig(opts.PlatformKubeconfig)
+	kcpRestConfig, err := loadKubeconfig(opts.KcpKubeconfig)
 	if err != nil {
-		return fmt.Errorf("failed to load platform kubeconfig: %w", err)
+		return fmt.Errorf("failed to load kcp kubeconfig: %w", err)
 	}
 
 	// sanity check
-	if !strings.Contains(platformRestConfig.Host, "/clusters/") {
-		return fmt.Errorf("platform kubeconfig does not point to a specific workspace")
+	if !strings.Contains(kcpRestConfig.Host, "/clusters/") {
+		return fmt.Errorf("kcp kubeconfig does not point to a specific workspace")
 	}
 
-	// We check if the APIExport exists and extract information we need to set up our platformCluster.
-	apiExport, lcPath, lcName, err := resolveAPIExport(ctx, platformRestConfig, opts.APIExportRef)
+	// We check if the APIExport exists and extract information we need to set up our kcpCluster.
+	apiExport, lcPath, lcName, err := resolveAPIExport(ctx, kcpRestConfig, opts.APIExportRef)
 	if err != nil {
 		return fmt.Errorf("failed to resolve APIExport: %w", err)
 	}
 
 	log.Infow("Resolved APIExport", "apigroup", opts.APIExportRef, "workspace", lcPath, "logicalcluster", lcName)
 
-	// init the "permanent" platform cluster connection
-	platformCluster, err := setupPlatformCluster(platformRestConfig, opts)
+	// init the "permanent" kcp cluster connection
+	kcpCluster, err := setupKcpCluster(kcpRestConfig, opts)
 	if err != nil {
-		return fmt.Errorf("failed to initialize platform cluster: %w", err)
+		return fmt.Errorf("failed to initialize kcp cluster: %w", err)
 	}
 
-	// start the platform cluster caches when the manager boots up
+	// start the kcp cluster caches when the manager boots up
 	// (happens regardless of leader election status)
-	if err := mgr.Add(platformCluster); err != nil {
-		return fmt.Errorf("failed to add platform cluster runnable: %w", err)
+	if err := mgr.Add(kcpCluster); err != nil {
+		return fmt.Errorf("failed to add kcp cluster runnable: %w", err)
 	}
 
-	if err := apiresourceschema.Add(mgr, platformCluster, lcName, log, 4, opts.AgentName, opts.APIExportRef, opts.PublishedResourceSelector); err != nil {
+	if err := apiresourceschema.Add(mgr, kcpCluster, lcName, log, 4, opts.AgentName, opts.APIExportRef, opts.PublishedResourceSelector); err != nil {
 		return fmt.Errorf("failed to add apiresourceschema controller: %w", err)
 	}
 
-	if err := apiexport.Add(mgr, platformCluster, lcName, log, opts.APIExportRef, opts.AgentName, opts.PublishedResourceSelector); err != nil {
+	if err := apiexport.Add(mgr, kcpCluster, lcName, log, opts.APIExportRef, opts.AgentName, opts.PublishedResourceSelector); err != nil {
 		return fmt.Errorf("failed to add apiexport controller: %w", err)
 	}
 
-	if err := syncmanager.Add(ctx, mgr, platformCluster, platformRestConfig, log, apiExport, opts.PublishedResourceSelector); err != nil {
+	if err := syncmanager.Add(ctx, mgr, kcpCluster, kcpRestConfig, log, apiExport, opts.PublishedResourceSelector); err != nil {
 		return fmt.Errorf("failed to add syncmanager controller: %w", err)
 	}
 
@@ -231,9 +231,9 @@ func resolveAPIExport(ctx context.Context, restConfig *rest.Config, apiExportRef
 	return apiExport, lcPath, lcName, nil
 }
 
-// setupPlatformCluster sets up a plain, non-kcp-aware ctrl-runtime Cluster object
+// setupKcpCluster sets up a plain, non-kcp-aware ctrl-runtime Cluster object
 // that is solvely used to interact with the APIExport and APIResourceSchemas.
-func setupPlatformCluster(restConfig *rest.Config, opts *Options) (cluster.Cluster, error) {
+func setupKcpCluster(restConfig *rest.Config, opts *Options) (cluster.Cluster, error) {
 	scheme := runtime.NewScheme()
 
 	if err := kcpdevv1alpha1.AddToScheme(scheme); err != nil {
@@ -246,7 +246,7 @@ func setupPlatformCluster(restConfig *rest.Config, opts *Options) (cluster.Clust
 
 	return cluster.New(restConfig, func(o *cluster.Options) {
 		o.Scheme = scheme
-		// RBAC on the platform cluster is very tight and does not allow to list/watch all objects;
+		// RBAC in kcp might be very tight and might not allow to list/watch all objects;
 		// restrict the cache's selectors accordingly so we can still make use of caching.
 		o.Cache = cache.Options{
 			Scheme: scheme,

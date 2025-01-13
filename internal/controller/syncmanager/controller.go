@@ -62,13 +62,13 @@ type Reconciler struct {
 	// also triggered.
 	ctx context.Context
 
-	localManager       manager.Manager
-	platformCluster    cluster.Cluster
-	platformRestConfig *rest.Config
-	log                *zap.SugaredLogger
-	recorder           record.EventRecorder
-	discoveryClient    *discovery.Client
-	prFilter           labels.Selector
+	localManager    manager.Manager
+	kcpCluster      cluster.Cluster
+	kcpRestConfig   *rest.Config
+	log             *zap.SugaredLogger
+	recorder        record.EventRecorder
+	discoveryClient *discovery.Client
+	prFilter        labels.Selector
 
 	apiExport *kcpdevv1alpha1.APIExport
 
@@ -88,23 +88,23 @@ type Reconciler struct {
 func Add(
 	ctx context.Context,
 	localManager manager.Manager,
-	platformCluster cluster.Cluster,
-	platformRestConfig *rest.Config,
+	kcpCluster cluster.Cluster,
+	kcpRestConfig *rest.Config,
 	log *zap.SugaredLogger,
 	apiExport *kcpdevv1alpha1.APIExport,
 	prFilter labels.Selector,
 ) error {
 	reconciler := &Reconciler{
-		ctx:                ctx,
-		localManager:       localManager,
-		apiExport:          apiExport,
-		platformCluster:    platformCluster,
-		platformRestConfig: platformRestConfig,
-		log:                log,
-		recorder:           localManager.GetEventRecorderFor(ControllerName),
-		syncWorkers:        map[string]lifecycle.Controller{},
-		discoveryClient:    discovery.NewClient(localManager.GetClient()),
-		prFilter:           prFilter,
+		ctx:             ctx,
+		localManager:    localManager,
+		apiExport:       apiExport,
+		kcpCluster:      kcpCluster,
+		kcpRestConfig:   kcpRestConfig,
+		log:             log,
+		recorder:        localManager.GetEventRecorderFor(ControllerName),
+		syncWorkers:     map[string]lifecycle.Controller{},
+		discoveryClient: discovery.NewClient(localManager.GetClient()),
+		prFilter:        prFilter,
 	}
 
 	_, err := builder.ControllerManagedBy(localManager).
@@ -113,10 +113,10 @@ func Add(
 			// this controller is meant to control others, so we only want 1 thread
 			MaxConcurrentReconciles: 1,
 		}).
-		// Watch for changes to APIExport on the platform side to start/restart the actual syncing controllers;
+		// Watch for changes to APIExport on the kcp side to start/restart the actual syncing controllers;
 		// the cache is already restricted by a fieldSelector in the main.go to respect the RBC restrictions,
 		// so there is no need here to add an additional filter.
-		WatchesRawSource(source.Kind(platformCluster.GetCache(), &kcpdevv1alpha1.APIExport{}, controllerutil.EnqueueConst[*kcpdevv1alpha1.APIExport]("dummy"))).
+		WatchesRawSource(source.Kind(kcpCluster.GetCache(), &kcpdevv1alpha1.APIExport{}, controllerutil.EnqueueConst[*kcpdevv1alpha1.APIExport]("dummy"))).
 		// Watch for changes to the PublishedResources
 		Watches(&syncagentv1alpha1.PublishedResource{}, controllerutil.EnqueueConst[ctrlruntimeclient.Object]("dummy"), builder.WithPredicates(predicate.ByLabels(prFilter))).
 		Build(reconciler)
@@ -131,7 +131,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, _ reconcile.Request) (reconc
 	key := types.NamespacedName{Name: r.apiExport.Name}
 
 	apiExport := &kcpdevv1alpha1.APIExport{}
-	if err := r.platformCluster.GetClient().Get(wsCtx, key, apiExport); ctrlruntimeclient.IgnoreNotFound(err) != nil {
+	if err := r.kcpCluster.GetClient().Get(wsCtx, key, apiExport); ctrlruntimeclient.IgnoreNotFound(err) != nil {
 		return reconcile.Result{}, fmt.Errorf("failed to retrieve APIExport: %w", err)
 	}
 
@@ -188,7 +188,7 @@ func (r *Reconciler) ensureVirtualWorkspaceCluster(log *zap.SugaredLogger, vwURL
 	if r.vwCluster == nil {
 		log.Info("Setting up virtual workspace cluster…")
 
-		stoppableCluster, err := lifecycle.NewCluster(vwURL, r.platformRestConfig)
+		stoppableCluster, err := lifecycle.NewCluster(vwURL, r.kcpRestConfig)
 		if err != nil {
 			return fmt.Errorf("failed to initialize cluster: %w", err)
 		}

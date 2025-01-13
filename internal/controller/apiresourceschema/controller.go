@@ -55,19 +55,19 @@ const (
 )
 
 type Reconciler struct {
-	localClient    ctrlruntimeclient.Client
-	platformClient ctrlruntimeclient.Client
-	log            *zap.SugaredLogger
-	recorder       record.EventRecorder
-	lcName         logicalcluster.Name
-	agentName      string
-	apiExportName  string
+	localClient   ctrlruntimeclient.Client
+	kcpClient     ctrlruntimeclient.Client
+	log           *zap.SugaredLogger
+	recorder      record.EventRecorder
+	lcName        logicalcluster.Name
+	agentName     string
+	apiExportName string
 }
 
 // Add creates a new controller and adds it to the given manager.
 func Add(
 	mgr manager.Manager,
-	platformCluster cluster.Cluster,
+	kcpCluster cluster.Cluster,
 	lcName logicalcluster.Name,
 	log *zap.SugaredLogger,
 	numWorkers int,
@@ -76,13 +76,13 @@ func Add(
 	prFilter labels.Selector,
 ) error {
 	reconciler := &Reconciler{
-		localClient:    mgr.GetClient(),
-		platformClient: platformCluster.GetClient(),
-		lcName:         lcName,
-		log:            log.Named(ControllerName),
-		recorder:       mgr.GetEventRecorderFor(ControllerName),
-		agentName:      agentName,
-		apiExportName:  apiExportName,
+		localClient:   mgr.GetClient(),
+		kcpClient:     kcpCluster.GetClient(),
+		lcName:        lcName,
+		log:           log.Named(ControllerName),
+		recorder:      mgr.GetEventRecorderFor(ControllerName),
+		agentName:     agentName,
+		apiExportName: apiExportName,
 	}
 
 	_, err := builder.ControllerManagedBy(mgr).
@@ -143,7 +143,7 @@ func (r *Reconciler) reconcile(ctx context.Context, log *zap.SugaredLogger, pubR
 	// service owners to somehow publish updated CRDs without changing their API version.
 	wsCtx := kontext.WithCluster(ctx, r.lcName)
 	ars := &kcpdevv1alpha1.APIResourceSchema{}
-	err = r.platformClient.Get(wsCtx, types.NamespacedName{Name: arsName}, ars, &ctrlruntimeclient.GetOptions{})
+	err = r.kcpClient.Get(wsCtx, types.NamespacedName{Name: arsName}, ars, &ctrlruntimeclient.GetOptions{})
 
 	if apierrors.IsNotFound(err) {
 		if err := r.createAPIResourceSchema(wsCtx, log, r.apiExportName, projectedCRD, arsName); err != nil {
@@ -192,7 +192,7 @@ func (r *Reconciler) createAPIResourceSchema(ctx context.Context, log *zap.Sugar
 
 	log.With("name", arsName).Info("Creating APIResourceSchema…")
 
-	return r.platformClient.Create(ctx, ars)
+	return r.kcpClient.Create(ctx, ars)
 }
 
 func (r *Reconciler) projectResourceNames(apiGroup string, crd *apiextensionsv1.CustomResourceDefinition, projection *syncagentv1alpha1.ResourceProjection) *apiextensionsv1.CustomResourceDefinition {

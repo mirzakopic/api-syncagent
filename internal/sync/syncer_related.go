@@ -140,13 +140,13 @@ func (s *ResourceSyncer) processRelatedResource(log *zap.SugaredLogger, stateSto
 		},
 		// ConfigMaps and Secrets have no subresources
 		subresources: nil,
-		// only sync the status back if the object originates in the platform,
+		// only sync the status back if the object originates in kcp,
 		// as the service side should never have to rely on new status infos coming
-		// from the platform side
-		syncStatusBack: relRes.Origin == "platform",
+		// from the kcp side
+		syncStatusBack: relRes.Origin == "kcp",
 		// if the origin is on the remote side, we want to add a finalizer to make
 		// sure we can clean up properly
-		blockSourceDeletion: relRes.Origin == "platform",
+		blockSourceDeletion: relRes.Origin == "kcp",
 		// apply mutation rules configured for the related resource
 		mutator: mutation.NewMutator(nil), // relRes.Mutation
 	}
