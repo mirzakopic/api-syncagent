@@ -17,10 +17,6 @@ limitations under the License.
 package kcp
 
 const (
-	// RootWorkspace is kcp's root workspace name. This should only be changed
-	// if it changes in kcp.
-	RootWorkspace = "root"
-
 	// IdentityClusterName is the name of the logicalcluster that is backing the
 	// current kcp workspace. Within each kcp workspace one can query for this
 	// logicalcluster to resolve the workspace's path (e.g. "root:org1:teamx")
