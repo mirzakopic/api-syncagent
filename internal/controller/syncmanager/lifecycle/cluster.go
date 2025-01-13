@@ -20,12 +20,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"strings"
 
 	"go.uber.org/zap"
 
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/kcp"
 )
@@ -43,6 +47,16 @@ type Cluster struct {
 	cancelFunc context.CancelCauseFunc
 }
 
+// newWildcardClusterMapperProvider returns a RESTMapper that talks to the /clusters/* endpoint.
+func newWildcardClusterMapperProvider(c *rest.Config, httpClient *http.Client) (meta.RESTMapper, error) {
+	mapperCfg := rest.CopyConfig(c)
+	if !strings.HasSuffix(mapperCfg.Host, "/clusters/*") {
+		mapperCfg.Host += "/clusters/*"
+	}
+
+	return apiutil.NewDynamicRESTMapper(mapperCfg, httpClient)
+}
+
 func NewCluster(address string, baseRestConfig *rest.Config) (*Cluster, error) {
 	// note that this cluster and all its components are kcp-aware
 	config := rest.CopyConfig(baseRestConfig)
@@ -52,7 +66,7 @@ func NewCluster(address string, baseRestConfig *rest.Config) (*Cluster, error) {
 		o.NewCache = kcp.NewClusterAwareCache
 		o.NewAPIReader = kcp.NewClusterAwareAPIReader
 		o.NewClient = kcp.NewClusterAwareClient
-		// o.MapperProvider = kcp.NewClusterAwareMapperProvider
+		o.MapperProvider = newWildcardClusterMapperProvider
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize cluster: %w", err)
