@@ -6,7 +6,6 @@ require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/evanphx/json-patch/v5 v5.9.0
 	github.com/go-logr/zapr v1.3.0
-	github.com/gobuffalo/flect v1.0.3
 	github.com/kcp-dev/apimachinery/v2 v2.0.1-0.20240817110845-a9eb9752bfeb
 	github.com/kcp-dev/client-go v0.0.0-20240912145314-f5949d81732a
 	github.com/kcp-dev/code-generator/v2 v2.3.1
@@ -50,6 +49,7 @@ require (
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/swag v0.22.4 // indirect
+	github.com/gobuffalo/flect v1.0.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.4 // indirect

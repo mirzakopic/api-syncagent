@@ -69,12 +69,3 @@ done
 for f in internal/sync/crd/*.yaml; do
   beautify "$f"
 done
-
-# embed all generated CRDs
-EMBED_DIR=sdk/crd
-
-for apidir in $CRD_DIR/*/; do
-  api="$(basename "$apidir")"
-  rm -rf -- "$EMBED_DIR/$api"
-  cp -ar "$CRD_DIR/$api" "$EMBED_DIR"
-done
