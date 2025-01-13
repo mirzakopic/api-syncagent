@@ -244,7 +244,7 @@ spec:
                         description: ConfigMap or Secret
                         type: string
                       origin:
-                        description: '"service" or "platform"'
+                        description: '"service" or "kcp"'
                         type: string
                       reference:
                         properties:
