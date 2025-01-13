@@ -61,6 +61,9 @@ type Options struct {
 	PublishedResourceSelectorString string
 	PublishedResourceSelector       labels.Selector
 
+	KubeconfigHostOverride   string
+	KubeconfigCAFileOverride string
+
 	LogOptions log.Options
 }
 
@@ -80,6 +83,8 @@ func (o *Options) AddFlags(flags *pflag.FlagSet) {
 	flags.StringVar(&o.APIExportRef, "apiexport-ref", o.APIExportRef, "name of the APIExport in kcp that this Sync Agent is powering")
 	flags.StringVar(&o.PublishedResourceSelectorString, "published-resource-selector", o.PublishedResourceSelectorString, "restrict this Sync Agent to only process PublishedResources matching this label selector (optional)")
 	flags.BoolVar(&o.EnableLeaderElection, "enable-leader-election", o.EnableLeaderElection, "whether to perform leader election")
+	flags.StringVar(&o.KubeconfigHostOverride, "kubeconfig-host-override", o.KubeconfigHostOverride, "Override the host configured in the local kubeconfig")
+	flags.StringVar(&o.KubeconfigCAFileOverride, "kubeconfig-ca-file-override", o.KubeconfigCAFileOverride, "Override the server CA file configured in the local kubeconfig")
 }
 
 func (o *Options) Validate() error {

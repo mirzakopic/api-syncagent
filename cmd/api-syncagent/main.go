@@ -119,7 +119,7 @@ func run(ctx context.Context, log *zap.SugaredLogger, opts *Options) error {
 	log.Infow("Resolved APIExport", "apigroup", opts.APIExportRef, "workspace", lcPath, "logicalcluster", lcName)
 
 	// init the "permanent" platform cluster connection
-	platformCluster, err := setupPlatformCluster(platformRestConfig, opts.APIExportRef)
+	platformCluster, err := setupPlatformCluster(platformRestConfig, opts)
 	if err != nil {
 		return fmt.Errorf("failed to initialize platform cluster: %w", err)
 	}
@@ -149,8 +149,21 @@ func run(ctx context.Context, log *zap.SugaredLogger, opts *Options) error {
 
 func setupLocalManager(ctx context.Context, opts *Options) (manager.Manager, error) {
 	scheme := runtime.NewScheme()
+	restConfig := ctrlruntime.GetConfigOrDie()
 
-	mgr, err := manager.New(ctrlruntime.GetConfigOrDie(), manager.Options{
+	if opts.KubeconfigHostOverride != "" {
+		restConfig.Host = opts.KubeconfigHostOverride
+	}
+
+	if opts.KubeconfigCAFileOverride != "" {
+		// override the caData if it exists.
+		if len(restConfig.TLSClientConfig.CAData) > 0 {
+			restConfig.TLSClientConfig.CAData = nil
+		}
+		restConfig.TLSClientConfig.CAFile = opts.KubeconfigCAFileOverride
+	}
+
+	mgr, err := manager.New(restConfig, manager.Options{
 		Scheme: scheme,
 		BaseContext: func() context.Context {
 			return ctx
@@ -220,7 +233,7 @@ func resolveAPIExport(ctx context.Context, restConfig *rest.Config, apiExportRef
 
 // setupPlatformCluster sets up a plain, non-kcp-aware ctrl-runtime Cluster object
 // that is solvely used to interact with the APIExport and APIResourceSchemas.
-func setupPlatformCluster(restConfig *rest.Config, apiexportRef string) (cluster.Cluster, error) {
+func setupPlatformCluster(restConfig *rest.Config, opts *Options) (cluster.Cluster, error) {
 	scheme := runtime.NewScheme()
 
 	if err := kcpdevv1alpha1.AddToScheme(scheme); err != nil {
@@ -239,7 +252,7 @@ func setupPlatformCluster(restConfig *rest.Config, apiexportRef string) (cluster
 			Scheme: scheme,
 			ByObject: map[ctrlruntimeclient.Object]cache.ByObject{
 				&kcpdevv1alpha1.APIExport{}: {
-					Field: fields.SelectorFromSet(fields.Set{"metadata.name": apiexportRef}),
+					Field: fields.SelectorFromSet(fields.Set{"metadata.name": opts.APIExportRef}),
 				},
 			},
 		}
