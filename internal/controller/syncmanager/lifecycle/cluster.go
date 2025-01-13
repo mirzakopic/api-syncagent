@@ -21,8 +21,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 
+	"github.com/kcp-dev/logicalcluster/v3"
 	"go.uber.org/zap"
 
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -32,6 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/kcp"
+	"sigs.k8s.io/controller-runtime/pkg/kontext"
 )
 
 // Cluster is a controller-runtime cluster
@@ -57,10 +60,75 @@ func newWildcardClusterMapperProvider(c *rest.Config, httpClient *http.Client) (
 	return apiutil.NewDynamicRESTMapper(mapperCfg, httpClient)
 }
 
+// clusterAwareRoundTripper is a cluster-aware wrapper around http.RoundTripper
+// taking the cluster from the context.
+type clusterAwareRoundTripper struct {
+	delegate http.RoundTripper
+}
+
+// newClusterAwareRoundTripper creates a new cluster aware round tripper.
+func newClusterAwareRoundTripper(delegate http.RoundTripper) *clusterAwareRoundTripper {
+	return &clusterAwareRoundTripper{
+		delegate: delegate,
+	}
+}
+
+func (c *clusterAwareRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	cluster, ok := kontext.ClusterFrom(req.Context())
+	if ok && !cluster.Empty() {
+		return clusterRoundTripper{cluster: cluster.Path(), delegate: c.delegate}.RoundTrip(req)
+	}
+	return c.delegate.RoundTrip(req)
+}
+
+// clusterRoundTripper is static cluster-aware wrapper around http.RoundTripper.
+type clusterRoundTripper struct {
+	cluster  logicalcluster.Path
+	delegate http.RoundTripper
+}
+
+func (c clusterRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	if !c.cluster.Empty() {
+		req = req.Clone(req.Context())
+		req.URL.Path = generatePath(req.URL.Path, c.cluster)
+		req.URL.RawPath = generatePath(req.URL.RawPath, c.cluster)
+	}
+	return c.delegate.RoundTrip(req)
+}
+
+// apiRegex matches any string that has /api/ or /apis/ in it.
+var apiRegex = regexp.MustCompile(`(/api/|/apis/)`)
+
+// generatePath formats the request path to target the specified cluster.
+func generatePath(originalPath string, clusterPath logicalcluster.Path) string {
+	// If the originalPath already has cluster.Path() then the path was already modifed and no change needed
+	if strings.Contains(originalPath, clusterPath.RequestPath()) {
+		return originalPath
+	}
+	// If the originalPath has /api/ or /apis/ in it, it might be anywhere in the path, so we use a regex to find and
+	// replaces /api/ or /apis/ with $cluster/api/ or $cluster/apis/
+	if apiRegex.MatchString(originalPath) {
+		return apiRegex.ReplaceAllString(originalPath, fmt.Sprintf("%s$1", clusterPath.RequestPath()))
+	}
+	// Otherwise, we're just prepending /clusters/$name
+	path := clusterPath.RequestPath()
+	// if the original path is relative, add a / separator
+	if len(originalPath) > 0 && originalPath[0] != '/' {
+		path += "/"
+	}
+	// finally append the original path
+	path += originalPath
+	return path
+}
+
 func NewCluster(address string, baseRestConfig *rest.Config) (*Cluster, error) {
 	// note that this cluster and all its components are kcp-aware
 	config := rest.CopyConfig(baseRestConfig)
 	config.Host = address
+
+	config.Wrap(func(rt http.RoundTripper) http.RoundTripper {
+		return newClusterAwareRoundTripper(rt)
+	})
 
 	clusterObj, err := cluster.New(config, func(o *cluster.Options) {
 		o.NewCache = kcp.NewClusterAwareCache
