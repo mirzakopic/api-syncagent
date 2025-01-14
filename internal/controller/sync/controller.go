@@ -63,6 +63,7 @@ func Create(
 	pubRes *syncagentv1alpha1.PublishedResource,
 	discoveryClient *discovery.Client,
 	apiExportName string,
+	stateNamespace string,
 	log *zap.SugaredLogger,
 	numWorkers int,
 ) (controller.Controller, error) {
@@ -86,7 +87,7 @@ func Create(
 
 	// create the syncer that holds the meat&potatoes of the synchronization logic
 	mutator := mutation.NewMutator(nil) // pubRes.Spec.Mutation
-	syncer, err := sync.NewResourceSyncer(log, localManager.GetClient(), virtualWorkspaceCluster.GetClient(), pubRes, localCRD, apiExportName, mutator)
+	syncer, err := sync.NewResourceSyncer(log, localManager.GetClient(), virtualWorkspaceCluster.GetClient(), pubRes, localCRD, apiExportName, mutator, stateNamespace)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create syncer: %w", err)
 	}

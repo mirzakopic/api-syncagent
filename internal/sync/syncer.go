@@ -59,6 +59,7 @@ func NewResourceSyncer(
 	localCRD *apiextensionsv1.CustomResourceDefinition,
 	remoteAPIGroup string,
 	mutator mutation.Mutator,
+	stateNamespace string,
 ) (*ResourceSyncer, error) {
 	// create a dummy that represents the type used on the local service cluster
 	localGVK := projection.PublishedResourceSourceGVK(pubRes)
@@ -100,7 +101,7 @@ func NewResourceSyncer(
 		subresources:        subresources,
 		destDummy:           localDummy,
 		mutator:             mutator,
-		newObjectStateStore: newObjectStateStore,
+		newObjectStateStore: newKubernetesStateStoreCreator(stateNamespace),
 	}, nil
 }
 
