@@ -22,6 +22,6 @@ created by the accompanying controller in the Sync Agent.
 
 Note that for the time being, to prevent data loss, only new ARS will be added to
 the APIExport. Once an ARS is listed in the APIExport, it is supposed to remain
-until an administrator/other process performs garbage collection in the platform.
+until an administrator/other process performs garbage collection in kcp.
 */
 package apiexport

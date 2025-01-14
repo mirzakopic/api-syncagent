@@ -17,10 +17,9 @@ The intended usecase follows roughly these steps:
    inside of kcp.
 4. The service owner uses the Sync Agent Helm chart (or similar deployment technique) to install the
    Sync Agent in their cluster.
-5. To actually make resources available in the platform, the service owner now has to create a
-   set of `PublishedResource` objects. The configuration happens from their point of view, meaning
-   they define how to publish a CRD to the platform, defining renaming rules and other projection
-   settings.
+5. To actually make resources available in kcp, the service owner now has to create a set of
+   `PublishedResource` objects. The configuration happens from their point of view, meaning they
+   define how to publish a CRD to kcp, defining renaming rules and other projection settings.
 6. Once a `PublishedResource` is created in the service cluster, the Sync Agent will pick it up,
    find the referenced CRD, convert/project this CRD into an `APIResourceSchema` (ARS) for kcp and
    then create the ARS in org workspace.
@@ -28,7 +27,7 @@ The intended usecase follows roughly these steps:
    `APIExport` in the org workspace. This APIExport can then be bound in the org workspace itself
    (or later any workspaces (depending on permissions)) and be used there.
 8. kcp automatically provides a virtual workspace for the `APIExport` and this is what the Sync Agent
-   then uses to watch all objects for the relevant resources in the platform (i.e. in all workspaces).
+   then uses to watch all objects for the relevant resources in kcp (i.e. in all workspaces).
 9. The Sync Agent will now begin to synchronize objects back and forth between the service cluster
    and kcp.
 
@@ -100,8 +99,8 @@ In addition to projecting (mapping) the GVK, the `PublishedResource` also contai
 rules, which influence how the local objects that the Sync Agent is creating are named.
 
 As a single Sync Agent serves a single service, the API group used in kcp is the same for all
-`PublishedResources`. It's the API group configured in the `APIExport` inside the platform (created
-in step 1 in the overview above).
+`PublishedResources`. It's the API group configured in the `APIExport` inside kcp (created in step 1
+in the overview above).
 
 To prevent chaos, `PublishedResources` are immutable: handling the case that a PR first wants to
 publish `kubermatic.k8c.io/v1 Cluster` and then suddenly `kubermatic.k8c.io/v1 User` resources would

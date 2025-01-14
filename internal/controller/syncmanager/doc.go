@@ -16,9 +16,8 @@ limitations under the License.
 
 /*
 Package syncmanager contains a controller that watches the APIExport we manage
-in the platform cluster. Once the virtual workspace URL for said APIExport
-is ready, the controller will begin to synchronize resources back and forth
-between the platform cluster (i.e. all relevant workspaces) and the service
-cluster.
+in kcp. Once the virtual workspace URL for said APIExport is ready, the
+controller will begin to synchronize resources back and forth between kcp
+(i.e. all relevant workspaces) and the service cluster.
 */
 package syncmanager
