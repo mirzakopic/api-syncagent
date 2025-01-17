@@ -21,7 +21,7 @@ presubmits:
       preset-goproxy: "true"
     spec:
       containers:
-        - image: ghcr.io/kcp-dev/infra/build:1.23.4-3
+        - image: ghcr.io/kcp-dev/infra/build:1.23.5-1
           command:
             - hack/ci/verify.sh
           resources:
@@ -37,7 +37,7 @@ presubmits:
       preset-goproxy: "true"
     spec:
       containers:
-        - image: ghcr.io/kcp-dev/infra/build:1.23.4-3
+        - image: ghcr.io/kcp-dev/infra/build:1.23.5-1
           command:
             - make
             - lint
@@ -54,7 +54,7 @@ presubmits:
       preset-goproxy: "true"
     spec:
       containers:
-        - image: quay.io/containers/buildah:v1.30.0
+        - image: quay.io/containers/buildah:v1.38.0
           command:
             - hack/ci/build-image.sh
           env:
@@ -76,7 +76,7 @@ presubmits:
       preset-goproxy: "true"
     spec:
       containers:
-        - image: ghcr.io/kcp-dev/infra/build:1.23.4-3
+        - image: ghcr.io/kcp-dev/infra/build:1.23.5-1
           command:
             - make
             - test
