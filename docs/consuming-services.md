@@ -19,7 +19,7 @@ A Service provided by a Sync Agent should not be confused with a Kubernetes Serv
 ## Consuming a Service
 
 To consume a service (or to make use of an `APIExport`) you have to create an `APIBinding` object
-in the kcp workspace where the servie should be used. This section assumes that you are familiar
+in the kcp workspace where the service should be used. This section assumes that you are familiar
 with kcp on the command line and have the kcp kubectl plugin installed.
 
 First you need to get the kubeconfig for accessing your kcp workspaces. Once you have set your

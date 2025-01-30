@@ -1,7 +1,7 @@
 # Getting Started with the Sync Agent
 
 All that is necessary to run the Sync Agent is a running Kubernetes cluster (for testing you can use
-[kind][kind]) [kcp][kcp] installation.
+[kind][kind]) and a [kcp][kcp] installation.
 
 ## Prerequisites
 
@@ -31,7 +31,7 @@ of your choice:
 # use the kcp kubeconfig
 $ export KUBECONFIG=/path/to/kcp.kubeconfig
 
-# nativagate to the workspace wher the APIExport should exist
+# nativagate to the workspace where the APIExport should exist
 $ kubectl ws :workspace:you:want:to:create:it
 
 # create it
@@ -59,62 +59,23 @@ $ kubectl create secret generic kcp-kubeconfig \
   --from-file "kubeconfig=admin.kubeconfig"
 ```
 
+### Helm Chart Setup
+
 The Sync Agent is shipped as a Helm chart and to install it, the next step is preparing a `values.yaml`
 file for the Sync Agent Helm chart. We need to pass the target `APIExport`, a name for the Sync Agent
 itself and a reference to the kubeconfig secret we just created.
 
 ```yaml
-syncAgent:
-  # Required: the name of the APIExport in kcp that this Sync Agent is supposed to serve.
-  apiExportName: test.example.com
+# Required: the name of the APIExport in kcp that this Sync Agent is supposed to serve.
+apiExportName: test.example.com
 
-  # Required: this Sync Agent's public name, will be shown in kcp, purely for informational purposes.
-  agentName: unique-test
+# Required: This Agent's public name, purely for informational purposes.
+# If not set, defaults to the Helm release name.
+agentName: unique-test
 
-  # Required: Name of the Kubernetes Secret that contains a "kubeconfig" key, with the kubeconfig
-  # provided by kcp to access it.
-  kcpKubeconfig: kcp-kubeconfig
-
-  # Create additional RBAC on the service cluster. These rules depend somewhat on the Sync Agent
-  # configuration, but the following two rules are very common. If you configure the Sync Agent to
-  # only work with cluster-scoped objects, you do not need to grant it permissions to create
-  # namespaces, for example.
-  rbac:
-    createClusterRole: true
-    rules:
-      # in order to create APIResourceSchemas
-      - apiGroups:
-          - apiextensions.k8s.io
-        resources:
-          - customresourcedefinitions
-        verbs:
-          - get
-          - list
-          - watch
-      # so copies of remote objects can be placed in their target namespaces
-      - apiGroups:
-          - ""
-        resources:
-          - namespaces
-        verbs:
-          - get
-          - list
-          - watch
-          - create
-```
-
-In addition, it is important to create RBAC rules for the resources you want to publish. If you want
-to publish the `Certificate` resource as created by cert-manager, you will need to append the
-following ruleset:
-
-```yaml
-      # so we can manage certificates
-      - apiGroups:
-          - cert-manager.io
-        resources:
-          - certificates
-        verbs:
-          - '*'
+# Required: Name of the Kubernetes Secret that contains a "kubeconfig" key,
+# with the kubeconfig provided by kcp to access it.
+kcpKubeconfig: kcp-kubeconfig
 ```
 
 Once this `values.yaml` file is prepared, install a recent development build of the Sync Agent:
@@ -126,6 +87,52 @@ helm install kcp-api-syncagent oci://github.com/kcp-dev/helm-charts/api-syncagen
 Two `kcp-api-syncagent` Pods should start in the `kcp-system` namespace. If they crash you will need to
 identify the reason from container logs. A possible issue is that the provided kubeconfig does not
 have permissions against the target kcp workspace.
+
+### RBAC
+
+The Sync Agent usually requires additional RBAC on the service cluster to function properly. The
+Helm chart will automatically allow it to read CRDs, namespaces and Secrets, but depending on how
+you configure your PublishedResources, additional permissions need to be created.
+
+For example, if the Sync Agent is meant to create `Certificate` objects (defined by cert-manager),
+you would need to grant it permissions on those:
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: 'api-syncagent:unique-test'
+rules:
+  - apiGroups:
+      - cert-manager.io
+    resources:
+      - certificates
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: 'api-syncagent:unique-test'
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: 'api-syncagent:unique-test'
+subjects:
+  - kind: ServiceAccount
+    name: 'kcp-api-syncagent'
+    namespace: kcp-system
+```
+
+**NB:** Even though the PublishedResources might only create/update Certificates in a single namespace,
+due to the inner workings of the Agent they will still be watched (cached) cluster-wide. So you can
+tighten permissions on `create`/`update` operations to certain namespaces, but `watch` permissions
+need to be granted cluster-wide.
 
 ## Publish Resources
 
