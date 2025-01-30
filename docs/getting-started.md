@@ -81,14 +81,19 @@ kcpKubeconfig: kcp-kubeconfig
 Once this `values.yaml` file is prepared, install a recent development build of the Sync Agent:
 
 ```sh
-helm install kcp-api-syncagent oci://github.com/kcp-dev/helm-charts/api-syncagent --version 9.9.9-9fc9a430d95f95f4b2210f91ef67b3ec153b5cab -f values.yaml -n kcp-system
+helm repo add kcp https://kcp-dev.github.io/helm-charts
+helm repo update
+
+helm install kcp-api-syncagent kcp/api-syncagent \
+  --values values.yaml \
+  --namespace kcp-system
 ```
 
 Two `kcp-api-syncagent` Pods should start in the `kcp-system` namespace. If they crash you will need to
 identify the reason from container logs. A possible issue is that the provided kubeconfig does not
 have permissions against the target kcp workspace.
 
-### RBAC
+### Service Cluster RBAC
 
 The Sync Agent usually requires additional RBAC on the service cluster to function properly. The
 Helm chart will automatically allow it to read CRDs, namespaces and Secrets, but depending on how
@@ -133,6 +138,73 @@ subjects:
 due to the inner workings of the Agent they will still be watched (cached) cluster-wide. So you can
 tighten permissions on `create`/`update` operations to certain namespaces, but `watch` permissions
 need to be granted cluster-wide.
+
+### kcp RBAC
+
+The Helm chart is installed on the service cluster and so cannot provision the necessary RBAC for
+the Sync Agent within kcp. Usually whoever creates the `APIExport` is also responsible for creating
+the RBAC rules that grant the Agent access.
+
+The Sync Agent needs to
+
+* manage its `APIExport`,
+* manage `APIResourceSchemas` and
+* access the virtual workspace for its `APIExport`.
+
+This can be achieved by applying RBAC like this _in the workspace where the `APIExport` resides_:
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: api-syncagent-mango
+rules:
+  # manage its APIExport
+  - apiGroups:
+      - apis.kcp.io
+    resources:
+      - apiexports
+    resourceNames:
+      - test.example.com
+    verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+  # manage APIResourceSchemas
+  - apiGroups:
+      - apis.kcp.io
+    resources:
+      - apiresourceschemas
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+  # access the virtual workspace
+  - apiGroups:
+      - apis.kcp.io
+    resources:
+      - apiexports/content
+    resourceNames:
+      - test.example.com
+    verbs:
+      - '*'
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: api-syncagent-columbo:mango-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: api-syncagent-mango
+subjects:
+  - kind: User
+    name: api-syncagent-mango
+```
 
 ## Publish Resources
 
