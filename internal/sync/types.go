@@ -21,14 +21,15 @@ const (
 	// them from being deleted before the local objects can be cleaned up.
 	deletionFinalizer = "syncagent.kcp.io/cleanup"
 
-	// The following 4 labels are put on local objects to link them to their
+	// The following 4 labels/annotations are put on local objects to link them to their
 	// origin remote objects. Note that the cluster *path* label is optional and
 	// has to be enabled per PublishedResource.
 
-	remoteObjectClusterLabel     = "syncagent.kcp.io/remote-object-cluster"
-	remoteObjectClusterPathLabel = "syncagent.kcp.io/remote-object-cluster-path"
-	remoteObjectNamespaceLabel   = "syncagent.kcp.io/remote-object-namespace"
-	remoteObjectNameLabel        = "syncagent.kcp.io/remote-object-name"
+	remoteObjectClusterLabel   = "syncagent.kcp.io/remote-object-cluster"
+	remoteObjectNamespaceLabel = "syncagent.kcp.io/remote-object-namespace"
+	remoteObjectNameLabel      = "syncagent.kcp.io/remote-object-name"
+
+	remoteObjectClusterPathAnnotation = "syncagent.kcp.io/remote-object-cluster-path"
 
 	// objectStateLabelName is put on object state Secrets to allow for easier mass deletions
 	// if ever necessary.

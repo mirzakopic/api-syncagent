@@ -183,6 +183,11 @@ func (s *objectSyncer) syncObjectSpec(log *zap.SugaredLogger, source, dest syncS
 		lastKnownSourceState.SetAPIVersion(sourceObjCopy.GetAPIVersion())
 		lastKnownSourceState.SetKind(sourceObjCopy.GetKind())
 
+		// update annotations (this is important if the admin later flipped the enableClusterPaths
+		// option in the PublishedResource)
+		sourceKey := newObjectKey(source.object, source.clusterName, source.clusterPath)
+		ensureAnnotations(sourceObjCopy, sourceKey.Annotations())
+
 		// now we can diff the two versions and create a patch
 		rawPatch, err := s.createMergePatch(lastKnownSourceState, sourceObjCopy)
 		if err != nil {
@@ -276,6 +281,9 @@ func (s *objectSyncer) ensureDestinationObject(log *zap.SugaredLogger, source, d
 	sourceObjKey := newObjectKey(source.object, source.clusterName, source.clusterPath)
 	ensureLabels(destObj, sourceObjKey.Labels())
 
+	// put optional additional annotations on the new object
+	ensureAnnotations(destObj, sourceObjKey.Annotations())
+
 	// finally, we can create the destination object
 	objectLog := log.With("dest-object", newObjectKey(destObj, dest.clusterName, logicalcluster.None))
 	objectLog.Debugw("Creating destination object…")
@@ -318,6 +326,7 @@ func (s *objectSyncer) adoptExistingDestinationObject(log *zap.SugaredLogger, de
 	// the destination object from another source object, which would then lead to the two source objects
 	// "fighting" about the one destination object.
 	ensureLabels(existingDestObj, sourceKey.Labels())
+	ensureAnnotations(existingDestObj, sourceKey.Annotations())
 
 	if err := dest.client.Update(dest.ctx, existingDestObj); err != nil {
 		return fmt.Errorf("failed to upsert current destination object labels: %w", err)

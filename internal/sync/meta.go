@@ -134,14 +134,18 @@ func (k objectKey) Key() string {
 }
 
 func (k objectKey) Labels() labels.Set {
-	s := labels.Set{
+	return labels.Set{
 		remoteObjectClusterLabel:   string(k.ClusterName),
 		remoteObjectNamespaceLabel: k.Namespace,
 		remoteObjectNameLabel:      k.Name,
 	}
+}
+
+func (k objectKey) Annotations() labels.Set {
+	s := labels.Set{}
 
 	if !k.ClusterPath.Empty() {
-		s[remoteObjectClusterPathLabel] = k.ClusterPath.String()
+		s[remoteObjectClusterPathAnnotation] = k.ClusterPath.String()
 	}
 
 	return s
