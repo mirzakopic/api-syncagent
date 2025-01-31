@@ -24,10 +24,12 @@ import (
 	"regexp"
 	"strings"
 
+	kcpdevcorev1alpha1 "github.com/kcp-dev/kcp/sdk/apis/core/v1alpha1"
 	"github.com/kcp-dev/logicalcluster/v3"
 	"go.uber.org/zap"
 
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -130,7 +132,14 @@ func NewCluster(address string, baseRestConfig *rest.Config) (*Cluster, error) {
 		return newClusterAwareRoundTripper(rt)
 	})
 
+	scheme := runtime.NewScheme()
+
+	if err := kcpdevcorev1alpha1.AddToScheme(scheme); err != nil {
+		return nil, fmt.Errorf("failed to register scheme %s: %w", kcpdevcorev1alpha1.SchemeGroupVersion, err)
+	}
+
 	clusterObj, err := cluster.New(config, func(o *cluster.Options) {
+		o.Scheme = scheme
 		o.NewCache = kcp.NewClusterAwareCache
 		o.NewAPIReader = kcp.NewClusterAwareAPIReader
 		o.NewClient = kcp.NewClusterAwareClient
