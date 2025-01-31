@@ -19,6 +19,8 @@ package sync
 import (
 	"testing"
 
+	"github.com/kcp-dev/logicalcluster/v3"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
@@ -34,7 +36,8 @@ func createNewObject(name, namespace string) metav1.Object {
 func TestObjectKey(t *testing.T) {
 	testcases := []struct {
 		object      metav1.Object
-		clusterName string
+		clusterName logicalcluster.Name
+		clusterPath logicalcluster.Path
 		expected    string
 	}{
 		{
@@ -57,11 +60,17 @@ func TestObjectKey(t *testing.T) {
 			clusterName: "abc123",
 			expected:    "abc123|namespace/test",
 		},
+		{
+			object:      createNewObject("test", "namespace"),
+			clusterName: "abc123",
+			clusterPath: logicalcluster.NewPath("this:should:not:appear:in:the:key"),
+			expected:    "abc123|namespace/test",
+		},
 	}
 
 	for _, testcase := range testcases {
 		t.Run("", func(t *testing.T) {
-			key := newObjectKey(testcase.object, testcase.clusterName)
+			key := newObjectKey(testcase.object, testcase.clusterName, testcase.clusterPath)
 
 			if stringified := key.String(); stringified != testcase.expected {
 				t.Fatalf("Expected %q but got %q.", testcase.expected, stringified)

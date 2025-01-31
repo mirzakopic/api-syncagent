@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/kcp-dev/logicalcluster/v3"
+
 	"sigs.k8s.io/controller-runtime/pkg/kontext"
 )
 

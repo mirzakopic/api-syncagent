@@ -21,8 +21,6 @@ import (
 	"fmt"
 	"time"
 
-	kcpcore "github.com/kcp-dev/kcp/sdk/apis/core"
-	kcpdevcorev1alpha1 "github.com/kcp-dev/kcp/sdk/apis/core/v1alpha1"
 	"github.com/kcp-dev/logicalcluster/v3"
 	"go.uber.org/zap"
 
@@ -31,6 +29,9 @@ import (
 	"github.com/kcp-dev/api-syncagent/internal/projection"
 	"github.com/kcp-dev/api-syncagent/internal/sync"
 	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
+
+	kcpcore "github.com/kcp-dev/kcp/sdk/apis/core"
+	kcpdevcorev1alpha1 "github.com/kcp-dev/kcp/sdk/apis/core/v1alpha1"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"

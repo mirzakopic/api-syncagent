@@ -825,7 +825,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				if backend == nil {
 					backend = newKubernetesBackend(stateNamespace, primaryObject, stateCluster)
 					if testcase.existingState != "" {
-						if err := backend.Put(testcase.remoteObject, clusterName.String(), []byte(testcase.existingState)); err != nil {
+						if err := backend.Put(testcase.remoteObject, clusterName, []byte(testcase.existingState)); err != nil {
 							t.Fatalf("Failed to prime state store: %v", err)
 						}
 					}
@@ -894,7 +894,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 						t.Fatal("Cannot check object state, state store was never instantiated.")
 					}
 
-					finalState, err := backend.Get(testcase.expectedRemoteObject, clusterName.String())
+					finalState, err := backend.Get(testcase.expectedRemoteObject, clusterName)
 					if err != nil {
 						t.Fatalf("Failed to get final state: %v", err)
 					} else if !bytes.Equal(finalState, []byte(testcase.expectedState)) {
@@ -1122,7 +1122,7 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 				if backend == nil {
 					backend = newKubernetesBackend(stateNamespace, primaryObject, stateCluster)
 					if testcase.existingState != "" {
-						if err := backend.Put(testcase.remoteObject, clusterName.String(), []byte(testcase.existingState)); err != nil {
+						if err := backend.Put(testcase.remoteObject, clusterName, []byte(testcase.existingState)); err != nil {
 							t.Fatalf("Failed to prime state store: %v", err)
 						}
 					}
@@ -1191,7 +1191,7 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 						t.Fatal("Cannot check object state, state store was never instantiated.")
 					}
 
-					finalState, err := backend.Get(testcase.expectedRemoteObject, clusterName.String())
+					finalState, err := backend.Get(testcase.expectedRemoteObject, clusterName)
 					if err != nil {
 						t.Fatalf("Failed to get final state: %v", err)
 					} else if !bytes.Equal(finalState, []byte(testcase.expectedState)) {

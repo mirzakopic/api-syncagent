@@ -22,6 +22,7 @@ import (
 	"slices"
 
 	jsonpatch "github.com/evanphx/json-patch/v5"
+	"github.com/kcp-dev/logicalcluster/v3"
 	"go.uber.org/zap"
 	"k8c.io/reconciler/pkg/equality"
 
@@ -54,7 +55,8 @@ type objectSyncer struct {
 
 type syncSide struct {
 	ctx         context.Context
-	clusterName string
+	clusterName logicalcluster.Name
+	clusterPath logicalcluster.Path
 	client      ctrlruntimeclient.Client
 	object      *unstructured.Unstructured
 }
@@ -104,7 +106,7 @@ func (s *objectSyncer) Sync(log *zap.SugaredLogger, source, dest syncSide) (requ
 	// do not try to update a destination object that is in deletion
 	// (this should only happen if a service admin manually deletes something on the service cluster)
 	if dest.object.GetDeletionTimestamp() != nil {
-		log.Debugw("Destination object is in deletion, skipping any further synchronization", "dest-object", newObjectKey(dest.object, dest.clusterName))
+		log.Debugw("Destination object is in deletion, skipping any further synchronization", "dest-object", newObjectKey(dest.object, dest.clusterName, logicalcluster.None))
 		return false, nil
 	}
 
@@ -173,7 +175,7 @@ func (s *objectSyncer) syncObjectSpec(log *zap.SugaredLogger, source, dest syncS
 	sourceObjCopy := source.object.DeepCopy()
 	stripMetadata(sourceObjCopy)
 
-	log = log.With("dest-object", newObjectKey(dest.object, dest.clusterName))
+	log = log.With("dest-object", newObjectKey(dest.object, dest.clusterName, logicalcluster.None))
 
 	// calculate the patch to go from the last known state to the current source object's state
 	if lastKnownSourceState != nil {
@@ -271,11 +273,11 @@ func (s *objectSyncer) ensureDestinationObject(log *zap.SugaredLogger, source, d
 	stripMetadata(destObj)
 
 	// remember the connection between the source and destination object
-	sourceObjKey := newObjectKey(source.object, source.clusterName)
+	sourceObjKey := newObjectKey(source.object, source.clusterName, source.clusterPath)
 	ensureLabels(destObj, sourceObjKey.Labels())
 
 	// finally, we can create the destination object
-	objectLog := log.With("dest-object", newObjectKey(destObj, dest.clusterName))
+	objectLog := log.With("dest-object", newObjectKey(destObj, dest.clusterName, logicalcluster.None))
 	objectLog.Debugw("Creating destination object…")
 
 	if err := dest.client.Create(dest.ctx, destObj); err != nil {
@@ -356,7 +358,7 @@ func (s *objectSyncer) handleDeletion(log *zap.SugaredLogger, source, dest syncS
 	// if the destination object still exists, delete it and wait for it to be cleaned up
 	if dest.object != nil {
 		if dest.object.GetDeletionTimestamp() == nil {
-			log.Debugw("Deleting destination object…", "dest-object", newObjectKey(dest.object, dest.clusterName))
+			log.Debugw("Deleting destination object…", "dest-object", newObjectKey(dest.object, dest.clusterName, logicalcluster.None))
 			if err := dest.client.Delete(dest.ctx, dest.object); err != nil {
 				return false, fmt.Errorf("failed to delete destination object: %w", err)
 			}
