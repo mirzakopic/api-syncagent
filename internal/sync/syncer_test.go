@@ -191,7 +191,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 					Username: "Colonel Mustard",
 				},
 			}),
-			existingState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
+			existingState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{},"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
 
 			expectedRemoteObject: newUnstructured(&dummyv1alpha1.Thing{
 				ObjectMeta: metav1.ObjectMeta{
@@ -217,7 +217,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 					Username: "Colonel Mustard",
 				},
 			}),
-			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
+			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{},"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
 		},
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -264,7 +264,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 					Username: "Colonel Mustard",
 				},
 			}),
-			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
+			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{},"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
 		},
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -321,7 +321,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 					Username: "Colonel Mustard",
 				},
 			}),
-			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
+			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{},"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
 		},
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -357,7 +357,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 					Username: "Colonel Mustard",
 				},
 			}),
-			existingState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
+			existingState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{},"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
 
 			expectedRemoteObject: newUnstructured(&dummyv1alpha1.Thing{
 				ObjectMeta: metav1.ObjectMeta{
@@ -383,7 +383,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 					Username: "Miss Scarlet",
 				},
 			}),
-			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Miss Scarlet"}}`,
+			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{},"name":"my-test-thing"},"spec":{"username":"Miss Scarlet"}}`,
 		},
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -445,7 +445,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 					Username: "Colonel Mustard",
 				},
 			}),
-			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
+			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{},"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
 		},
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -574,7 +574,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 					Address:  "Hotdogstr. 13", // we assume this field was set by a local controller/webhook, unrelated to the Sync Agent
 				},
 			}),
-			existingState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
+			existingState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{},"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
 
 			expectedRemoteObject: newUnstructured(&dummyv1alpha1.Thing{
 				ObjectMeta: metav1.ObjectMeta{
@@ -602,7 +602,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 					Address: "Hotdogstr. 13",
 				},
 			}),
-			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Miss Scarlet"}}`,
+			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{},"name":"my-test-thing"},"spec":{"username":"Miss Scarlet"}}`,
 		},
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -1014,7 +1014,7 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 					CurrentVersion: "v1",
 				},
 			}),
-			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
+			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{},"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
 		},
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -1085,7 +1085,7 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 					CurrentVersion: "v1",
 				},
 			}),
-			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
+			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{},"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
 		},
 	}
 
