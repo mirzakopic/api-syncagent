@@ -112,7 +112,7 @@ func NewResourceSyncer(
 // case, the caller should re-fetch the remote object and call Process() again (most likely in the
 // next reconciliation). Only when (false, nil) is returned is the entire process finished.
 func (s *ResourceSyncer) Process(ctx Context, remoteObj *unstructured.Unstructured) (requeue bool, err error) {
-	log := s.log.With("source-object", newObjectKey(remoteObj, ctx.clusterName, ctx.clusterPath))
+	log := s.log.With("source-object", newObjectKey(remoteObj, ctx.clusterName, ctx.workspacePath))
 
 	// find the local equivalent object in the local service cluster
 	localObj, err := s.findLocalObject(ctx, remoteObj)
@@ -126,11 +126,11 @@ func (s *ResourceSyncer) Process(ctx Context, remoteObj *unstructured.Unstructur
 	// Prepare object sync sides.
 
 	sourceSide := syncSide{
-		ctx:         ctx.remote,
-		clusterName: ctx.clusterName,
-		clusterPath: ctx.clusterPath,
-		client:      s.remoteClient,
-		object:      remoteObj,
+		ctx:           ctx.remote,
+		clusterName:   ctx.clusterName,
+		workspacePath: ctx.workspacePath,
+		client:        s.remoteClient,
+		object:        remoteObj,
 	}
 
 	destSide := syncSide{
@@ -182,7 +182,7 @@ func (s *ResourceSyncer) Process(ctx Context, remoteObj *unstructured.Unstructur
 }
 
 func (s *ResourceSyncer) findLocalObject(ctx Context, remoteObj *unstructured.Unstructured) (*unstructured.Unstructured, error) {
-	localSelector := labels.SelectorFromSet(newObjectKey(remoteObj, ctx.clusterName, ctx.clusterPath).Labels())
+	localSelector := labels.SelectorFromSet(newObjectKey(remoteObj, ctx.clusterName, ctx.workspacePath).Labels())
 
 	localObjects := &unstructured.UnstructuredList{}
 	localObjects.SetAPIVersion(s.destDummy.GetAPIVersion())

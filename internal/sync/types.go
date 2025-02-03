@@ -29,7 +29,7 @@ const (
 	remoteObjectNamespaceLabel = "syncagent.kcp.io/remote-object-namespace"
 	remoteObjectNameLabel      = "syncagent.kcp.io/remote-object-name"
 
-	remoteObjectClusterPathAnnotation = "syncagent.kcp.io/remote-object-cluster-path"
+	remoteObjectWorkspacePathAnnotation = "syncagent.kcp.io/remote-object-workspace-path"
 
 	// objectStateLabelName is put on object state Secrets to allow for easier mass deletions
 	// if ever necessary.

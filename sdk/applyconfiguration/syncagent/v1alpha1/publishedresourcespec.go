@@ -21,12 +21,12 @@ package v1alpha1
 // PublishedResourceSpecApplyConfiguration represents a declarative configuration of the PublishedResourceSpec type for use
 // with apply.
 type PublishedResourceSpecApplyConfiguration struct {
-	Resource           *SourceResourceDescriptorApplyConfiguration `json:"resource,omitempty"`
-	Filter             *ResourceFilterApplyConfiguration           `json:"filter,omitempty"`
-	Naming             *ResourceNamingApplyConfiguration           `json:"naming,omitempty"`
-	EnableClusterPaths *bool                                       `json:"enableClusterPaths,omitempty"`
-	Projection         *ResourceProjectionApplyConfiguration       `json:"projection,omitempty"`
-	Related            []RelatedResourceSpecApplyConfiguration     `json:"related,omitempty"`
+	Resource             *SourceResourceDescriptorApplyConfiguration `json:"resource,omitempty"`
+	Filter               *ResourceFilterApplyConfiguration           `json:"filter,omitempty"`
+	Naming               *ResourceNamingApplyConfiguration           `json:"naming,omitempty"`
+	EnableWorkspacePaths *bool                                       `json:"enableWorkspacePaths,omitempty"`
+	Projection           *ResourceProjectionApplyConfiguration       `json:"projection,omitempty"`
+	Related              []RelatedResourceSpecApplyConfiguration     `json:"related,omitempty"`
 }
 
 // PublishedResourceSpecApplyConfiguration constructs a declarative configuration of the PublishedResourceSpec type for use with
@@ -59,11 +59,11 @@ func (b *PublishedResourceSpecApplyConfiguration) WithNaming(value *ResourceNami
 	return b
 }
 
-// WithEnableClusterPaths sets the EnableClusterPaths field in the declarative configuration to the given value
+// WithEnableWorkspacePaths sets the EnableWorkspacePaths field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the EnableClusterPaths field is set to the value of the last call.
-func (b *PublishedResourceSpecApplyConfiguration) WithEnableClusterPaths(value bool) *PublishedResourceSpecApplyConfiguration {
-	b.EnableClusterPaths = &value
+// If called multiple times, the EnableWorkspacePaths field is set to the value of the last call.
+func (b *PublishedResourceSpecApplyConfiguration) WithEnableWorkspacePaths(value bool) *PublishedResourceSpecApplyConfiguration {
+	b.EnableWorkspacePaths = &value
 	return b
 }
 

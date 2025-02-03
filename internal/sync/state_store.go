@@ -133,7 +133,7 @@ func hashObject(obj *unstructured.Unstructured) string {
 func newKubernetesBackend(namespace string, primaryObject, stateCluster syncSide) *kubernetesBackend {
 	keyHash := hashObject(primaryObject.object)
 
-	secretLabels := newObjectKey(primaryObject.object, primaryObject.clusterName, primaryObject.clusterPath).Labels()
+	secretLabels := newObjectKey(primaryObject.object, primaryObject.clusterName, primaryObject.workspacePath).Labels()
 	secretLabels[objectStateLabelName] = objectStateLabelValue
 
 	return &kubernetesBackend{

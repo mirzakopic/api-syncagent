@@ -25,10 +25,10 @@ import (
 )
 
 type Context struct {
-	clusterName logicalcluster.Name
-	clusterPath logicalcluster.Path
-	local       context.Context
-	remote      context.Context
+	clusterName   logicalcluster.Name
+	workspacePath logicalcluster.Path
+	local         context.Context
+	remote        context.Context
 }
 
 func NewContext(local, remote context.Context) Context {
@@ -44,11 +44,11 @@ func NewContext(local, remote context.Context) Context {
 	}
 }
 
-func (c *Context) WithClusterPath(path logicalcluster.Path) Context {
+func (c *Context) WithWorkspacePath(path logicalcluster.Path) Context {
 	return Context{
-		clusterName: c.clusterName,
-		clusterPath: path,
-		local:       c.local,
-		remote:      c.remote,
+		clusterName:   c.clusterName,
+		workspacePath: path,
+		local:         c.local,
+		remote:        c.remote,
 	}
 }

@@ -54,11 +54,11 @@ type objectSyncer struct {
 }
 
 type syncSide struct {
-	ctx         context.Context
-	clusterName logicalcluster.Name
-	clusterPath logicalcluster.Path
-	client      ctrlruntimeclient.Client
-	object      *unstructured.Unstructured
+	ctx           context.Context
+	clusterName   logicalcluster.Name
+	workspacePath logicalcluster.Path
+	client        ctrlruntimeclient.Client
+	object        *unstructured.Unstructured
 }
 
 func (s *objectSyncer) Sync(log *zap.SugaredLogger, source, dest syncSide) (requeue bool, err error) {
@@ -183,9 +183,9 @@ func (s *objectSyncer) syncObjectSpec(log *zap.SugaredLogger, source, dest syncS
 		lastKnownSourceState.SetAPIVersion(sourceObjCopy.GetAPIVersion())
 		lastKnownSourceState.SetKind(sourceObjCopy.GetKind())
 
-		// update annotations (this is important if the admin later flipped the enableClusterPaths
+		// update annotations (this is important if the admin later flipped the enableWorkspacePaths
 		// option in the PublishedResource)
-		sourceKey := newObjectKey(source.object, source.clusterName, source.clusterPath)
+		sourceKey := newObjectKey(source.object, source.clusterName, source.workspacePath)
 		ensureAnnotations(sourceObjCopy, sourceKey.Annotations())
 
 		// now we can diff the two versions and create a patch
@@ -278,7 +278,7 @@ func (s *objectSyncer) ensureDestinationObject(log *zap.SugaredLogger, source, d
 	stripMetadata(destObj)
 
 	// remember the connection between the source and destination object
-	sourceObjKey := newObjectKey(source.object, source.clusterName, source.clusterPath)
+	sourceObjKey := newObjectKey(source.object, source.clusterName, source.workspacePath)
 	ensureLabels(destObj, sourceObjKey.Labels())
 
 	// put optional additional annotations on the new object

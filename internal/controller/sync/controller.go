@@ -162,14 +162,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	// if desired, fetch the cluster path as well (some downstream service providers might make use of it,
 	// but since it requires an additional permission claim, it's optional)
-	if r.pubRes.Spec.EnableClusterPaths {
+	if r.pubRes.Spec.EnableWorkspacePaths {
 		lc := &kcpdevcorev1alpha1.LogicalCluster{}
 		if err := r.vwClient.Get(wsCtx, types.NamespacedName{Name: kcpdevcorev1alpha1.LogicalClusterName}, lc); err != nil {
 			return reconcile.Result{}, fmt.Errorf("failed to retrieve remote logicalcluster: %w", err)
 		}
 
 		path := lc.Annotations[kcpcore.LogicalClusterPathAnnotationKey]
-		syncContext = syncContext.WithClusterPath(logicalcluster.NewPath(path))
+		syncContext = syncContext.WithWorkspacePath(logicalcluster.NewPath(path))
 	}
 
 	// sync main object

@@ -94,18 +94,18 @@ func removeFinalizer(ctx context.Context, log *zap.SugaredLogger, client ctrlrun
 }
 
 type objectKey struct {
-	ClusterName logicalcluster.Name
-	ClusterPath logicalcluster.Path
-	Namespace   string
-	Name        string
+	ClusterName   logicalcluster.Name
+	WorkspacePath logicalcluster.Path
+	Namespace     string
+	Name          string
 }
 
-func newObjectKey(obj metav1.Object, clusterName logicalcluster.Name, clusterPath logicalcluster.Path) objectKey {
+func newObjectKey(obj metav1.Object, clusterName logicalcluster.Name, workspacePath logicalcluster.Path) objectKey {
 	return objectKey{
-		ClusterName: clusterName,
-		ClusterPath: clusterPath,
-		Namespace:   obj.GetNamespace(),
-		Name:        obj.GetName(),
+		ClusterName:   clusterName,
+		WorkspacePath: workspacePath,
+		Namespace:     obj.GetNamespace(),
+		Name:          obj.GetName(),
 	}
 }
 
@@ -144,8 +144,8 @@ func (k objectKey) Labels() labels.Set {
 func (k objectKey) Annotations() labels.Set {
 	s := labels.Set{}
 
-	if !k.ClusterPath.Empty() {
-		s[remoteObjectClusterPathAnnotation] = k.ClusterPath.String()
+	if !k.WorkspacePath.Empty() {
+		s[remoteObjectWorkspacePathAnnotation] = k.WorkspacePath.String()
 	}
 
 	return s

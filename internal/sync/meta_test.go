@@ -35,10 +35,10 @@ func createNewObject(name, namespace string) metav1.Object {
 
 func TestObjectKey(t *testing.T) {
 	testcases := []struct {
-		object      metav1.Object
-		clusterName logicalcluster.Name
-		clusterPath logicalcluster.Path
-		expected    string
+		object        metav1.Object
+		clusterName   logicalcluster.Name
+		workspacePath logicalcluster.Path
+		expected      string
 	}{
 		{
 			object:      createNewObject("test", ""),
@@ -61,16 +61,16 @@ func TestObjectKey(t *testing.T) {
 			expected:    "abc123|namespace/test",
 		},
 		{
-			object:      createNewObject("test", "namespace"),
-			clusterName: "abc123",
-			clusterPath: logicalcluster.NewPath("this:should:not:appear:in:the:key"),
-			expected:    "abc123|namespace/test",
+			object:        createNewObject("test", "namespace"),
+			clusterName:   "abc123",
+			workspacePath: logicalcluster.NewPath("this:should:not:appear:in:the:key"),
+			expected:      "abc123|namespace/test",
 		},
 	}
 
 	for _, testcase := range testcases {
 		t.Run("", func(t *testing.T) {
-			key := newObjectKey(testcase.object, testcase.clusterName, testcase.clusterPath)
+			key := newObjectKey(testcase.object, testcase.clusterName, testcase.workspacePath)
 
 			if stringified := key.String(); stringified != testcase.expected {
 				t.Fatalf("Expected %q but got %q.", testcase.expected, stringified)
