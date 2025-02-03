@@ -19,13 +19,16 @@ package sync
 import (
 	"context"
 
+	"github.com/kcp-dev/logicalcluster/v3"
+
 	"sigs.k8s.io/controller-runtime/pkg/kontext"
 )
 
 type Context struct {
-	clusterName string
-	local       context.Context
-	remote      context.Context
+	clusterName   logicalcluster.Name
+	workspacePath logicalcluster.Path
+	local         context.Context
+	remote        context.Context
 }
 
 func NewContext(local, remote context.Context) Context {
@@ -35,8 +38,17 @@ func NewContext(local, remote context.Context) Context {
 	}
 
 	return Context{
-		clusterName: string(clusterName),
+		clusterName: clusterName,
 		local:       local,
 		remote:      remote,
+	}
+}
+
+func (c *Context) WithWorkspacePath(path logicalcluster.Path) Context {
+	return Context{
+		clusterName:   c.clusterName,
+		workspacePath: path,
+		local:         c.local,
+		remote:        c.remote,
 	}
 }

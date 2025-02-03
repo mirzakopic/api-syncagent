@@ -68,6 +68,13 @@ type PublishedResourceSpec struct {
 	// many different kcp workspaces.
 	Naming *ResourceNaming `json:"naming,omitempty"`
 
+	// EnableWorkspacePaths toggles whether the Sync Agent will not just store the kcp
+	// cluster name as a label on each locally synced object, but also the full workspace
+	// path. This is optional because it requires additional requests to kcp and
+	// should only be used if the workspace path is of interest on the
+	// service cluster side.
+	EnableWorkspacePaths bool `json:"enableWorkspacePaths,omitempty"`
+
 	// Projection is used to change the GVK of a published resource within kcp.
 	// This can be used to hide implementation details and provide a customized API
 	// experience to the user.

@@ -30,7 +30,11 @@ import (
 	"github.com/kcp-dev/api-syncagent/internal/sync"
 	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
 
+	kcpcore "github.com/kcp-dev/kcp/sdk/apis/core"
+	kcpdevcorev1alpha1 "github.com/kcp-dev/kcp/sdk/apis/core/v1alpha1"
+
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
@@ -52,6 +56,7 @@ type Reconciler struct {
 	log         *zap.SugaredLogger
 	syncer      *sync.ResourceSyncer
 	remoteDummy *unstructured.Unstructured
+	pubRes      *syncagentv1alpha1.PublishedResource
 }
 
 // Create creates a new controller and importantly does *not* add it to the manager,
@@ -99,6 +104,7 @@ func Create(
 		log:         log,
 		remoteDummy: remoteDummy,
 		syncer:      syncer,
+		pubRes:      pubRes,
 	}
 
 	ctrlOptions := controller.Options{
@@ -152,8 +158,22 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{}, nil
 	}
 
+	syncContext := sync.NewContext(ctx, wsCtx)
+
+	// if desired, fetch the cluster path as well (some downstream service providers might make use of it,
+	// but since it requires an additional permission claim, it's optional)
+	if r.pubRes.Spec.EnableWorkspacePaths {
+		lc := &kcpdevcorev1alpha1.LogicalCluster{}
+		if err := r.vwClient.Get(wsCtx, types.NamespacedName{Name: kcpdevcorev1alpha1.LogicalClusterName}, lc); err != nil {
+			return reconcile.Result{}, fmt.Errorf("failed to retrieve remote logicalcluster: %w", err)
+		}
+
+		path := lc.Annotations[kcpcore.LogicalClusterPathAnnotationKey]
+		syncContext = syncContext.WithWorkspacePath(logicalcluster.NewPath(path))
+	}
+
 	// sync main object
-	requeue, err := r.syncer.Process(sync.NewContext(ctx, wsCtx), remoteObj)
+	requeue, err := r.syncer.Process(syncContext, remoteObj)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

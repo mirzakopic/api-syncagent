@@ -19,6 +19,7 @@ package sync
 import (
 	"context"
 
+	"github.com/kcp-dev/logicalcluster/v3"
 	"go.uber.org/zap"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -65,7 +66,7 @@ func ensureFinalizer(ctx context.Context, log *zap.SugaredLogger, client ctrlrun
 	finalizers.Insert(deletionFinalizer)
 	obj.SetFinalizers(sets.List(finalizers))
 
-	log.Debugw("Adding finalizer…", "on", newObjectKey(obj, ""), "finalizer", finalizer)
+	log.Debugw("Adding finalizer…", "on", newObjectKey(obj, "", logicalcluster.None), "finalizer", finalizer)
 	if err := client.Patch(ctx, obj, ctrlruntimeclient.MergeFrom(original)); err != nil {
 		return false, err
 	}
@@ -84,7 +85,7 @@ func removeFinalizer(ctx context.Context, log *zap.SugaredLogger, client ctrlrun
 	finalizers.Delete(deletionFinalizer)
 	obj.SetFinalizers(sets.List(finalizers))
 
-	log.Debugw("Removing finalizer…", "on", newObjectKey(obj, ""), "finalizer", finalizer)
+	log.Debugw("Removing finalizer…", "on", newObjectKey(obj, "", logicalcluster.None), "finalizer", finalizer)
 	if err := client.Patch(ctx, obj, ctrlruntimeclient.MergeFrom(original)); err != nil {
 		return false, err
 	}
@@ -93,16 +94,18 @@ func removeFinalizer(ctx context.Context, log *zap.SugaredLogger, client ctrlrun
 }
 
 type objectKey struct {
-	Cluster   string
-	Namespace string
-	Name      string
+	ClusterName   logicalcluster.Name
+	WorkspacePath logicalcluster.Path
+	Namespace     string
+	Name          string
 }
 
-func newObjectKey(obj metav1.Object, clusterName string) objectKey {
+func newObjectKey(obj metav1.Object, clusterName logicalcluster.Name, workspacePath logicalcluster.Path) objectKey {
 	return objectKey{
-		Cluster:   clusterName,
-		Namespace: obj.GetNamespace(),
-		Name:      obj.GetName(),
+		ClusterName:   clusterName,
+		WorkspacePath: workspacePath,
+		Namespace:     obj.GetNamespace(),
+		Name:          obj.GetName(),
 	}
 }
 
@@ -111,8 +114,8 @@ func (k objectKey) String() string {
 	if k.Namespace != "" {
 		result = k.Namespace + "/" + result
 	}
-	if k.Cluster != "" {
-		result = k.Cluster + "|" + result
+	if k.ClusterName != "" {
+		result = string(k.ClusterName) + "|" + result
 	}
 
 	return result
@@ -123,8 +126,8 @@ func (k objectKey) Key() string {
 	if k.Namespace != "" {
 		result = k.Namespace + "_" + result
 	}
-	if k.Cluster != "" {
-		result = k.Cluster + "_" + result
+	if k.ClusterName != "" {
+		result = string(k.ClusterName) + "_" + result
 	}
 
 	return result
@@ -132,8 +135,18 @@ func (k objectKey) Key() string {
 
 func (k objectKey) Labels() labels.Set {
 	return labels.Set{
-		remoteObjectClusterLabel:   k.Cluster,
+		remoteObjectClusterLabel:   string(k.ClusterName),
 		remoteObjectNamespaceLabel: k.Namespace,
 		remoteObjectNameLabel:      k.Name,
 	}
+}
+
+func (k objectKey) Annotations() labels.Set {
+	s := labels.Set{}
+
+	if !k.WorkspacePath.Empty() {
+		s[remoteObjectWorkspacePathAnnotation] = k.WorkspacePath.String()
+	}
+
+	return s
 }

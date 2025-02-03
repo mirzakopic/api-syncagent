@@ -27,7 +27,10 @@ import (
 	"github.com/kcp-dev/logicalcluster/v3"
 	"go.uber.org/zap"
 
+	kcpdevcorev1alpha1 "github.com/kcp-dev/kcp/sdk/apis/core/v1alpha1"
+
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -100,18 +103,18 @@ func (c clusterRoundTripper) RoundTrip(req *http.Request) (*http.Response, error
 var apiRegex = regexp.MustCompile(`(/api/|/apis/)`)
 
 // generatePath formats the request path to target the specified cluster.
-func generatePath(originalPath string, clusterPath logicalcluster.Path) string {
+func generatePath(originalPath string, workspacePath logicalcluster.Path) string {
 	// If the originalPath already has cluster.Path() then the path was already modifed and no change needed
-	if strings.Contains(originalPath, clusterPath.RequestPath()) {
+	if strings.Contains(originalPath, workspacePath.RequestPath()) {
 		return originalPath
 	}
 	// If the originalPath has /api/ or /apis/ in it, it might be anywhere in the path, so we use a regex to find and
 	// replaces /api/ or /apis/ with $cluster/api/ or $cluster/apis/
 	if apiRegex.MatchString(originalPath) {
-		return apiRegex.ReplaceAllString(originalPath, fmt.Sprintf("%s$1", clusterPath.RequestPath()))
+		return apiRegex.ReplaceAllString(originalPath, fmt.Sprintf("%s$1", workspacePath.RequestPath()))
 	}
 	// Otherwise, we're just prepending /clusters/$name
-	path := clusterPath.RequestPath()
+	path := workspacePath.RequestPath()
 	// if the original path is relative, add a / separator
 	if len(originalPath) > 0 && originalPath[0] != '/' {
 		path += "/"
@@ -130,7 +133,14 @@ func NewCluster(address string, baseRestConfig *rest.Config) (*Cluster, error) {
 		return newClusterAwareRoundTripper(rt)
 	})
 
+	scheme := runtime.NewScheme()
+
+	if err := kcpdevcorev1alpha1.AddToScheme(scheme); err != nil {
+		return nil, fmt.Errorf("failed to register scheme %s: %w", kcpdevcorev1alpha1.SchemeGroupVersion, err)
+	}
+
 	clusterObj, err := cluster.New(config, func(o *cluster.Options) {
+		o.Scheme = scheme
 		o.NewCache = kcp.NewClusterAwareCache
 		o.NewAPIReader = kcp.NewClusterAwareAPIReader
 		o.NewClient = kcp.NewClusterAwareClient

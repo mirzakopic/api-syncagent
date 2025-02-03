@@ -23,6 +23,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/kcp-dev/logicalcluster/v3"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
@@ -32,7 +34,7 @@ import (
 
 type ObjectStateStore interface {
 	Get(source syncSide) (*unstructured.Unstructured, error)
-	Put(obj *unstructured.Unstructured, clusterName string, subresources []string) error
+	Put(obj *unstructured.Unstructured, clusterName logicalcluster.Name, subresources []string) error
 }
 
 // objectStateStore is capable of creating/updating a target Kubernetes object
@@ -71,7 +73,7 @@ func (op *objectStateStore) Get(source syncSide) (*unstructured.Unstructured, er
 	return lastKnown, nil
 }
 
-func (op *objectStateStore) Put(obj *unstructured.Unstructured, clusterName string, subresources []string) error {
+func (op *objectStateStore) Put(obj *unstructured.Unstructured, clusterName logicalcluster.Name, subresources []string) error {
 	encoded, err := op.snapshotObject(obj, subresources)
 	if err != nil {
 		return err
@@ -99,8 +101,8 @@ func (op *objectStateStore) snapshotObject(obj *unstructured.Unstructured, subre
 }
 
 type backend interface {
-	Get(obj *unstructured.Unstructured, clusterName string) ([]byte, error)
-	Put(obj *unstructured.Unstructured, clusterName string, data []byte) error
+	Get(obj *unstructured.Unstructured, clusterName logicalcluster.Name) ([]byte, error)
+	Put(obj *unstructured.Unstructured, clusterName logicalcluster.Name, data []byte) error
 }
 
 type kubernetesBackend struct {
@@ -131,7 +133,7 @@ func hashObject(obj *unstructured.Unstructured) string {
 func newKubernetesBackend(namespace string, primaryObject, stateCluster syncSide) *kubernetesBackend {
 	keyHash := hashObject(primaryObject.object)
 
-	secretLabels := newObjectKey(primaryObject.object, primaryObject.clusterName).Labels()
+	secretLabels := newObjectKey(primaryObject.object, primaryObject.clusterName, primaryObject.workspacePath).Labels()
 	secretLabels[objectStateLabelName] = objectStateLabelValue
 
 	return &kubernetesBackend{
@@ -145,13 +147,13 @@ func newKubernetesBackend(namespace string, primaryObject, stateCluster syncSide
 	}
 }
 
-func (b *kubernetesBackend) Get(obj *unstructured.Unstructured, clusterName string) ([]byte, error) {
+func (b *kubernetesBackend) Get(obj *unstructured.Unstructured, clusterName logicalcluster.Name) ([]byte, error) {
 	secret := corev1.Secret{}
 	if err := b.stateCluster.client.Get(b.stateCluster.ctx, b.secretName, &secret); ctrlruntimeclient.IgnoreNotFound(err) != nil {
 		return nil, err
 	}
 
-	sourceKey := newObjectKey(obj, clusterName).Key()
+	sourceKey := newObjectKey(obj, clusterName, logicalcluster.None).Key()
 	data, ok := secret.Data[sourceKey]
 	if !ok {
 		return nil, nil
@@ -160,7 +162,7 @@ func (b *kubernetesBackend) Get(obj *unstructured.Unstructured, clusterName stri
 	return data, nil
 }
 
-func (b *kubernetesBackend) Put(obj *unstructured.Unstructured, clusterName string, data []byte) error {
+func (b *kubernetesBackend) Put(obj *unstructured.Unstructured, clusterName logicalcluster.Name, data []byte) error {
 	secret := corev1.Secret{}
 	if err := b.stateCluster.client.Get(b.stateCluster.ctx, b.secretName, &secret); ctrlruntimeclient.IgnoreNotFound(err) != nil {
 		return err
@@ -170,7 +172,7 @@ func (b *kubernetesBackend) Put(obj *unstructured.Unstructured, clusterName stri
 		secret.Data = map[string][]byte{}
 	}
 
-	sourceKey := newObjectKey(obj, clusterName).Key()
+	sourceKey := newObjectKey(obj, clusterName, logicalcluster.None).Key()
 	secret.Data[sourceKey] = data
 	secret.Labels = b.labels
 

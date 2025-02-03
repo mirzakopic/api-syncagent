@@ -31,7 +31,7 @@ func TestNewContext(t *testing.T) {
 
 	combinedCtx := NewContext(context.Background(), ctx)
 
-	if combinedCtx.clusterName != clusterName.String() {
+	if combinedCtx.clusterName != clusterName {
 		t.Fatalf("Expected function to recognize the cluster name in the context, but got %q", combinedCtx.clusterName)
 	}
 }

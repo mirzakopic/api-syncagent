@@ -22,6 +22,7 @@ import (
 	"slices"
 
 	jsonpatch "github.com/evanphx/json-patch/v5"
+	"github.com/kcp-dev/logicalcluster/v3"
 	"go.uber.org/zap"
 	"k8c.io/reconciler/pkg/equality"
 
@@ -53,10 +54,11 @@ type objectSyncer struct {
 }
 
 type syncSide struct {
-	ctx         context.Context
-	clusterName string
-	client      ctrlruntimeclient.Client
-	object      *unstructured.Unstructured
+	ctx           context.Context
+	clusterName   logicalcluster.Name
+	workspacePath logicalcluster.Path
+	client        ctrlruntimeclient.Client
+	object        *unstructured.Unstructured
 }
 
 func (s *objectSyncer) Sync(log *zap.SugaredLogger, source, dest syncSide) (requeue bool, err error) {
@@ -104,7 +106,7 @@ func (s *objectSyncer) Sync(log *zap.SugaredLogger, source, dest syncSide) (requ
 	// do not try to update a destination object that is in deletion
 	// (this should only happen if a service admin manually deletes something on the service cluster)
 	if dest.object.GetDeletionTimestamp() != nil {
-		log.Debugw("Destination object is in deletion, skipping any further synchronization", "dest-object", newObjectKey(dest.object, dest.clusterName))
+		log.Debugw("Destination object is in deletion, skipping any further synchronization", "dest-object", newObjectKey(dest.object, dest.clusterName, logicalcluster.None))
 		return false, nil
 	}
 
@@ -173,13 +175,18 @@ func (s *objectSyncer) syncObjectSpec(log *zap.SugaredLogger, source, dest syncS
 	sourceObjCopy := source.object.DeepCopy()
 	stripMetadata(sourceObjCopy)
 
-	log = log.With("dest-object", newObjectKey(dest.object, dest.clusterName))
+	log = log.With("dest-object", newObjectKey(dest.object, dest.clusterName, logicalcluster.None))
 
 	// calculate the patch to go from the last known state to the current source object's state
 	if lastKnownSourceState != nil {
 		// ignore difference in GVK
 		lastKnownSourceState.SetAPIVersion(sourceObjCopy.GetAPIVersion())
 		lastKnownSourceState.SetKind(sourceObjCopy.GetKind())
+
+		// update annotations (this is important if the admin later flipped the enableWorkspacePaths
+		// option in the PublishedResource)
+		sourceKey := newObjectKey(source.object, source.clusterName, source.workspacePath)
+		ensureAnnotations(sourceObjCopy, sourceKey.Annotations())
 
 		// now we can diff the two versions and create a patch
 		rawPatch, err := s.createMergePatch(lastKnownSourceState, sourceObjCopy)
@@ -271,11 +278,14 @@ func (s *objectSyncer) ensureDestinationObject(log *zap.SugaredLogger, source, d
 	stripMetadata(destObj)
 
 	// remember the connection between the source and destination object
-	sourceObjKey := newObjectKey(source.object, source.clusterName)
+	sourceObjKey := newObjectKey(source.object, source.clusterName, source.workspacePath)
 	ensureLabels(destObj, sourceObjKey.Labels())
 
+	// put optional additional annotations on the new object
+	ensureAnnotations(destObj, sourceObjKey.Annotations())
+
 	// finally, we can create the destination object
-	objectLog := log.With("dest-object", newObjectKey(destObj, dest.clusterName))
+	objectLog := log.With("dest-object", newObjectKey(destObj, dest.clusterName, logicalcluster.None))
 	objectLog.Debugw("Creating destination object…")
 
 	if err := dest.client.Create(dest.ctx, destObj); err != nil {
@@ -316,6 +326,7 @@ func (s *objectSyncer) adoptExistingDestinationObject(log *zap.SugaredLogger, de
 	// the destination object from another source object, which would then lead to the two source objects
 	// "fighting" about the one destination object.
 	ensureLabels(existingDestObj, sourceKey.Labels())
+	ensureAnnotations(existingDestObj, sourceKey.Annotations())
 
 	if err := dest.client.Update(dest.ctx, existingDestObj); err != nil {
 		return fmt.Errorf("failed to upsert current destination object labels: %w", err)
@@ -356,7 +367,7 @@ func (s *objectSyncer) handleDeletion(log *zap.SugaredLogger, source, dest syncS
 	// if the destination object still exists, delete it and wait for it to be cleaned up
 	if dest.object != nil {
 		if dest.object.GetDeletionTimestamp() == nil {
-			log.Debugw("Deleting destination object…", "dest-object", newObjectKey(dest.object, dest.clusterName))
+			log.Debugw("Deleting destination object…", "dest-object", newObjectKey(dest.object, dest.clusterName, logicalcluster.None))
 			if err := dest.client.Delete(dest.ctx, dest.object); err != nil {
 				return false, fmt.Errorf("failed to delete destination object: %w", err)
 			}
