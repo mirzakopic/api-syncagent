@@ -38,6 +38,10 @@ import (
 type objectCreatorFunc func(source *unstructured.Unstructured) *unstructured.Unstructured
 
 type objectSyncer struct {
+	// When set, the syncer will create a label on the destination object that contains
+	// this value; used to allow multiple agents syncing *the same* API from one
+	// service cluster onto multiple different kcp's.
+	agentName string
 	// creates a new destination object; does not need to perform cleanup like
 	// removing unwanted metadata, that's done by the syncer automatically
 	destCreator objectCreatorFunc
@@ -281,6 +285,9 @@ func (s *objectSyncer) ensureDestinationObject(log *zap.SugaredLogger, source, d
 	sourceObjKey := newObjectKey(source.object, source.clusterName, source.workspacePath)
 	ensureLabels(destObj, sourceObjKey.Labels())
 
+	// remember what agent synced this object
+	s.labelWithAgent(destObj)
+
 	// put optional additional annotations on the new object
 	ensureAnnotations(destObj, sourceObjKey.Annotations())
 
@@ -326,6 +333,7 @@ func (s *objectSyncer) adoptExistingDestinationObject(log *zap.SugaredLogger, de
 	// the destination object from another source object, which would then lead to the two source objects
 	// "fighting" about the one destination object.
 	ensureLabels(existingDestObj, sourceKey.Labels())
+	s.labelWithAgent(existingDestObj)
 	ensureAnnotations(existingDestObj, sourceKey.Annotations())
 
 	if err := dest.client.Update(dest.ctx, existingDestObj); err != nil {
@@ -424,4 +432,10 @@ func (s *objectSyncer) createMergePatch(base, revision *unstructured.Unstructure
 
 func (s *objectSyncer) isIrrelevantTopLevelField(fieldName string) bool {
 	return fieldName == "kind" || fieldName == "apiVersion" || fieldName == "metadata" || slices.Contains(s.subresources, fieldName)
+}
+
+func (s *objectSyncer) labelWithAgent(obj *unstructured.Unstructured) {
+	if s.agentName != "" {
+		ensureLabels(obj, map[string]string{agentNameLabel: s.agentName})
+	}
 }

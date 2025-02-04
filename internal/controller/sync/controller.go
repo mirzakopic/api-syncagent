@@ -42,6 +42,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/kontext"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
@@ -69,6 +70,7 @@ func Create(
 	discoveryClient *discovery.Client,
 	apiExportName string,
 	stateNamespace string,
+	agentName string,
 	log *zap.SugaredLogger,
 	numWorkers int,
 ) (controller.Controller, error) {
@@ -92,7 +94,7 @@ func Create(
 
 	// create the syncer that holds the meat&potatoes of the synchronization logic
 	mutator := mutation.NewMutator(nil) // pubRes.Spec.Mutation
-	syncer, err := sync.NewResourceSyncer(log, localManager.GetClient(), virtualWorkspaceCluster.GetClient(), pubRes, localCRD, apiExportName, mutator, stateNamespace)
+	syncer, err := sync.NewResourceSyncer(log, localManager.GetClient(), virtualWorkspaceCluster.GetClient(), pubRes, localCRD, apiExportName, mutator, stateNamespace, agentName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create syncer: %w", err)
 	}
@@ -135,7 +137,12 @@ func Create(
 		return []reconcile.Request{*req}
 	})
 
-	if err := c.Watch(source.Kind(localManager.GetCache(), localDummy, enqueueRemoteObjForLocalObj)); err != nil {
+	// only watch local objects that we own
+	nameFilter := predicate.NewTypedPredicateFuncs(func(u *unstructured.Unstructured) bool {
+		return sync.OwnedBy(u, agentName)
+	})
+
+	if err := c.Watch(source.Kind(localManager.GetCache(), localDummy, enqueueRemoteObjForLocalObj, nameFilter)); err != nil {
 		return nil, err
 	}
 

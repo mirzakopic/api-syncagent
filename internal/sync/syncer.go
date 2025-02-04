@@ -46,6 +46,8 @@ type ResourceSyncer struct {
 
 	mutator mutation.Mutator
 
+	agentName string
+
 	// newObjectStateStore is used for testing purposes
 	newObjectStateStore newObjectStateStoreFunc
 }
@@ -59,6 +61,7 @@ func NewResourceSyncer(
 	remoteAPIGroup string,
 	mutator mutation.Mutator,
 	stateNamespace string,
+	agentName string,
 ) (*ResourceSyncer, error) {
 	// create a dummy that represents the type used on the local service cluster
 	localGVK := projection.PublishedResourceSourceGVK(pubRes)
@@ -100,6 +103,7 @@ func NewResourceSyncer(
 		subresources:        subresources,
 		destDummy:           localDummy,
 		mutator:             mutator,
+		agentName:           agentName,
 		newObjectStateStore: newKubernetesStateStoreCreator(stateNamespace),
 	}, nil
 }
@@ -145,6 +149,8 @@ func (s *ResourceSyncer) Process(ctx Context, remoteObj *unstructured.Unstructur
 	stateStore := s.newObjectStateStore(sourceSide, destSide)
 
 	syncer := objectSyncer{
+		// The primary object should be labelled with the agent name.
+		agentName:    s.agentName,
 		subresources: s.subresources,
 		// use the projection and renaming rules configured in the PublishedResource
 		destCreator: s.createLocalObjectCreator(ctx),
