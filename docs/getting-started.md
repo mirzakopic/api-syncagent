@@ -69,8 +69,12 @@ itself and a reference to the kubeconfig secret we just created.
 # Required: the name of the APIExport in kcp that this Sync Agent is supposed to serve.
 apiExportName: test.example.com
 
-# Required: This Agent's public name, purely for informational purposes.
-# If not set, defaults to the Helm release name.
+# Required: This Agent's public name, used to signal ownership over locally synced objects.
+# This value must be a valid Kubernetes label value, see
+# https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set
+# for more information.
+# Changing this value after the fact will make the agent ignore previously created objects,
+# so beware and relabel if necessary.
 agentName: unique-test
 
 # Required: Name of the Kubernetes Secret that contains a "kubeconfig" key,

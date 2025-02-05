@@ -127,6 +127,8 @@ func (s *ResourceSyncer) processRelatedResource(log *zap.SugaredLogger, stateSto
 	}
 
 	syncer := objectSyncer{
+		// Related objects within kcp are not labelled with the agent name because it's unnecessary.
+		// agentName: "",
 		// use the same state store as we used for the main resource, to keep everything contained
 		// in one place, on the service cluster side
 		stateStore: stateStore,

@@ -16,6 +16,8 @@ limitations under the License.
 
 package sync
 
+import ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
+
 const (
 	// deletionFinalizer is the finalizer put on remote objects to prevent
 	// them from being deleted before the local objects can be cleaned up.
@@ -31,6 +33,10 @@ const (
 
 	remoteObjectWorkspacePathAnnotation = "syncagent.kcp.io/remote-object-workspace-path"
 
+	// agentNameLabel contains the Sync Agent's name and is used to allow multiple Sync Agents
+	// on the same service cluster, syncing *the same* API to different kcp's.
+	agentNameLabel = "syncagent.kcp.io/agent-name"
+
 	// objectStateLabelName is put on object state Secrets to allow for easier mass deletions
 	// if ever necessary.
 	objectStateLabelName = "syncagent.kcp.io/object-state"
@@ -45,3 +51,7 @@ const (
 	// metadata of the related object.
 	relatedObjectAnnotationPrefix = "related-resources.syncagent.kcp.io/"
 )
+
+func OwnedBy(obj ctrlruntimeclient.Object, agentName string) bool {
+	return obj.GetLabels()[agentNameLabel] == agentName
+}

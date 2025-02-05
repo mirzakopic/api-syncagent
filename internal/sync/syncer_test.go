@@ -182,6 +182,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
+						agentNameLabel:             "textor-the-doctor",
 						remoteObjectClusterLabel:   "testcluster",
 						remoteObjectNamespaceLabel: "",
 						remoteObjectNameLabel:      "my-test-thing",
@@ -208,6 +209,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
+						agentNameLabel:             "textor-the-doctor",
 						remoteObjectClusterLabel:   "testcluster",
 						remoteObjectNamespaceLabel: "",
 						remoteObjectNameLabel:      "my-test-thing",
@@ -255,6 +257,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
+						agentNameLabel:             "textor-the-doctor",
 						remoteObjectClusterLabel:   "testcluster",
 						remoteObjectNamespaceLabel: "",
 						remoteObjectNameLabel:      "my-test-thing",
@@ -312,6 +315,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
+						agentNameLabel:             "textor-the-doctor",
 						remoteObjectClusterLabel:   "testcluster",
 						remoteObjectNamespaceLabel: "",
 						remoteObjectNameLabel:      "my-test-thing",
@@ -348,6 +352,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
+						agentNameLabel:             "textor-the-doctor",
 						remoteObjectClusterLabel:   "testcluster",
 						remoteObjectNamespaceLabel: "",
 						remoteObjectNameLabel:      "my-test-thing",
@@ -374,6 +379,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
+						agentNameLabel:             "textor-the-doctor",
 						remoteObjectClusterLabel:   "testcluster",
 						remoteObjectNamespaceLabel: "",
 						remoteObjectNameLabel:      "my-test-thing",
@@ -410,6 +416,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
+						agentNameLabel:             "textor-the-doctor",
 						remoteObjectClusterLabel:   "testcluster",
 						remoteObjectNamespaceLabel: "",
 						remoteObjectNameLabel:      "my-test-thing",
@@ -436,6 +443,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
+						agentNameLabel:             "textor-the-doctor",
 						remoteObjectClusterLabel:   "testcluster",
 						remoteObjectNamespaceLabel: "",
 						remoteObjectNameLabel:      "my-test-thing",
@@ -484,6 +492,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 						"existing-annotation": "annotation-value",
 					},
 					Labels: map[string]string{
+						agentNameLabel:             "textor-the-doctor",
 						remoteObjectClusterLabel:   "testcluster",
 						remoteObjectNamespaceLabel: "",
 						remoteObjectNameLabel:      "my-test-thing",
@@ -525,6 +534,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 						"new-annotation":      "hei-verden",
 					},
 					Labels: map[string]string{
+						agentNameLabel:             "textor-the-doctor",
 						remoteObjectClusterLabel:   "testcluster",
 						remoteObjectNamespaceLabel: "",
 						remoteObjectNameLabel:      "my-test-thing",
@@ -564,6 +574,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
+						agentNameLabel:             "textor-the-doctor",
 						remoteObjectClusterLabel:   "testcluster",
 						remoteObjectNamespaceLabel: "",
 						remoteObjectNameLabel:      "my-test-thing",
@@ -591,6 +602,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
+						agentNameLabel:             "textor-the-doctor",
 						remoteObjectClusterLabel:   "testcluster",
 						remoteObjectNamespaceLabel: "",
 						remoteObjectNameLabel:      "my-test-thing",
@@ -636,6 +648,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 						"prevent-instant-deletion-in-tests",
 					},
 					Labels: map[string]string{
+						agentNameLabel:             "textor-the-doctor",
 						remoteObjectClusterLabel:   "testcluster",
 						remoteObjectNamespaceLabel: "",
 						remoteObjectNameLabel:      "my-test-thing",
@@ -667,6 +680,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 					},
 					DeletionTimestamp: &nonEmptyTime,
 					Labels: map[string]string{
+						agentNameLabel:             "textor-the-doctor",
 						remoteObjectClusterLabel:   "testcluster",
 						remoteObjectNamespaceLabel: "",
 						remoteObjectNameLabel:      "my-test-thing",
@@ -748,6 +762,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 					},
 					DeletionTimestamp: &nonEmptyTime,
 					Labels: map[string]string{
+						agentNameLabel:             "textor-the-doctor",
 						remoteObjectClusterLabel:   "testcluster",
 						remoteObjectNamespaceLabel: "",
 						remoteObjectNameLabel:      "my-test-thing",
@@ -778,6 +793,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 					},
 					DeletionTimestamp: &nonEmptyTime,
 					Labels: map[string]string{
+						agentNameLabel:             "textor-the-doctor",
 						remoteObjectClusterLabel:   "testcluster",
 						remoteObjectNamespaceLabel: "",
 						remoteObjectNameLabel:      "my-test-thing",
@@ -809,6 +825,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				testcase.remoteAPIGroup,
 				nil,
 				stateNamespace,
+				"textor-the-doctor",
 			)
 			if err != nil {
 				t.Fatalf("Failed to create syncer: %v", err)
@@ -970,6 +987,7 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
+						agentNameLabel:             "textor-the-doctor",
 						remoteObjectClusterLabel:   "testcluster",
 						remoteObjectNamespaceLabel: "",
 						remoteObjectNameLabel:      "my-test-thing",
@@ -1002,6 +1020,7 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
+						agentNameLabel:             "textor-the-doctor",
 						remoteObjectClusterLabel:   "testcluster",
 						remoteObjectNamespaceLabel: "",
 						remoteObjectNameLabel:      "my-test-thing",
@@ -1041,6 +1060,7 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
+						agentNameLabel:             "textor-the-doctor",
 						remoteObjectClusterLabel:   "testcluster",
 						remoteObjectNamespaceLabel: "",
 						remoteObjectNameLabel:      "my-test-thing",
@@ -1073,6 +1093,7 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
+						agentNameLabel:             "textor-the-doctor",
 						remoteObjectClusterLabel:   "testcluster",
 						remoteObjectNamespaceLabel: "",
 						remoteObjectNameLabel:      "my-test-thing",
@@ -1106,6 +1127,7 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 				testcase.remoteAPIGroup,
 				nil,
 				stateNamespace,
+				"textor-the-doctor",
 			)
 			if err != nil {
 				t.Fatalf("Failed to create syncer: %v", err)
