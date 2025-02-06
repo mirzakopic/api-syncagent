@@ -17,7 +17,6 @@ require (
 	github.com/tidwall/gjson v1.18.0
 	github.com/tidwall/sjson v1.2.5
 	go.uber.org/zap v1.27.0
-	go.xrstf.de/rudi v0.0.9
 	k8c.io/reconciler v0.5.0
 	k8s.io/api v0.31.2
 	k8s.io/apiextensions-apiserver v0.31.2
