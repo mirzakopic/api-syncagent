@@ -149,6 +149,84 @@ spec:
                       type: object
                       x-kubernetes-map-type: atomic
                   type: object
+                mutation:
+                  description: |-
+                    Mutation allows to configure "rewrite rules" to modify the objects in both
+                    directions during the synchronization.
+                  properties:
+                    spec:
+                      items:
+                        properties:
+                          delete:
+                            properties:
+                              path:
+                                type: string
+                            required:
+                              - path
+                            type: object
+                          regex:
+                            properties:
+                              path:
+                                type: string
+                              pattern:
+                                description: |-
+                                  Pattern can be left empty to simply replace the entire value with the
+                                  replacement.
+                                type: string
+                              replacement:
+                                type: string
+                            required:
+                              - path
+                            type: object
+                          template:
+                            properties:
+                              path:
+                                type: string
+                              template:
+                                type: string
+                            required:
+                              - path
+                              - template
+                            type: object
+                        type: object
+                      type: array
+                    status:
+                      items:
+                        properties:
+                          delete:
+                            properties:
+                              path:
+                                type: string
+                            required:
+                              - path
+                            type: object
+                          regex:
+                            properties:
+                              path:
+                                type: string
+                              pattern:
+                                description: |-
+                                  Pattern can be left empty to simply replace the entire value with the
+                                  replacement.
+                                type: string
+                              replacement:
+                                type: string
+                            required:
+                              - path
+                            type: object
+                          template:
+                            properties:
+                              path:
+                                type: string
+                              template:
+                                type: string
+                            required:
+                              - path
+                              - template
+                            type: object
+                        type: object
+                      type: array
+                  type: object
                 naming:
                   description: |-
                     Naming can be used to control how the namespace and names for local objects
@@ -251,6 +329,84 @@ spec:
                       kind:
                         description: ConfigMap or Secret
                         type: string
+                      mutation:
+                        description: |-
+                          Mutation configures optional transformation rules for the related resource.
+                          Status mutations are only performed when the related resource originates in kcp.
+                        properties:
+                          spec:
+                            items:
+                              properties:
+                                delete:
+                                  properties:
+                                    path:
+                                      type: string
+                                  required:
+                                    - path
+                                  type: object
+                                regex:
+                                  properties:
+                                    path:
+                                      type: string
+                                    pattern:
+                                      description: |-
+                                        Pattern can be left empty to simply replace the entire value with the
+                                        replacement.
+                                      type: string
+                                    replacement:
+                                      type: string
+                                  required:
+                                    - path
+                                  type: object
+                                template:
+                                  properties:
+                                    path:
+                                      type: string
+                                    template:
+                                      type: string
+                                  required:
+                                    - path
+                                    - template
+                                  type: object
+                              type: object
+                            type: array
+                          status:
+                            items:
+                              properties:
+                                delete:
+                                  properties:
+                                    path:
+                                      type: string
+                                  required:
+                                    - path
+                                  type: object
+                                regex:
+                                  properties:
+                                    path:
+                                      type: string
+                                    pattern:
+                                      description: |-
+                                        Pattern can be left empty to simply replace the entire value with the
+                                        replacement.
+                                      type: string
+                                    replacement:
+                                      type: string
+                                  required:
+                                    - path
+                                  type: object
+                                template:
+                                  properties:
+                                    path:
+                                      type: string
+                                    template:
+                                      type: string
+                                  required:
+                                    - path
+                                    - template
+                                  type: object
+                              type: object
+                            type: array
+                        type: object
                       origin:
                         description: '"service" or "kcp"'
                         type: string

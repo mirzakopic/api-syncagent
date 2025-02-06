@@ -46,14 +46,24 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &syncagentv1alpha1.RelatedResourceReferenceApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("RelatedResourceSpec"):
 		return &syncagentv1alpha1.RelatedResourceSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ResourceDeleteMutation"):
+		return &syncagentv1alpha1.ResourceDeleteMutationApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ResourceFilter"):
 		return &syncagentv1alpha1.ResourceFilterApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ResourceLocator"):
 		return &syncagentv1alpha1.ResourceLocatorApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ResourceMutation"):
+		return &syncagentv1alpha1.ResourceMutationApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ResourceMutationSpec"):
+		return &syncagentv1alpha1.ResourceMutationSpecApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ResourceNaming"):
 		return &syncagentv1alpha1.ResourceNamingApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ResourceProjection"):
 		return &syncagentv1alpha1.ResourceProjectionApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ResourceRegexMutation"):
+		return &syncagentv1alpha1.ResourceRegexMutationApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ResourceTemplateMutation"):
+		return &syncagentv1alpha1.ResourceTemplateMutationApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("SourceResourceDescriptor"):
 		return &syncagentv1alpha1.SourceResourceDescriptorApplyConfiguration{}
 

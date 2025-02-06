@@ -26,6 +26,7 @@ type PublishedResourceSpecApplyConfiguration struct {
 	Naming               *ResourceNamingApplyConfiguration           `json:"naming,omitempty"`
 	EnableWorkspacePaths *bool                                       `json:"enableWorkspacePaths,omitempty"`
 	Projection           *ResourceProjectionApplyConfiguration       `json:"projection,omitempty"`
+	Mutation             *ResourceMutationSpecApplyConfiguration     `json:"mutation,omitempty"`
 	Related              []RelatedResourceSpecApplyConfiguration     `json:"related,omitempty"`
 }
 
@@ -72,6 +73,14 @@ func (b *PublishedResourceSpecApplyConfiguration) WithEnableWorkspacePaths(value
 // If called multiple times, the Projection field is set to the value of the last call.
 func (b *PublishedResourceSpecApplyConfiguration) WithProjection(value *ResourceProjectionApplyConfiguration) *PublishedResourceSpecApplyConfiguration {
 	b.Projection = value
+	return b
+}
+
+// WithMutation sets the Mutation field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Mutation field is set to the value of the last call.
+func (b *PublishedResourceSpecApplyConfiguration) WithMutation(value *ResourceMutationSpecApplyConfiguration) *PublishedResourceSpecApplyConfiguration {
+	b.Mutation = value
 	return b
 }
 
