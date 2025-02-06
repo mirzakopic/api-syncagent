@@ -150,7 +150,7 @@ func (s *ResourceSyncer) processRelatedResource(log *zap.SugaredLogger, stateSto
 		// sure we can clean up properly
 		blockSourceDeletion: relRes.Origin == "kcp",
 		// apply mutation rules configured for the related resource
-		mutator: mutation.NewMutator(nil), // relRes.Mutation
+		mutator: mutation.NewMutator(relRes.Mutation),
 	}
 
 	requeue, err = syncer.Sync(log, sourceSide, destSide)

@@ -28,7 +28,6 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
-	"go.xrstf.de/rudi"
 
 	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
 )
@@ -46,11 +45,6 @@ func ApplyResourceMutations(value any, mutations []syncagentv1alpha1.ResourceMut
 }
 
 func ApplyResourceMutation(value any, mut syncagentv1alpha1.ResourceMutation, ctx *TemplateMutationContext) (any, error) {
-	// for Rudi scripts we can skip all the JSON encoding/decoding
-	if mut.Rudi != nil {
-		return applyResourceRudiMigration(value, *mut.Rudi, ctx)
-	}
-
 	// encode current value as JSON
 	encoded, err := json.Marshal(value)
 	if err != nil {
@@ -82,31 +76,8 @@ func applyResourceMutationToJSON(jsonData string, mut syncagentv1alpha1.Resource
 	case mut.Regex != nil:
 		return applyResourceRegexMutation(jsonData, *mut.Regex)
 	default:
-		return "", errors.New("must use either Rudi, regex, template or delete mutation")
+		return "", errors.New("must use either regex, template or delete mutation")
 	}
-}
-
-func applyResourceRudiMigration(value any, mut syncagentv1alpha1.ResourceRudiMutation, ctx *TemplateMutationContext) (any, error) {
-	program, err := rudi.Parse("myscript", mut.Script)
-	if err != nil {
-		return nil, fmt.Errorf("invalid script: %w", err)
-	}
-
-	funcs := rudi.NewBuiltInFunctions()
-	vars := rudi.NewVariables()
-
-	if ctx != nil {
-		vars.
-			Set("localObj", ctx.LocalObject).
-			Set("remoteObj", ctx.RemoteObject)
-	}
-
-	processed, _, err := program.Run(value, vars, funcs)
-	if err != nil {
-		return nil, fmt.Errorf("script failed: %w", err)
-	}
-
-	return processed, nil
 }
 
 func applyResourceDeleteMutation(jsonData string, mut syncagentv1alpha1.ResourceDeleteMutation) (string, error) {
