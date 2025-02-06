@@ -150,7 +150,6 @@ spec:
     name: "cert-$remoteNamespaceHash-$remoteNameHash"
 ```
 
-<!--
 ### Mutation
 
 Besides projecting the type meta, changes to object contents are also nearly always required.
@@ -182,7 +181,6 @@ spec:
       - regex: ...
         template: ...
         delete: ...
-        rudi: ...
 ```
 
 #### Regex
@@ -217,19 +215,6 @@ delete:
 
 This mutation simply removes the value at the given path from the document. JSON path is the
 usual path, without a leading dot.
-
-#### Rudi
-
-```yaml
-rudi:
-  script: |
-    (set! .metadata.name (concat "-" [$localObj.metadata.name "foo"]))
-```
-
-This mutation runs a [Rudi](https://github.com/xrstf/rudi) program on the document. Note that in
-Rudi, in contrast to all the other mutation types, JSON paths _do_ begin with leading dot if you
-refer to the main document. Just `metadata.name` would be invalid.
--->
 
 ### Related Resources
 
