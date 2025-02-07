@@ -85,9 +85,7 @@ type PublishedResourceSpec struct {
 
 	// Mutation allows to configure "rewrite rules" to modify the objects in both
 	// directions during the synchronization.
-	// This is currently disabled in order not to introduce too much freedom in the MVP
-	// and instead rely on Crossplane or other solutions.
-	// Mutation *ResourceMutationSpec `json:"mutation,omitempty"`
+	Mutation *ResourceMutationSpec `json:"mutation,omitempty"`
 
 	Related []RelatedResourceSpec `json:"related,omitempty"`
 }
@@ -138,14 +136,9 @@ type ResourceMutation struct {
 	// Must use exactly one of these options, never more, never fewer.
 	// TODO: Add validation code for this somewhere.
 
-	Rudi     *ResourceRudiMutation     `json:"rudi,omitempty"`
 	Delete   *ResourceDeleteMutation   `json:"delete,omitempty"`
 	Regex    *ResourceRegexMutation    `json:"regex,omitempty"`
 	Template *ResourceTemplateMutation `json:"template,omitempty"`
-}
-
-type ResourceRudiMutation struct {
-	Script string `json:"script"`
 }
 
 type ResourceDeleteMutation struct {
@@ -181,9 +174,8 @@ type RelatedResourceSpec struct {
 	Reference RelatedResourceReference `json:"reference"`
 
 	// Mutation configures optional transformation rules for the related resource.
-	// Status mutations are not supported and are ignored.
-	// This is disabled for the same reason the mutations for the main resource are disabled.
-	// Mutation *ResourceMutationSpec `json:"mutation,omitempty"`
+	// Status mutations are only performed when the related resource originates in kcp.
+	Mutation *ResourceMutationSpec `json:"mutation,omitempty"`
 }
 
 type RelatedResourceReference struct {

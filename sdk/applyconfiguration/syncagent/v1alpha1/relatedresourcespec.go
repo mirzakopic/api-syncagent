@@ -25,6 +25,7 @@ type RelatedResourceSpecApplyConfiguration struct {
 	Origin     *string                                     `json:"origin,omitempty"`
 	Kind       *string                                     `json:"kind,omitempty"`
 	Reference  *RelatedResourceReferenceApplyConfiguration `json:"reference,omitempty"`
+	Mutation   *ResourceMutationSpecApplyConfiguration     `json:"mutation,omitempty"`
 }
 
 // RelatedResourceSpecApplyConfiguration constructs a declarative configuration of the RelatedResourceSpec type for use with
@@ -62,5 +63,13 @@ func (b *RelatedResourceSpecApplyConfiguration) WithKind(value string) *RelatedR
 // If called multiple times, the Reference field is set to the value of the last call.
 func (b *RelatedResourceSpecApplyConfiguration) WithReference(value *RelatedResourceReferenceApplyConfiguration) *RelatedResourceSpecApplyConfiguration {
 	b.Reference = value
+	return b
+}
+
+// WithMutation sets the Mutation field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Mutation field is set to the value of the last call.
+func (b *RelatedResourceSpecApplyConfiguration) WithMutation(value *ResourceMutationSpecApplyConfiguration) *RelatedResourceSpecApplyConfiguration {
+	b.Mutation = value
 	return b
 }

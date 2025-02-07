@@ -93,7 +93,7 @@ func Create(
 	}
 
 	// create the syncer that holds the meat&potatoes of the synchronization logic
-	mutator := mutation.NewMutator(nil) // pubRes.Spec.Mutation
+	mutator := mutation.NewMutator(pubRes.Spec.Mutation)
 	syncer, err := sync.NewResourceSyncer(log, localManager.GetClient(), virtualWorkspaceCluster.GetClient(), pubRes, localCRD, apiExportName, mutator, stateNamespace, agentName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create syncer: %w", err)
