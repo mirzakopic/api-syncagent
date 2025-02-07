@@ -91,6 +91,23 @@ $(YQ):
 	  ${YQ_VERSION} \
 	  yq_*
 
+KCP = _tools/kcp
+KCP_VERSION = 0.26.1
+
+.PHONY: $(KCP)
+$(KCP):
+	@hack/download-tool.sh \
+	  https://github.com/kcp-dev/kcp/releases/download/v${KCP_VERSION}/kcp_${KCP_VERSION}_${GOOS}_${GOARCH}.tar.gz \
+	  kcp \
+	  ${KCP_VERSION}
+
+ENVTEST = _tools/setup-envtest
+ENVTEST_VERSION = release-0.19
+
+.PHONY: $(ENVTEST)
+$(ENVTEST):
+	@GO_MODULE=true hack/download-tool.sh sigs.k8s.io/controller-runtime/tools/setup-envtest setup-envtest $(ENVTEST_VERSION)
+
 .PHONY: test
 test:
 	./hack/run-tests.sh

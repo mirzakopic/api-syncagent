@@ -17,7 +17,6 @@
 set -euo pipefail
 
 cd $(dirname $0)/..
-source hack/lib.sh
 
 mkdir -p _tools
 cd _tools
@@ -26,6 +25,8 @@ URL="$1"
 BINARY="$2"
 VERSION="$3"
 BINARY_PATTERN="${4:-**/$BINARY}"
+GO_MODULE=${GO_MODULE:-false}
+UNCOMPRESSED=${UNCOMPRESSED:-false}
 
 # Check if and what version we installed already.
 versionFile="$BINARY.version"
@@ -45,27 +46,31 @@ fi
   cd tmp
 
   echo "Downloading $BINARY version $VERSION …" >&2
-  curl --fail --silent -LO "$URL"
-  archive="$(ls)"
 
-  UNCOMPRESSED=${UNCOMPRESSED:-false}
+  if $GO_MODULE; then
+    GOBIN=$(realpath .) go install "$URL@$VERSION"
+    mv * "../$BINARY"
+  else
+    curl --fail --silent -LO "$URL"
+    archive="$(ls)"
 
-  if ! $UNCOMPRESSED; then
-    case "$archive" in
-      *.tar.gz | *.tgz)
-        tar xzf "$archive"
-        ;;
-      *.zip)
-        unzip "$archive"
-        ;;
-      *)
-        echo "Unknown file type: $archive" >&2
-        exit 1
-    esac
+    if ! $UNCOMPRESSED; then
+      case "$archive" in
+        *.tar.gz | *.tgz)
+          tar xzf "$archive"
+          ;;
+        *.zip)
+          unzip "$archive"
+          ;;
+        *)
+          echo "Unknown file type: $archive" >&2
+          exit 1
+      esac
+    fi
+
+    mv $BINARY_PATTERN ../$BINARY
+    chmod +x ../$BINARY
   fi
-
-  mv $BINARY_PATTERN ../$BINARY
-  chmod +x ../$BINARY
 )
 
 rm -rf tmp
