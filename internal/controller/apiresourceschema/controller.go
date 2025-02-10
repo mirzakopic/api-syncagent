@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 
 	"github.com/kcp-dev/logicalcluster/v3"
@@ -146,7 +147,7 @@ func (r *Reconciler) reconcile(ctx context.Context, log *zap.SugaredLogger, pubR
 	err = r.kcpClient.Get(wsCtx, types.NamespacedName{Name: arsName}, ars, &ctrlruntimeclient.GetOptions{})
 
 	if apierrors.IsNotFound(err) {
-		if err := r.createAPIResourceSchema(wsCtx, log, r.apiExportName, projectedCRD, arsName); err != nil {
+		if err := r.createAPIResourceSchema(wsCtx, log, r.apiExportName, projectedCRD, arsName, pubResource.Spec.Resource.Version); err != nil {
 			return nil, fmt.Errorf("failed to create APIResourceSchema: %w", err)
 		}
 	} else if err != nil {
@@ -169,7 +170,17 @@ func (r *Reconciler) reconcile(ctx context.Context, log *zap.SugaredLogger, pubR
 	return nil, nil
 }
 
-func (r *Reconciler) createAPIResourceSchema(ctx context.Context, log *zap.SugaredLogger, apigroup string, projectedCRD *apiextensionsv1.CustomResourceDefinition, arsName string) error {
+func (r *Reconciler) createAPIResourceSchema(ctx context.Context, log *zap.SugaredLogger, apigroup string, projectedCRD *apiextensionsv1.CustomResourceDefinition, arsName string, selectedVersion string) error {
+	// At this moment we ignore every non-selected version in the CRD, as we have not fully
+	// decided on how to support the API version lifecycle yet. Having multiple versions in
+	// the CRD will make kcp require a `conversion` to also be configured. Since we cannot
+	// enforce that and want to instead work with existing CRDs as best as we can, we chose
+	// this option (instead of error'ing out if a conversion is missing).
+	projectedCRD.Spec.Conversion = nil
+	projectedCRD.Spec.Versions = slices.DeleteFunc(projectedCRD.Spec.Versions, func(v apiextensionsv1.CustomResourceDefinitionVersion) bool {
+		return v.Name != selectedVersion
+	})
+
 	// prefix is irrelevant as the reconciling framework will use arsName anyway
 	converted, err := kcpdevv1alpha1.CRDToAPIResourceSchema(projectedCRD, "irrelevant")
 	if err != nil {
