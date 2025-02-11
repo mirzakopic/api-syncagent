@@ -17,38 +17,158 @@ limitations under the License.
 package utils
 
 import (
+	"fmt"
+	"net/url"
 	"os"
+	"regexp"
 	"testing"
 
+	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
+
+	kcpapisv1alpha1 "github.com/kcp-dev/kcp/sdk/apis/apis/v1alpha1"
+	kcptenancyv1alpha1 "github.com/kcp-dev/kcp/sdk/apis/tenancy/v1alpha1"
+
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/scale/scheme"
 	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/kcp"
 )
 
-func GetKcpClient(t *testing.T) ctrlruntimeclient.Client {
+func GetKcpAdminKubeconfig(t *testing.T) string {
+	return requiredEnv(t, "KCP_KUBECONFIG")
+}
+
+func must(t *testing.T, err error) {
+	t.Helper()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func newScheme(t *testing.T) *runtime.Scheme {
 	t.Helper()
 
 	sc := runtime.NewScheme()
-	if err := scheme.AddToScheme(sc); err != nil {
-		t.Fatal(err)
-	}
-	if err := corev1.AddToScheme(sc); err != nil {
-		t.Fatal(err)
-	}
+	must(t, scheme.AddToScheme(sc))
+	must(t, corev1.AddToScheme(sc))
+	must(t, rbacv1.AddToScheme(sc))
+	must(t, kcptenancyv1alpha1.AddToScheme(sc))
+	must(t, kcpapisv1alpha1.AddToScheme(sc))
+	must(t, syncagentv1alpha1.AddToScheme(sc))
 
-	config, err := clientcmd.BuildConfigFromFlags("", os.Getenv("KCP_KUBECONFIG"))
+	return sc
+}
+
+var clusterPathSuffix = regexp.MustCompile(`/clusters/[a-z0-9:*]+$`)
+
+func GetKcpAdminClusterClient(t *testing.T) ctrlruntimeclient.Client {
+	t.Helper()
+	return GetClusterClient(t, GetKcpAdminKubeconfig(t))
+}
+
+func GetClusterClient(t *testing.T, kubeconfig string) ctrlruntimeclient.Client {
+	t.Helper()
+
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
-		t.Fatalf("Failed to get kcp kubeconfig: %v", err)
+		t.Fatalf("Failed to get load kubeconfig %q: %v", kubeconfig, err)
 	}
 
-	client, err := ctrlruntimeclient.New(config, ctrlruntimeclient.Options{
-		Scheme: sc,
+	// remove any pre-existing /clusters/... suffix, a cluster-aware client needs
+	// to point to the base URL (either of kcp or a virtual workspace)
+	config.Host = clusterPathSuffix.ReplaceAllLiteralString(config.Host, "")
+
+	client, err := kcp.NewClusterAwareClient(config, ctrlruntimeclient.Options{
+		Scheme: newScheme(t),
 	})
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
 
 	return client
+}
+
+func GetKcpAdminClient(t *testing.T) ctrlruntimeclient.Client {
+	t.Helper()
+	return GetClient(t, GetKcpAdminKubeconfig(t))
+}
+
+func GetClient(t *testing.T, kubeconfig string) ctrlruntimeclient.Client {
+	t.Helper()
+
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		t.Fatalf("Failed to get load kubeconfig %q: %v", kubeconfig, err)
+	}
+
+	client, err := ctrlruntimeclient.New(config, ctrlruntimeclient.Options{
+		Scheme: newScheme(t),
+	})
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	return client
+}
+
+func CreateKcpAgentKubeconfig(t *testing.T, path string) string {
+	t.Helper()
+
+	agentToken := requiredEnv(t, "KCP_AGENT_TOKEN")
+
+	kubeconfig, err := clientcmd.LoadFromFile(GetKcpAdminKubeconfig(t))
+	if err != nil {
+		t.Fatalf("Failed to load admin kcp kubeconfig: %v", err)
+	}
+
+	// drop everything but the currently selected context
+	if err := clientcmdapi.MinifyConfig(kubeconfig); err != nil {
+		t.Fatalf("Failed to minify admin kcp kubeconfig: %v", err)
+	}
+
+	// update server URL if desired
+	if path != "" {
+		for name, cluster := range kubeconfig.Clusters {
+			parsed, err := url.Parse(cluster.Server)
+			if err != nil {
+				// Given how ultra lax url.Parse is, this basically never happens.
+				t.Fatalf("Failed to parse %q as URL: %v", cluster.Server, err)
+			}
+
+			kubeconfig.Clusters[name].Server = fmt.Sprintf("%s://%s%s", parsed.Scheme, parsed.Host, path)
+		}
+	}
+
+	// use the agent's token
+	for name := range kubeconfig.AuthInfos {
+		kubeconfig.AuthInfos[name].Token = agentToken
+	}
+
+	// write the kubeconfig to a temporary file
+	encodedKubeconfig, err := clientcmd.Write(*kubeconfig)
+	if err != nil {
+		t.Fatalf("Failed to encode agent kubeconfig: %v", err)
+	}
+
+	kubeconfigFile, err := os.CreateTemp(os.TempDir(), "kubeconfig*")
+	if err != nil {
+		t.Fatalf("Failed to create agent kubeconfig file: %v", err)
+	}
+	defer kubeconfigFile.Close()
+
+	if _, err := kubeconfigFile.Write(encodedKubeconfig); err != nil {
+		t.Fatalf("Failed to write agent kubeconfig file: %v", err)
+	}
+
+	// ensure the kubeconfig is removed after the test
+	t.Cleanup(func() {
+		os.Remove(kubeconfigFile.Name())
+	})
+
+	return kubeconfigFile.Name()
 }

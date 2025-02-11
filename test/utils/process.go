@@ -18,11 +18,13 @@ package utils
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"regexp"
+	"strings"
 	"testing"
-
-	"github.com/kcp-dev/logicalcluster/v3"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -32,13 +34,49 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 )
 
+func requiredEnv(t *testing.T, name string) string {
+	t.Helper()
+
+	value := os.Getenv(name)
+	if value == "" {
+		t.Fatalf("No $%s environment variable specified.", name)
+	}
+
+	return value
+}
+
+func ArtifactsDirectory(t *testing.T) string {
+	return requiredEnv(t, "ARTIFACTS")
+}
+
+func AgentBinary(t *testing.T) string {
+	return requiredEnv(t, "AGENT_BINARY")
+}
+
+var nonalpha = regexp.MustCompile(`[^a-z0-9_-]`)
+var testCounters = map[string]int{}
+
+func uniqueLogfile(t *testing.T, basename string) string {
+	testName := strings.ToLower(t.Name())
+	testName = nonalpha.ReplaceAllLiteralString(testName, "_")
+	testName = strings.Trim(testName, "_")
+
+	if basename != "" {
+		testName += "_" + basename
+	}
+
+	counter := testCounters[testName]
+	testCounters[testName]++
+
+	return fmt.Sprintf("%s_%02d.log", testName, counter)
+}
+
 func RunAgent(
 	ctx context.Context,
 	t *testing.T,
 	name string,
 	kcpKubeconfig string,
 	localKubeconfig string,
-	apiExportCluster logicalcluster.Path,
 	apiExport string,
 ) context.CancelFunc {
 	t.Helper()
@@ -52,11 +90,21 @@ func RunAgent(
 		"--kubeconfig", localKubeconfig,
 		"--kcp-kubeconfig", kcpKubeconfig,
 		"--namespace", "kube-system",
+		"--log-format", "Console",
+	}
+
+	logFile := filepath.Join(ArtifactsDirectory(t), uniqueLogfile(t, ""))
+	log, err := os.Create(logFile)
+	if err != nil {
+		t.Fatalf("Failed to create logfile: %v", err)
 	}
 
 	localCtx, cancel := context.WithCancel(ctx)
 
-	cmd := exec.CommandContext(localCtx, "_build/api-syncagent", args...)
+	cmd := exec.CommandContext(localCtx, AgentBinary(t), args...)
+	cmd.Stdout = log
+	cmd.Stderr = log
+
 	if err := cmd.Start(); err != nil {
 		t.Fatalf("Failed to start api-syncagent: %v", err)
 	}
@@ -64,6 +112,8 @@ func RunAgent(
 	cancelAndWait := func() {
 		cancel()
 		_ = cmd.Wait()
+
+		log.Close()
 	}
 
 	t.Cleanup(cancelAndWait)
@@ -74,8 +124,10 @@ func RunAgent(
 func RunEnvtest(t *testing.T) (string, ctrlruntimeclient.Client, context.CancelFunc) {
 	t.Helper()
 
+	rootDirectory := requiredEnv(t, "ROOT_DIRECTORY")
+
 	testEnv := &envtest.Environment{
-		CRDDirectoryPaths:     []string{"../../../deploy/crd/kcp.io"},
+		CRDDirectoryPaths:     []string{filepath.Join(rootDirectory, "deploy/crd/kcp.io")},
 		ErrorIfCRDPathMissing: true,
 	}
 
