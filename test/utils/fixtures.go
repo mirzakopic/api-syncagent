@@ -38,7 +38,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/kontext"
 )
 
-func CreateHomeWorkspace(
+func CreateOrganization(
 	t *testing.T,
 	ctx context.Context,
 	workspaceName logicalcluster.Name,
@@ -53,10 +53,10 @@ func CreateHomeWorkspace(
 	}
 
 	// setup workspaces
-	homeClusterName := CreateWorkspace(t, ctx, kcpClient, "root", workspaceName)
+	orgClusterName := CreateWorkspace(t, ctx, kcpClient, "root", workspaceName)
 
 	// grant access and allow the agent to resolve its own workspace path
-	homeCtx := kontext.WithCluster(ctx, homeClusterName)
+	homeCtx := kontext.WithCluster(ctx, orgClusterName)
 	GrantWorkspaceAccess(t, homeCtx, kcpClient, string(workspaceName), agent, rbacv1.PolicyRule{
 		APIGroups:     []string{"core.kcp.io"},
 		Resources:     []string{"logicalclusters"},
@@ -66,8 +66,8 @@ func CreateHomeWorkspace(
 
 	// add some consumer workspaces
 	teamClusters := []logicalcluster.Name{
-		CreateWorkspace(t, ctx, kcpClient, homeClusterName, "team-1"),
-		CreateWorkspace(t, ctx, kcpClient, homeClusterName, "team-2"),
+		CreateWorkspace(t, ctx, kcpClient, orgClusterName, "team-1"),
+		CreateWorkspace(t, ctx, kcpClient, orgClusterName, "team-2"),
 	}
 
 	// setup the APIExport and wait for it to be ready
@@ -79,7 +79,7 @@ func CreateHomeWorkspace(
 		BindToAPIExport(t, teamCtx, kcpClient, apiExport)
 	}
 
-	return CreateKcpAgentKubeconfig(t, fmt.Sprintf("/clusters/%s", homeClusterName))
+	return CreateKcpAgentKubeconfig(t, fmt.Sprintf("/clusters/%s", orgClusterName))
 }
 
 func CreateWorkspace(t *testing.T, ctx context.Context, client ctrlruntimeclient.Client, parent logicalcluster.Name, workspaceName logicalcluster.Name) logicalcluster.Name {

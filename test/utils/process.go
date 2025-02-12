@@ -26,10 +26,7 @@ import (
 	"strings"
 	"testing"
 
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/scale/scheme"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 )
@@ -121,14 +118,18 @@ func RunAgent(
 	return cancelAndWait
 }
 
-func RunEnvtest(t *testing.T) (string, ctrlruntimeclient.Client, context.CancelFunc) {
+func RunEnvtest(t *testing.T, extraCRDs []string) (string, ctrlruntimeclient.Client, context.CancelFunc) {
 	t.Helper()
 
-	rootDirectory := requiredEnv(t, "ROOT_DIRECTORY")
-
 	testEnv := &envtest.Environment{
-		CRDDirectoryPaths:     []string{filepath.Join(rootDirectory, "deploy/crd/kcp.io")},
 		ErrorIfCRDPathMissing: true,
+	}
+
+	rootDirectory := requiredEnv(t, "ROOT_DIRECTORY")
+	extraCRDs = append(extraCRDs, "deploy/crd/kcp.io")
+
+	for _, extra := range extraCRDs {
+		testEnv.CRDDirectoryPaths = append(testEnv.CRDDirectoryPaths, filepath.Join(rootDirectory, extra))
 	}
 
 	_, err := testEnv.Start()
@@ -141,16 +142,8 @@ func RunEnvtest(t *testing.T) (string, ctrlruntimeclient.Client, context.CancelF
 		t.Fatal(err)
 	}
 
-	sc := runtime.NewScheme()
-	if err := scheme.AddToScheme(sc); err != nil {
-		t.Fatal(err)
-	}
-	if err := corev1.AddToScheme(sc); err != nil {
-		t.Fatal(err)
-	}
-
 	client, err := ctrlruntimeclient.New(adminRestConfig, ctrlruntimeclient.Options{
-		Scheme: sc,
+		Scheme: newScheme(t),
 	})
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
