@@ -40,7 +40,7 @@ $(BUILD_DEST)/%: cmd/%
 	go build $(GOTOOLFLAGS) -o $@ ./cmd/$*
 
 GOLANGCI_LINT = _tools/golangci-lint
-GOLANGCI_LINT_VERSION = 1.63.4
+GOLANGCI_LINT_VERSION = 1.64.2
 
 .PHONY: $(GOLANGCI_LINT)
 $(GOLANGCI_LINT):

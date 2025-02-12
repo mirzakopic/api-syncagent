@@ -28,4 +28,5 @@ _tools/boilerplate \
   -exclude internal/certificates/triple \
   -exclude sdk/clientset \
   -exclude sdk/informers \
-  -exclude sdk/listers
+  -exclude sdk/listers \
+  -exclude test/crds
