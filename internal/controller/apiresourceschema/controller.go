@@ -181,6 +181,14 @@ func (r *Reconciler) createAPIResourceSchema(ctx context.Context, log *zap.Sugar
 		return v.Name != selectedVersion
 	})
 
+	if len(projectedCRD.Spec.Versions) != 1 {
+		// This should never happen because of checks earlier in the reconciler.
+		return fmt.Errorf("invalid CRD: cannot find selected version %q", selectedVersion)
+	}
+
+	projectedCRD.Spec.Versions[0].Served = true
+	projectedCRD.Spec.Versions[0].Storage = true
+
 	// prefix is irrelevant as the reconciling framework will use arsName anyway
 	converted, err := kcpdevv1alpha1.CRDToAPIResourceSchema(projectedCRD, "irrelevant")
 	if err != nil {
