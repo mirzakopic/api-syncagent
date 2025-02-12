@@ -43,9 +43,9 @@ linters:
     - predeclared
     - promlinter
     - staticcheck
-    - tenv
     - unconvert
     - unused
+    - usetesting
     - wastedassign
     - whitespace
   disable-all: true
