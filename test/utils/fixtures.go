@@ -19,6 +19,8 @@ package utils
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -32,8 +34,10 @@ import (
 	"github.com/kcp-dev/kcp/sdk/apis/third_party/conditions/util/conditions"
 
 	rbacv1 "k8s.io/api/rbac/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/kontext"
 )
@@ -300,4 +304,43 @@ func BindToAPIExport(t *testing.T, ctx context.Context, client ctrlruntimeclient
 	}
 
 	return apiBinding
+}
+
+func ApplyCRD(t *testing.T, ctx context.Context, client ctrlruntimeclient.Client, filename string) {
+	t.Helper()
+
+	crd := loadCRD(t, filename)
+
+	existingCRD := &apiextensionsv1.CustomResourceDefinition{}
+	if err := client.Get(ctx, ctrlruntimeclient.ObjectKeyFromObject(crd), existingCRD); err != nil {
+		if err := client.Create(ctx, crd); err != nil {
+			t.Fatalf("Failed to create CRD: %v", err)
+		}
+	} else {
+		existingCRD.Spec = crd.Spec
+
+		if err := client.Update(ctx, existingCRD); err != nil {
+			t.Fatalf("Failed to update CRD: %v", err)
+		}
+	}
+}
+
+func loadCRD(t *testing.T, filename string) *apiextensionsv1.CustomResourceDefinition {
+	t.Helper()
+
+	rootDirectory := requiredEnv(t, "ROOT_DIRECTORY")
+
+	f, err := os.Open(filepath.Join(rootDirectory, filename))
+	if err != nil {
+		t.Fatalf("Failed to read CRD: %v", err)
+	}
+	defer f.Close()
+
+	crd := &apiextensionsv1.CustomResourceDefinition{}
+	dec := yaml.NewYAMLOrJSONDecoder(f, 1024)
+	if err := dec.Decode(crd); err != nil {
+		t.Fatalf("Failed to decode CRD: %v", err)
+	}
+
+	return crd
 }
