@@ -24,12 +24,14 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/google/go-cmp/cmp"
 
 	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
 	"github.com/kcp-dev/api-syncagent/test/utils"
 
 	kcpapisv1alpha1 "github.com/kcp-dev/kcp/sdk/apis/apis/v1alpha1"
 
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -270,5 +272,108 @@ func TestARSDropsAllVersionsExceptTheSelectedOne(t *testing.T) {
 
 	if name := ars.Spec.Versions[0].Name; name != theVersion {
 		t.Fatalf("Expected ARS to contain %q, but contains %q.", theVersion, name)
+	}
+}
+
+func TestProjection(t *testing.T) {
+	const (
+		apiExportName   = "example.com"
+		originalVersion = "v1"
+	)
+
+	ctx := context.Background()
+	ctrlruntime.SetLogger(logr.Discard())
+
+	// setup a test environment in kcp
+	orgKubconfig := utils.CreateOrganization(t, ctx, "ars-projections", apiExportName)
+
+	// start a service cluster
+	envtestKubeconfig, envtestClient, _ := utils.RunEnvtest(t, []string{
+		"test/crds/crontab.yaml",
+	})
+
+	// publish Crontabs
+	t.Logf("Publishing CronTabs…")
+	pr := &syncagentv1alpha1.PublishedResource{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "publish-crontabs",
+		},
+		Spec: syncagentv1alpha1.PublishedResourceSpec{
+			Resource: syncagentv1alpha1.SourceResourceDescriptor{
+				APIGroup: "example.com",
+				Version:  originalVersion,
+				Kind:     "CronTab",
+			},
+			Projection: &syncagentv1alpha1.ResourceProjection{
+				Version:    "v6",
+				Scope:      syncagentv1alpha1.ClusterScoped,
+				Kind:       "CronusTabulatus",
+				Plural:     "cronustabulati",
+				ShortNames: []string{"cront"},
+			},
+		},
+	}
+
+	if err := envtestClient.Create(ctx, pr); err != nil {
+		t.Fatalf("Failed to create PublishedResource: %v", err)
+	}
+
+	// let the agent do its thing
+	utils.RunAgent(ctx, t, "bob", orgKubconfig, envtestKubeconfig, apiExportName)
+
+	// wait for the APIExport to be updated
+	t.Logf("Waiting for APIExport to be updated…")
+	orgClient := utils.GetClient(t, orgKubconfig)
+	apiExportKey := types.NamespacedName{Name: apiExportName}
+
+	var arsName string
+	err := wait.PollUntilContextTimeout(ctx, 500*time.Millisecond, 1*time.Minute, false, func(ctx context.Context) (done bool, err error) {
+		apiExport := &kcpapisv1alpha1.APIExport{}
+		err = orgClient.Get(ctx, apiExportKey, apiExport)
+		if err != nil {
+			return false, err
+		}
+
+		if len(apiExport.Spec.LatestResourceSchemas) == 0 {
+			return false, nil
+		}
+
+		arsName = apiExport.Spec.LatestResourceSchemas[0]
+
+		return true, nil
+	})
+	if err != nil {
+		t.Fatalf("Failed to wait for APIExport to be updated: %v", err)
+	}
+
+	// check the APIResourceSchema
+	ars := &kcpapisv1alpha1.APIResourceSchema{}
+	err = orgClient.Get(ctx, types.NamespacedName{Name: arsName}, ars)
+	if err != nil {
+		t.Fatalf("APIResourceSchema does not exist: %v", err)
+	}
+
+	if len(ars.Spec.Versions) != 1 {
+		t.Fatalf("Expected only one version to remain in ARS, but found %d.", len(ars.Spec.Versions))
+	}
+
+	if name := ars.Spec.Versions[0].Name; name != pr.Spec.Projection.Version {
+		t.Errorf("Expected ARS to contain version %q, but contains %q.", pr.Spec.Projection.Version, name)
+	}
+
+	if ars.Spec.Scope != apiextensionsv1.ResourceScope(pr.Spec.Projection.Scope) {
+		t.Errorf("Expected ARS to be of scope %q, but is %q.", pr.Spec.Projection.Scope, ars.Spec.Scope)
+	}
+
+	if ars.Spec.Names.Kind != pr.Spec.Projection.Kind {
+		t.Errorf("Expected ARS to be kind %q, but is %q.", pr.Spec.Projection.Kind, ars.Spec.Names.Kind)
+	}
+
+	if ars.Spec.Names.Plural != pr.Spec.Projection.Plural {
+		t.Errorf("Expected ARS to have plural name %q, but has %q.", pr.Spec.Projection.Plural, ars.Spec.Names.Plural)
+	}
+
+	if !cmp.Equal(ars.Spec.Names.ShortNames, pr.Spec.Projection.ShortNames) {
+		t.Errorf("Expected ARS to have short names %v, but has %v.", pr.Spec.Projection.ShortNames, ars.Spec.Names.ShortNames)
 	}
 }
