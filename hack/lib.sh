@@ -36,7 +36,8 @@ retry() {
   # Works only with bash but doesn't fail on other shells
   start_time=$(date +%s)
   set +e
-  actual_retry $@
+  # We use an extra wrapping to write junit and have a timer
+  retry_backoff $@
   rc=$?
   set -e
   elapsed_time=$(($(date +%s) - $start_time))
@@ -44,8 +45,7 @@ retry() {
   return $rc
 }
 
-# We use an extra wrapping to write junit and have a timer
-actual_retry() {
+retry_backoff() {
   retries=$1
   shift
 
@@ -66,9 +66,33 @@ actual_retry() {
   return 0
 }
 
+retry_linear() {
+  delay=$1
+  retries=$2
+  shift
+  shift
+
+  count=0
+  until "$@"; do
+    rc=$?
+    count=$((count + 1))
+    if [ $count -lt "$retries" ]; then
+      echodate "[$count/$retries] Command returned $rc, retrying…"
+      sleep $delay
+    else
+      echodate "Command returned $rc, no more retries left."
+      return $rc
+    fi
+  done
+
+  echodate "Command succeeded."
+
+  return 0
+}
+
 echodate() {
   # do not use -Is to keep this compatible with macOS
-  echo "[$(date +%Y-%m-%dT%H:%M:%S%:z)]" "$@"
+  echo "[$(date +%Y-%m-%dT%H:%M:%S%:z)]" "$@" > /dev/stderr
 }
 
 write_junit() {
