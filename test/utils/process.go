@@ -88,6 +88,8 @@ func RunAgent(
 		"--kcp-kubeconfig", kcpKubeconfig,
 		"--namespace", "kube-system",
 		"--log-format", "Console",
+		"--health-address", "0",
+		"--metrics-address", "0",
 	}
 
 	logFile := filepath.Join(ArtifactsDirectory(t), uniqueLogfile(t, ""))

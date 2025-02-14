@@ -133,7 +133,10 @@ func (r *Reconciler) reconcile(ctx context.Context, log *zap.SugaredLogger, pubR
 	}
 
 	// project the CRD
-	projectedCRD := r.projectResourceNames(r.apiExportName, crd, pubResource.Spec.Projection)
+	projectedCRD, err := r.applyProjection(r.apiExportName, crd, pubResource)
+	if err != nil {
+		return nil, fmt.Errorf("failed to apply projection rules: %w", err)
+	}
 
 	// to prevent changing the source GVK e.g. from "apps/v1 Daemonset" to "core/v1 Pod",
 	// we include the source GVK in hashed form in the final APIResourceSchema name.
@@ -147,7 +150,7 @@ func (r *Reconciler) reconcile(ctx context.Context, log *zap.SugaredLogger, pubR
 	err = r.kcpClient.Get(wsCtx, types.NamespacedName{Name: arsName}, ars, &ctrlruntimeclient.GetOptions{})
 
 	if apierrors.IsNotFound(err) {
-		if err := r.createAPIResourceSchema(wsCtx, log, r.apiExportName, projectedCRD, arsName, pubResource.Spec.Resource.Version); err != nil {
+		if err := r.createAPIResourceSchema(wsCtx, log, r.apiExportName, projectedCRD, arsName); err != nil {
 			return nil, fmt.Errorf("failed to create APIResourceSchema: %w", err)
 		}
 	} else if err != nil {
@@ -170,17 +173,7 @@ func (r *Reconciler) reconcile(ctx context.Context, log *zap.SugaredLogger, pubR
 	return nil, nil
 }
 
-func (r *Reconciler) createAPIResourceSchema(ctx context.Context, log *zap.SugaredLogger, apigroup string, projectedCRD *apiextensionsv1.CustomResourceDefinition, arsName string, selectedVersion string) error {
-	// At this moment we ignore every non-selected version in the CRD, as we have not fully
-	// decided on how to support the API version lifecycle yet. Having multiple versions in
-	// the CRD will make kcp require a `conversion` to also be configured. Since we cannot
-	// enforce that and want to instead work with existing CRDs as best as we can, we chose
-	// this option (instead of error'ing out if a conversion is missing).
-	projectedCRD.Spec.Conversion = nil
-	projectedCRD.Spec.Versions = slices.DeleteFunc(projectedCRD.Spec.Versions, func(v apiextensionsv1.CustomResourceDefinitionVersion) bool {
-		return v.Name != selectedVersion
-	})
-
+func (r *Reconciler) createAPIResourceSchema(ctx context.Context, log *zap.SugaredLogger, apigroup string, projectedCRD *apiextensionsv1.CustomResourceDefinition, arsName string) error {
 	// prefix is irrelevant as the reconciling framework will use arsName anyway
 	converted, err := kcpdevv1alpha1.CRDToAPIResourceSchema(projectedCRD, "irrelevant")
 	if err != nil {
@@ -206,12 +199,35 @@ func (r *Reconciler) createAPIResourceSchema(ctx context.Context, log *zap.Sugar
 	return r.kcpClient.Create(ctx, ars)
 }
 
-func (r *Reconciler) projectResourceNames(apiGroup string, crd *apiextensionsv1.CustomResourceDefinition, projection *syncagentv1alpha1.ResourceProjection) *apiextensionsv1.CustomResourceDefinition {
+func (r *Reconciler) applyProjection(apiGroup string, crd *apiextensionsv1.CustomResourceDefinition, pr *syncagentv1alpha1.PublishedResource) (*apiextensionsv1.CustomResourceDefinition, error) {
 	result := crd.DeepCopy()
 	result.Spec.Group = apiGroup
 
+	// At this moment we ignore every non-selected version in the CRD, as we have not fully
+	// decided on how to support the API version lifecycle yet. Having multiple versions in
+	// the CRD will make kcp require a `conversion` to also be configured. Since we cannot
+	// enforce that and want to instead work with existing CRDs as best as we can, we chose
+	// this option (instead of error'ing out if a conversion is missing).
+	result.Spec.Conversion = nil
+	result.Spec.Versions = slices.DeleteFunc(result.Spec.Versions, func(v apiextensionsv1.CustomResourceDefinitionVersion) bool {
+		return v.Name != pr.Spec.Resource.Version
+	})
+
+	if len(result.Spec.Versions) != 1 {
+		// This should never happen because of checks earlier in the reconciler.
+		return nil, fmt.Errorf("invalid CRD: cannot find selected version %q", pr.Spec.Resource.Version)
+	}
+
+	result.Spec.Versions[0].Served = true
+	result.Spec.Versions[0].Storage = true
+
+	projection := pr.Spec.Projection
 	if projection == nil {
-		return result
+		return result, nil
+	}
+
+	if projection.Version != "" {
+		result.Spec.Versions[0].Name = projection.Version
 	}
 
 	if projection.Kind != "" {
@@ -238,7 +254,7 @@ func (r *Reconciler) projectResourceNames(apiGroup string, crd *apiextensionsv1.
 		result.Spec.Names.ShortNames = projection.ShortNames
 	}
 
-	return result
+	return result, nil
 }
 
 // getAPIResourceSchemaName generates the name for the ARS in kcp. Note that

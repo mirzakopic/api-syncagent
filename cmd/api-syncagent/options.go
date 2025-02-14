@@ -65,12 +65,16 @@ type Options struct {
 	KubeconfigCAFileOverride string
 
 	LogOptions log.Options
+
+	MetricsAddr string
+	HealthAddr  string
 }
 
 func NewOptions() *Options {
 	return &Options{
 		LogOptions:                log.NewDefaultOptions(),
 		PublishedResourceSelector: labels.Everything(),
+		MetricsAddr:               "127.0.0.1:8085",
 	}
 }
 
@@ -83,8 +87,10 @@ func (o *Options) AddFlags(flags *pflag.FlagSet) {
 	flags.StringVar(&o.APIExportRef, "apiexport-ref", o.APIExportRef, "name of the APIExport in kcp that this Sync Agent is powering")
 	flags.StringVar(&o.PublishedResourceSelectorString, "published-resource-selector", o.PublishedResourceSelectorString, "restrict this Sync Agent to only process PublishedResources matching this label selector (optional)")
 	flags.BoolVar(&o.EnableLeaderElection, "enable-leader-election", o.EnableLeaderElection, "whether to perform leader election")
-	flags.StringVar(&o.KubeconfigHostOverride, "kubeconfig-host-override", o.KubeconfigHostOverride, "Override the host configured in the local kubeconfig")
-	flags.StringVar(&o.KubeconfigCAFileOverride, "kubeconfig-ca-file-override", o.KubeconfigCAFileOverride, "Override the server CA file configured in the local kubeconfig")
+	flags.StringVar(&o.KubeconfigHostOverride, "kubeconfig-host-override", o.KubeconfigHostOverride, "override the host configured in the local kubeconfig")
+	flags.StringVar(&o.KubeconfigCAFileOverride, "kubeconfig-ca-file-override", o.KubeconfigCAFileOverride, "override the server CA file configured in the local kubeconfig")
+	flags.StringVar(&o.MetricsAddr, "metrics-address", o.MetricsAddr, "host and port to serve Prometheus metrics via /metrics (HTTP)")
+	flags.StringVar(&o.HealthAddr, "health-address", o.HealthAddr, "host and port to serve probes via /readyz and /healthz (HTTP)")
 }
 
 func (o *Options) Validate() error {

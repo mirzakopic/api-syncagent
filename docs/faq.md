@@ -36,3 +36,19 @@ Only those required for its own operation. If you configure a namespaced resourc
 automatically add a claim for `namespaces` in kcp, plus it will add either `configmaps` or `secrets`
 if related resources are configured in a `PublishedResource`. But you cannot specify additional
 permissions claims.
+
+## I am seeing errors in the agent logs, what's going on?
+
+Errors like
+
+> reflector.go:561] k8s.io/client-go@v0.31.2/tools/cache/reflector.go:243: failed to list
+> example.com/v1, Kind=Dummy: the server could not find the requested resource
+
+or
+
+> reflector.go:158] "Unhandled Error" err="k8s.io/client-go@v0.31.2/tools/cache/reflector.go:243:
+> Failed to watch kcp.example.com/v1, Kind=Dummy: failed to list kcp.example.com/v1, Kind=Dummy:
+> the server could not find the requested resource" logger="UnhandledError"
+
+are typical when bootstrapping new APIExports in kcp. They are only cause for concern if they
+persist after configuring all PublishedResources.

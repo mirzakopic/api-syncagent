@@ -53,6 +53,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	ctrlruntimelog "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 )
 
 func main() {
@@ -168,9 +169,11 @@ func setupLocalManager(ctx context.Context, opts *Options) (manager.Manager, err
 		BaseContext: func() context.Context {
 			return ctx
 		},
+		Metrics:                 metricsserver.Options{BindAddress: opts.MetricsAddr},
 		LeaderElection:          opts.EnableLeaderElection,
 		LeaderElectionID:        "syncagent." + opts.AgentName,
 		LeaderElectionNamespace: opts.Namespace,
+		HealthProbeBindAddress:  opts.HealthAddr,
 	})
 	if err != nil {
 		return nil, err
