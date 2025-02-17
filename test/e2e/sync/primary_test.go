@@ -122,7 +122,7 @@ spec:
 	copy.SetAPIVersion("example.com/v1")
 	copy.SetKind("CronTab")
 
-	err := wait.PollUntilContextTimeout(ctx, 500*time.Millisecond, 1*time.Minute, false, func(ctx context.Context) (done bool, err error) {
+	err := wait.PollUntilContextTimeout(ctx, 500*time.Millisecond, 30*time.Second, false, func(ctx context.Context) (done bool, err error) {
 		copyKey := types.NamespacedName{Namespace: "synced-default", Name: "my-crontab"}
 		return envtestClient.Get(ctx, copyKey, copy) == nil, nil
 	})
@@ -210,7 +210,7 @@ spec:
 	copy.SetAPIVersion("example.com/v1")
 	copy.SetKind("CronTab")
 
-	err := wait.PollUntilContextTimeout(ctx, 500*time.Millisecond, 1*time.Minute, false, func(ctx context.Context) (done bool, err error) {
+	err := wait.PollUntilContextTimeout(ctx, 500*time.Millisecond, 30*time.Second, false, func(ctx context.Context) (done bool, err error) {
 		return envtestClient.Get(ctx, copyKey, copy) == nil, nil
 	})
 	if err != nil {
@@ -244,7 +244,7 @@ spec:
 
 	// wait for the agent to sync again
 	t.Logf("Waiting for the agent to sync again…")
-	err = wait.PollUntilContextTimeout(ctx, 500*time.Millisecond, 1*time.Minute, false, func(ctx context.Context) (done bool, err error) {
+	err = wait.PollUntilContextTimeout(ctx, 500*time.Millisecond, 30*time.Second, false, func(ctx context.Context) (done bool, err error) {
 		if err := envtestClient.Get(ctx, copyKey, copy); err != nil {
 			return false, err
 		}
@@ -293,7 +293,7 @@ spec:
 
 	// wait for the agent to sync again
 	t.Logf("Waiting for the agent to sync again…")
-	err = wait.PollUntilContextTimeout(ctx, 500*time.Millisecond, 1*time.Minute, false, func(ctx context.Context) (done bool, err error) {
+	err = wait.PollUntilContextTimeout(ctx, 500*time.Millisecond, 30*time.Second, false, func(ctx context.Context) (done bool, err error) {
 		if err := envtestClient.Get(ctx, copyKey, copy); err != nil {
 			return false, err
 		}
@@ -331,4 +331,121 @@ func yamlToUnstructured(t *testing.T, data string) *unstructured.Unstructured {
 	}
 
 	return &unstructured.Unstructured{Object: unstructuredMap}
+}
+
+func TestResourceFilter(t *testing.T) {
+	const (
+		apiExportName = "kcp.example.com"
+		orgWorkspace  = "sync-resource-filter"
+	)
+
+	ctx := context.Background()
+	ctrlruntime.SetLogger(logr.Discard())
+
+	// setup a test environment in kcp
+	orgKubconfig := utils.CreateOrganization(t, ctx, orgWorkspace, apiExportName)
+
+	// start a service cluster
+	envtestKubeconfig, envtestClient, _ := utils.RunEnvtest(t, []string{
+		"test/crds/crontab.yaml",
+	})
+
+	// publish Crontabs and Backups
+	t.Logf("Publishing CRDs…")
+	prCrontabs := &syncagentv1alpha1.PublishedResource{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "publish-crontabs",
+		},
+		Spec: syncagentv1alpha1.PublishedResourceSpec{
+			Resource: syncagentv1alpha1.SourceResourceDescriptor{
+				APIGroup: "example.com",
+				Version:  "v1",
+				Kind:     "CronTab",
+			},
+			// These rules make finding the local object easier, but should not be used in production.
+			Naming: &syncagentv1alpha1.ResourceNaming{
+				Name:      "$remoteName",
+				Namespace: "synced-$remoteNamespace",
+			},
+			Filter: &syncagentv1alpha1.ResourceFilter{
+				Resource: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"include": "me",
+					},
+				},
+			},
+		},
+	}
+
+	if err := envtestClient.Create(ctx, prCrontabs); err != nil {
+		t.Fatalf("Failed to create PublishedResource: %v", err)
+	}
+
+	// start the agent in the background to update the APIExport with the CronTabs API
+	utils.RunAgent(ctx, t, "bob", orgKubconfig, envtestKubeconfig, apiExportName)
+
+	// wait until the API is available
+	teamCtx := kontext.WithCluster(ctx, logicalcluster.Name(fmt.Sprintf("root:%s:team-1", orgWorkspace)))
+	kcpClient := utils.GetKcpAdminClusterClient(t)
+	utils.WaitForBoundAPI(t, teamCtx, kcpClient, schema.GroupVersionResource{
+		Group:    apiExportName,
+		Version:  "v1",
+		Resource: "crontabs",
+	})
+
+	// create two Crontab objects in a team workspace
+	t.Log("Creating CronTab in kcp…")
+	ignoredCrontab := yamlToUnstructured(t, `
+apiVersion: kcp.example.com/v1
+kind: CronTab
+metadata:
+  namespace: default
+  name: ignored
+spec:
+  image: ubuntu:latest
+`)
+
+	if err := kcpClient.Create(teamCtx, ignoredCrontab); err != nil {
+		t.Fatalf("Failed to create CronTab in kcp: %v", err)
+	}
+
+	includedCrontab := yamlToUnstructured(t, `
+apiVersion: kcp.example.com/v1
+kind: CronTab
+metadata:
+  namespace: default
+  name: included
+  labels:
+    include: me
+spec:
+  image: debian:12
+`)
+
+	if err := kcpClient.Create(teamCtx, includedCrontab); err != nil {
+		t.Fatalf("Failed to create CronTab in kcp: %v", err)
+	}
+
+	// wait for the agent to sync only one of the objects down into the service cluster
+
+	t.Logf("Wait for CronTab to be synced…")
+	copy := &unstructured.Unstructured{}
+	copy.SetAPIVersion("example.com/v1")
+	copy.SetKind("CronTab")
+
+	err := wait.PollUntilContextTimeout(ctx, 500*time.Millisecond, 30*time.Second, false, func(ctx context.Context) (done bool, err error) {
+		copyKey := types.NamespacedName{Namespace: "synced-default", Name: "included"}
+		return envtestClient.Get(ctx, copyKey, copy) == nil, nil
+	})
+	if err != nil {
+		t.Fatalf("Failed to wait for object to be synced down: %v", err)
+	}
+
+	// the only good negative check is to wait for a timeout
+	err = wait.PollUntilContextTimeout(ctx, 500*time.Millisecond, 30*time.Second, false, func(ctx context.Context) (done bool, err error) {
+		copyKey := types.NamespacedName{Namespace: "synced-default", Name: "ignored"}
+		return envtestClient.Get(ctx, copyKey, copy) == nil, nil
+	})
+	if err == nil {
+		t.Fatal("Expected no ignored object to be found on the service cluster, but did.")
+	}
 }
