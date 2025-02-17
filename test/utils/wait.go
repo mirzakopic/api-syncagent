@@ -18,9 +18,13 @@ package utils
 
 import (
 	"context"
+	"slices"
 	"testing"
 	"time"
 
+	kcpapisv1alpha1 "github.com/kcp-dev/kcp/sdk/apis/apis/v1alpha1"
+
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -39,4 +43,38 @@ func WaitForObject(t *testing.T, ctx context.Context, client ctrlruntimeclient.C
 	}
 
 	t.Logf("%T is ready.", obj)
+}
+
+func WaitForBoundAPI(t *testing.T, ctx context.Context, client ctrlruntimeclient.Client, gvr schema.GroupVersionResource) {
+	t.Helper()
+
+	t.Log("Waiting for API to be bound in kcp…")
+	err := wait.PollUntilContextTimeout(ctx, 500*time.Millisecond, 1*time.Minute, false, func(ctx context.Context) (bool, error) {
+		apiBindings := &kcpapisv1alpha1.APIBindingList{}
+		err := client.List(ctx, apiBindings)
+		if err != nil {
+			return false, err
+		}
+
+		for _, binding := range apiBindings.Items {
+			if bindingHasGVR(binding, gvr) {
+				return true, nil
+			}
+		}
+
+		return false, nil
+	})
+	if err != nil {
+		t.Fatalf("Failed to wait for API %v to become available: %v", gvr, err)
+	}
+}
+
+func bindingHasGVR(binding kcpapisv1alpha1.APIBinding, gvr schema.GroupVersionResource) bool {
+	for _, bound := range binding.Status.BoundResources {
+		if bound.Group == gvr.Group && bound.Resource == gvr.Resource && slices.Contains(bound.StorageVersions, gvr.Version) {
+			return true
+		}
+	}
+
+	return false
 }

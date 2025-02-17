@@ -80,6 +80,7 @@ export AGENT_BINARY="$(realpath _build/api-syncagent)"
 
 # time to run the tests
 echodate "Running e2e tests…"
-(set -x; go test -tags e2e -timeout 2h -v ./test/e2e/...)
+WHAT="${WHAT:-./test/e2e/...}"
+(set -x; go test -tags e2e -timeout 2h -v $WHAT)
 
 echodate "Done. :-)"
