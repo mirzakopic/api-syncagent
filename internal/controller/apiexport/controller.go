@@ -139,6 +139,11 @@ func (r *Reconciler) reconcile(ctx context.Context) error {
 	for _, pubResource := range filteredPubResources {
 		arsList.Insert(pubResource.Status.ResourceSchemaName)
 
+		// to evaluate the namespace filter, the agent needs to fetch the namespace
+		if filter := pubResource.Spec.Filter; filter != nil && filter.Namespace != nil {
+			claimedResources.Insert("namespaces")
+		}
+
 		for _, rr := range pubResource.Spec.Related {
 			resource, err := mapper.ResourceFor(schema.GroupVersionResource{
 				Resource: rr.Kind,
