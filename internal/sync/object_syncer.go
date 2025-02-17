@@ -349,6 +349,10 @@ func (s *objectSyncer) ensureNamespace(ctx context.Context, log *zap.SugaredLogg
 		return nil
 	}
 
+	// Use a get-then-create approach to benefit from having a cache; otherwise if we always
+	// send a create request, we're needlessly spamming the kube apiserver. Yes, this approach
+	// is a race condition and we have to check for AlreadyExists later down the line, but that
+	// only occurs on cold caches. During normal operations this should be more efficient.
 	ns := &corev1.Namespace{}
 	if err := client.Get(ctx, types.NamespacedName{Name: namespace}, ns); ctrlruntimeclient.IgnoreNotFound(err) != nil {
 		return fmt.Errorf("failed to check: %w", err)
@@ -358,7 +362,7 @@ func (s *objectSyncer) ensureNamespace(ctx context.Context, log *zap.SugaredLogg
 		ns.Name = namespace
 
 		log.Debugw("Creating namespace…", "namespace", namespace)
-		if err := client.Create(ctx, ns); err != nil {
+		if err := client.Create(ctx, ns); err != nil && !apierrors.IsAlreadyExists(err) {
 			return fmt.Errorf("failed to create: %w", err)
 		}
 	}
