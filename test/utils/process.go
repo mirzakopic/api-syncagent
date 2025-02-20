@@ -88,6 +88,7 @@ func RunAgent(
 		"--kcp-kubeconfig", kcpKubeconfig,
 		"--namespace", "kube-system",
 		"--log-format", "Console",
+		"--log-debug=true",
 		"--health-address", "0",
 		"--metrics-address", "0",
 	}

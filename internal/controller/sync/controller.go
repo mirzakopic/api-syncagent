@@ -33,7 +33,10 @@ import (
 	kcpcore "github.com/kcp-dev/kcp/sdk/apis/core"
 	kcpdevcorev1alpha1 "github.com/kcp-dev/kcp/sdk/apis/core/v1alpha1"
 
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -165,6 +168,27 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{}, nil
 	}
 
+	// if there is a namespace, get it if a namespace filter is also configured
+	var namespace *corev1.Namespace
+	if filter := r.pubRes.Spec.Filter; filter != nil && filter.Namespace != nil && remoteObj.GetNamespace() != "" {
+		namespace = &corev1.Namespace{}
+		key := types.NamespacedName{Name: remoteObj.GetNamespace()}
+
+		if err := r.vwClient.Get(wsCtx, key, namespace); err != nil {
+			return reconcile.Result{}, fmt.Errorf("failed to retrieve remote object's namespace: %w", err)
+		}
+	}
+
+	// apply filtering rules to scope down the number of objects we sync
+	include, err := r.objectMatchesFilter(remoteObj, namespace)
+	if err != nil {
+		return reconcile.Result{}, fmt.Errorf("failed to apply filtering rules: %w", err)
+	}
+
+	if !include {
+		return reconcile.Result{}, nil
+	}
+
 	syncContext := sync.NewContext(ctx, wsCtx)
 
 	// if desired, fetch the cluster path as well (some downstream service providers might make use of it,
@@ -192,4 +216,35 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	}
 
 	return result, nil
+}
+
+func (r *Reconciler) objectMatchesFilter(remoteObj *unstructured.Unstructured, namespace *corev1.Namespace) (bool, error) {
+	if r.pubRes.Spec.Filter == nil {
+		return true, nil
+	}
+
+	objMatches, err := r.matchesFilter(remoteObj, r.pubRes.Spec.Filter.Resource)
+	if err != nil || !objMatches {
+		return false, err
+	}
+
+	nsMatches, err := r.matchesFilter(namespace, r.pubRes.Spec.Filter.Namespace)
+	if err != nil || !nsMatches {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (r *Reconciler) matchesFilter(obj metav1.Object, selector *metav1.LabelSelector) (bool, error) {
+	if selector == nil {
+		return true, nil
+	}
+
+	s, err := metav1.LabelSelectorAsSelector(selector)
+	if err != nil {
+		return false, err
+	}
+
+	return s.Matches(labels.Set(obj.GetLabels())), nil
 }
