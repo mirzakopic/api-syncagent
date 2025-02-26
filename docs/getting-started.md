@@ -90,7 +90,8 @@ helm repo update
 
 helm install kcp-api-syncagent kcp/api-syncagent \
   --values values.yaml \
-  --namespace kcp-system
+  --namespace kcp-system \
+  --create-namespace
 ```
 
 Two `kcp-api-syncagent` Pods should start in the `kcp-system` namespace. If they crash you will need to
