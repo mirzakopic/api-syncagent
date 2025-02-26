@@ -41,7 +41,7 @@ apiexport/test.example.com created
 
 ## Sync Agent Installation
 
-The Sync Agent can be installed into any namespace, but in our example we are going with `k8c-system`.
+The Sync Agent can be installed into any namespace, but in our example we are going with `kcp-system`.
 It doesn't necessarily have to live in the same Kubernetes cluster where it is synchronizing data
 to, but that is the common setup. Ultimately the Sync Agent synchronizes data between two kube
 endpoints.
@@ -55,7 +55,7 @@ This can be done via a command like this:
 
 ```sh
 $ kubectl create secret generic kcp-kubeconfig \
-  --namespace k8c-system \
+  --namespace kcp-system \
   --from-file "kubeconfig=admin.kubeconfig"
 ```
 
@@ -90,10 +90,10 @@ helm repo update
 
 helm install kcp-api-syncagent kcp/api-syncagent \
   --values values.yaml \
-  --namespace k8c-system
+  --namespace kcp-system
 ```
 
-Two `kcp-api-syncagent` Pods should start in the `k8c-system` namespace. If they crash you will need to
+Two `kcp-api-syncagent` Pods should start in the `kcp-system` namespace. If they crash you will need to
 identify the reason from container logs. A possible issue is that the provided kubeconfig does not
 have permissions against the target kcp workspace.
 
@@ -135,7 +135,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: 'kcp-api-syncagent'
-    namespace: k8c-system
+    namespace: kcp-system
 ```
 
 **NB:** Even though the PublishedResources might only create/update Certificates in a single namespace,
