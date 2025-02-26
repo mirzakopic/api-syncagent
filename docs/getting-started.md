@@ -41,7 +41,7 @@ apiexport/test.example.com created
 
 ## Sync Agent Installation
 
-The Sync Agent can be installed into any namespace, but in our example we are going with `k8c-system`.
+The Sync Agent can be installed into any namespace, but in our example we are going with `kcp-system`.
 It doesn't necessarily have to live in the same Kubernetes cluster where it is synchronizing data
 to, but that is the common setup. Ultimately the Sync Agent synchronizes data between two kube
 endpoints.
@@ -55,7 +55,7 @@ This can be done via a command like this:
 
 ```sh
 $ kubectl create secret generic kcp-kubeconfig \
-  --namespace k8c-system \
+  --namespace kcp-system \
   --from-file "kubeconfig=admin.kubeconfig"
 ```
 
