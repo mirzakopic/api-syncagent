@@ -90,11 +90,10 @@ helm repo update
 
 helm install kcp-api-syncagent kcp/api-syncagent \
   --values values.yaml \
-  --namespace kcp-system \
-  --create-namespace
+  --namespace k8c-system
 ```
 
-Two `kcp-api-syncagent` Pods should start in the `kcp-system` namespace. If they crash you will need to
+Two `kcp-api-syncagent` Pods should start in the `k8c-system` namespace. If they crash you will need to
 identify the reason from container logs. A possible issue is that the provided kubeconfig does not
 have permissions against the target kcp workspace.
 
@@ -136,7 +135,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: 'kcp-api-syncagent'
-    namespace: kcp-system
+    namespace: k8c-system
 ```
 
 **NB:** Even though the PublishedResources might only create/update Certificates in a single namespace,
