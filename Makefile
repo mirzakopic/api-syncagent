@@ -30,6 +30,9 @@ GOOS ?= $(shell go env GOOS)
 .PHONY: all
 all: build test
 
+ldflags:
+	@echo $(LDFLAGS)
+
 .PHONY: build
 build: $(CMD)
 

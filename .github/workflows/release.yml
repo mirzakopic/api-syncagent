@@ -3,11 +3,11 @@ name: goreleaser
 on:
   pull_request:
     paths:
-    - .github/workflows/release.yml
-    - .goreleaser.yaml
+      - .github/workflows/release.yml
+      - .goreleaser.yaml
   push:
     tags:
-    - 'v*'
+      - 'v*'
 
 permissions:
   contents: read
@@ -31,6 +31,9 @@ jobs:
     
       - name: Delete non-semver tags
         run: 'git tag -d $(git tag -l | grep -v "^v")'
+      
+      - name: Set LDFLAGS
+        run: echo LDFLAGS="$(make ldflags)" >> $GITHUB_ENV
     
       - name: Run GoReleaser on tag
         if: github.event_name != 'pull_request'
@@ -53,7 +56,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
       - uses: actions/upload-artifact@v4
-        if: ${{ always() }}
+        if: github.event_name == 'pull_request'
         with:
           name: binaries
           path: dist/*.tar.gz
