@@ -17,12 +17,10 @@ limitations under the License.
 package sync
 
 import (
-	"crypto/sha1"
-	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"strings"
 
+	"github.com/kcp-dev/api-syncagent/internal/crypto"
 	"github.com/kcp-dev/logicalcluster/v3"
 
 	corev1 "k8s.io/api/core/v1"
@@ -112,26 +110,16 @@ type kubernetesBackend struct {
 }
 
 func hashObject(obj *unstructured.Unstructured) string {
-	data := map[string]any{
+	return crypto.ShortHash(map[string]any{
 		"apiVersion": obj.GetAPIVersion(),
+		"kind":       obj.GetKind(),
 		"namespace":  obj.GetNamespace(),
 		"name":       obj.GetName(),
-	}
-
-	hash := sha1.New()
-
-	if err := json.NewEncoder(hash).Encode(data); err != nil {
-		// This is not something that should ever happen at runtime and is also not
-		// something we can really gracefully handle, so crashing and restarting might
-		// be a good way to signal the service owner that something is up.
-		panic(fmt.Sprintf("Failed to hash object key: %v", err))
-	}
-
-	return hex.EncodeToString(hash.Sum(nil))
+	})
 }
 
 func newKubernetesBackend(namespace string, primaryObject, stateCluster syncSide) *kubernetesBackend {
-	keyHash := hashObject(primaryObject.object)
+	shortKeyHash := hashObject(primaryObject.object)
 
 	secretLabels := newObjectKey(primaryObject.object, primaryObject.clusterName, primaryObject.workspacePath).Labels()
 	secretLabels[objectStateLabelName] = objectStateLabelValue
@@ -139,7 +127,7 @@ func newKubernetesBackend(namespace string, primaryObject, stateCluster syncSide
 	return &kubernetesBackend{
 		secretName: types.NamespacedName{
 			// trim hash down; 20 was chosen at random
-			Name:      fmt.Sprintf("obj-state-%s-%s", primaryObject.clusterName, keyHash[:20]),
+			Name:      fmt.Sprintf("obj-state-%s-%s", primaryObject.clusterName, shortKeyHash),
 			Namespace: namespace,
 		},
 		labels:       secretLabels,
