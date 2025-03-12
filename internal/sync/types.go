@@ -27,9 +27,12 @@ const (
 	// origin remote objects. Note that the cluster *path* label is optional and
 	// has to be enabled per PublishedResource.
 
-	remoteObjectClusterLabel   = "syncagent.kcp.io/remote-object-cluster"
-	remoteObjectNamespaceLabel = "syncagent.kcp.io/remote-object-namespace"
-	remoteObjectNameLabel      = "syncagent.kcp.io/remote-object-name"
+	remoteObjectClusterLabel       = "syncagent.kcp.io/remote-object-cluster"
+	remoteObjectNamespaceHashLabel = "syncagent.kcp.io/remote-object-namespace-hash"
+	remoteObjectNameHashLabel      = "syncagent.kcp.io/remote-object-name-hash"
+
+	remoteObjectNamespaceAnnotation = "syncagent.kcp.io/remote-object-namespace"
+	remoteObjectNameAnnotation      = "syncagent.kcp.io/remote-object-name"
 
 	remoteObjectWorkspacePathAnnotation = "syncagent.kcp.io/remote-object-workspace-path"
 

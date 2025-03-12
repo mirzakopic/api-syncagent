@@ -182,17 +182,19 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
-						agentNameLabel:             "textor-the-doctor",
-						remoteObjectClusterLabel:   "testcluster",
-						remoteObjectNamespaceLabel: "",
-						remoteObjectNameLabel:      "my-test-thing",
+						agentNameLabel:            "textor-the-doctor",
+						remoteObjectClusterLabel:  "testcluster",
+						remoteObjectNameHashLabel: "c346c8ceb5d104cc783d09b95e8ea7032c190948",
+					},
+					Annotations: map[string]string{
+						remoteObjectNameAnnotation: "my-test-thing",
 					},
 				},
 				Spec: dummyv1alpha1.ThingSpec{
 					Username: "Colonel Mustard",
 				},
 			}),
-			existingState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{},"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
+			existingState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
 
 			expectedRemoteObject: newUnstructured(&dummyv1alpha1.Thing{
 				ObjectMeta: metav1.ObjectMeta{
@@ -209,17 +211,19 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
-						agentNameLabel:             "textor-the-doctor",
-						remoteObjectClusterLabel:   "testcluster",
-						remoteObjectNamespaceLabel: "",
-						remoteObjectNameLabel:      "my-test-thing",
+						agentNameLabel:            "textor-the-doctor",
+						remoteObjectClusterLabel:  "testcluster",
+						remoteObjectNameHashLabel: "c346c8ceb5d104cc783d09b95e8ea7032c190948",
+					},
+					Annotations: map[string]string{
+						remoteObjectNameAnnotation: "my-test-thing",
 					},
 				},
 				Spec: dummyv1alpha1.ThingSpec{
 					Username: "Colonel Mustard",
 				},
 			}),
-			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{},"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
+			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
 		},
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -257,17 +261,19 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
-						agentNameLabel:             "textor-the-doctor",
-						remoteObjectClusterLabel:   "testcluster",
-						remoteObjectNamespaceLabel: "",
-						remoteObjectNameLabel:      "my-test-thing",
+						agentNameLabel:            "textor-the-doctor",
+						remoteObjectClusterLabel:  "testcluster",
+						remoteObjectNameHashLabel: "c346c8ceb5d104cc783d09b95e8ea7032c190948",
+					},
+					Annotations: map[string]string{
+						remoteObjectNameAnnotation: "my-test-thing",
 					},
 				},
 				Spec: dummyv1alpha1.ThingSpec{
 					Username: "Colonel Mustard",
 				},
 			}),
-			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{},"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
+			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
 		},
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -315,17 +321,19 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
-						agentNameLabel:             "textor-the-doctor",
-						remoteObjectClusterLabel:   "testcluster",
-						remoteObjectNamespaceLabel: "",
-						remoteObjectNameLabel:      "my-test-thing",
+						agentNameLabel:            "textor-the-doctor",
+						remoteObjectClusterLabel:  "testcluster",
+						remoteObjectNameHashLabel: "c346c8ceb5d104cc783d09b95e8ea7032c190948",
+					},
+					Annotations: map[string]string{
+						remoteObjectNameAnnotation: "my-test-thing",
 					},
 				},
 				Spec: dummyv1alpha1.ThingSpec{
 					Username: "Colonel Mustard",
 				},
 			}),
-			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{},"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
+			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
 		},
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -352,17 +360,19 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
-						agentNameLabel:             "textor-the-doctor",
-						remoteObjectClusterLabel:   "testcluster",
-						remoteObjectNamespaceLabel: "",
-						remoteObjectNameLabel:      "my-test-thing",
+						agentNameLabel:            "textor-the-doctor",
+						remoteObjectClusterLabel:  "testcluster",
+						remoteObjectNameHashLabel: "c346c8ceb5d104cc783d09b95e8ea7032c190948",
+					},
+					Annotations: map[string]string{
+						remoteObjectNameAnnotation: "my-test-thing",
 					},
 				},
 				Spec: dummyv1alpha1.ThingSpec{
 					Username: "Colonel Mustard",
 				},
 			}),
-			existingState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{},"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
+			existingState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
 
 			expectedRemoteObject: newUnstructured(&dummyv1alpha1.Thing{
 				ObjectMeta: metav1.ObjectMeta{
@@ -379,17 +389,19 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
-						agentNameLabel:             "textor-the-doctor",
-						remoteObjectClusterLabel:   "testcluster",
-						remoteObjectNamespaceLabel: "",
-						remoteObjectNameLabel:      "my-test-thing",
+						agentNameLabel:            "textor-the-doctor",
+						remoteObjectClusterLabel:  "testcluster",
+						remoteObjectNameHashLabel: "c346c8ceb5d104cc783d09b95e8ea7032c190948",
+					},
+					Annotations: map[string]string{
+						remoteObjectNameAnnotation: "my-test-thing",
 					},
 				},
 				Spec: dummyv1alpha1.ThingSpec{
 					Username: "Miss Scarlet",
 				},
 			}),
-			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{},"name":"my-test-thing"},"spec":{"username":"Miss Scarlet"}}`,
+			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Miss Scarlet"}}`,
 		},
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -416,10 +428,12 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
-						agentNameLabel:             "textor-the-doctor",
-						remoteObjectClusterLabel:   "testcluster",
-						remoteObjectNamespaceLabel: "",
-						remoteObjectNameLabel:      "my-test-thing",
+						agentNameLabel:            "textor-the-doctor",
+						remoteObjectClusterLabel:  "testcluster",
+						remoteObjectNameHashLabel: "c346c8ceb5d104cc783d09b95e8ea7032c190948",
+					},
+					Annotations: map[string]string{
+						remoteObjectNameAnnotation: "my-test-thing",
 					},
 				},
 				Spec: dummyv1alpha1.ThingSpec{
@@ -443,17 +457,19 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
-						agentNameLabel:             "textor-the-doctor",
-						remoteObjectClusterLabel:   "testcluster",
-						remoteObjectNamespaceLabel: "",
-						remoteObjectNameLabel:      "my-test-thing",
+						agentNameLabel:            "textor-the-doctor",
+						remoteObjectClusterLabel:  "testcluster",
+						remoteObjectNameHashLabel: "c346c8ceb5d104cc783d09b95e8ea7032c190948",
+					},
+					Annotations: map[string]string{
+						remoteObjectNameAnnotation: "my-test-thing",
 					},
 				},
 				Spec: dummyv1alpha1.ThingSpec{
 					Username: "Colonel Mustard",
 				},
 			}),
-			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{},"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
+			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
 		},
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -489,14 +505,14 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Annotations: map[string]string{
-						"existing-annotation": "annotation-value",
+						remoteObjectNameAnnotation: "my-test-thing",
+						"existing-annotation":      "annotation-value",
 					},
 					Labels: map[string]string{
-						agentNameLabel:             "textor-the-doctor",
-						remoteObjectClusterLabel:   "testcluster",
-						remoteObjectNamespaceLabel: "",
-						remoteObjectNameLabel:      "my-test-thing",
-						"existing-label":           "label-value",
+						agentNameLabel:            "textor-the-doctor",
+						remoteObjectClusterLabel:  "testcluster",
+						remoteObjectNameHashLabel: "c346c8ceb5d104cc783d09b95e8ea7032c190948",
+						"existing-label":          "label-value",
 					},
 				},
 				Spec: dummyv1alpha1.ThingSpec{
@@ -530,16 +546,16 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Annotations: map[string]string{
-						"existing-annotation": "new-annotation-value",
-						"new-annotation":      "hei-verden",
+						remoteObjectNameAnnotation: "my-test-thing",
+						"existing-annotation":      "new-annotation-value",
+						"new-annotation":           "hei-verden",
 					},
 					Labels: map[string]string{
-						agentNameLabel:             "textor-the-doctor",
-						remoteObjectClusterLabel:   "testcluster",
-						remoteObjectNamespaceLabel: "",
-						remoteObjectNameLabel:      "my-test-thing",
-						"existing-label":           "new-label-value",
-						"new-label":                "hello-world",
+						agentNameLabel:            "textor-the-doctor",
+						remoteObjectClusterLabel:  "testcluster",
+						remoteObjectNameHashLabel: "c346c8ceb5d104cc783d09b95e8ea7032c190948",
+						"existing-label":          "new-label-value",
+						"new-label":               "hello-world",
 					},
 				},
 				Spec: dummyv1alpha1.ThingSpec{
@@ -548,6 +564,72 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 			}),
 			// last state annotation is "space optimized" and so does not include the ignored labels and annotations
 			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{"existing-annotation":"new-annotation-value","new-annotation":"hei-verden"},"labels":{"existing-label":"new-label-value","new-label":"hello-world"},"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
+		},
+
+		/////////////////////////////////////////////////////////////////////////////////
+
+		{
+			name:            "missing syncagent-related annotations should be patched on the destination object",
+			remoteAPIGroup:  "remote.example.corp",
+			localCRD:        loadCRD("things"),
+			pubRes:          remoteThingPR,
+			performRequeues: true,
+
+			remoteObject: newUnstructured(&dummyv1alpha1.Thing{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-test-thing",
+					Finalizers: []string{
+						deletionFinalizer,
+					},
+				},
+				Spec: dummyv1alpha1.ThingSpec{
+					Username: "Colonel Mustard",
+				},
+			}, withGroupKind("remote.example.corp", "RemoteThing")),
+			localObject: newUnstructured(&dummyv1alpha1.Thing{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "testcluster-my-test-thing",
+					Labels: map[string]string{
+						agentNameLabel:            "textor-the-doctor",
+						remoteObjectClusterLabel:  "testcluster",
+						remoteObjectNameHashLabel: "c346c8ceb5d104cc783d09b95e8ea7032c190948",
+					},
+				},
+				Spec: dummyv1alpha1.ThingSpec{
+					Username: "Colonel Mustard",
+				},
+			}),
+			existingState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
+
+			expectedRemoteObject: newUnstructured(&dummyv1alpha1.Thing{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-test-thing",
+					Finalizers: []string{
+						deletionFinalizer,
+					},
+				},
+				Spec: dummyv1alpha1.ThingSpec{
+					Username: "Colonel Mustard",
+				},
+			}, withGroupKind("remote.example.corp", "RemoteThing")),
+			expectedLocalObject: newUnstructured(&dummyv1alpha1.Thing{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "testcluster-my-test-thing",
+					Annotations: map[string]string{
+						remoteObjectNameAnnotation: "my-test-thing",
+					},
+					Labels: map[string]string{
+						agentNameLabel:            "textor-the-doctor",
+						remoteObjectClusterLabel:  "testcluster",
+						remoteObjectNameHashLabel: "c346c8ceb5d104cc783d09b95e8ea7032c190948",
+					},
+				},
+				Spec: dummyv1alpha1.ThingSpec{
+					Username: "Colonel Mustard",
+				},
+			}),
+			// last state annotation is "space optimized" and so does not include the ignored labels and annotations
+			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
 		},
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -574,10 +656,12 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
-						agentNameLabel:             "textor-the-doctor",
-						remoteObjectClusterLabel:   "testcluster",
-						remoteObjectNamespaceLabel: "",
-						remoteObjectNameLabel:      "my-test-thing",
+						agentNameLabel:            "textor-the-doctor",
+						remoteObjectClusterLabel:  "testcluster",
+						remoteObjectNameHashLabel: "c346c8ceb5d104cc783d09b95e8ea7032c190948",
+					},
+					Annotations: map[string]string{
+						remoteObjectNameAnnotation: "my-test-thing",
 					},
 				},
 				Spec: dummyv1alpha1.ThingSpec{
@@ -585,7 +669,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 					Address:  "Hotdogstr. 13", // we assume this field was set by a local controller/webhook, unrelated to the Sync Agent
 				},
 			}),
-			existingState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{},"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
+			existingState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
 
 			expectedRemoteObject: newUnstructured(&dummyv1alpha1.Thing{
 				ObjectMeta: metav1.ObjectMeta{
@@ -602,10 +686,12 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
-						agentNameLabel:             "textor-the-doctor",
-						remoteObjectClusterLabel:   "testcluster",
-						remoteObjectNamespaceLabel: "",
-						remoteObjectNameLabel:      "my-test-thing",
+						agentNameLabel:            "textor-the-doctor",
+						remoteObjectClusterLabel:  "testcluster",
+						remoteObjectNameHashLabel: "c346c8ceb5d104cc783d09b95e8ea7032c190948",
+					},
+					Annotations: map[string]string{
+						remoteObjectNameAnnotation: "my-test-thing",
 					},
 				},
 				Spec: dummyv1alpha1.ThingSpec{
@@ -614,7 +700,7 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 					Address: "Hotdogstr. 13",
 				},
 			}),
-			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{},"name":"my-test-thing"},"spec":{"username":"Miss Scarlet"}}`,
+			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Miss Scarlet"}}`,
 		},
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -648,10 +734,12 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 						"prevent-instant-deletion-in-tests",
 					},
 					Labels: map[string]string{
-						agentNameLabel:             "textor-the-doctor",
-						remoteObjectClusterLabel:   "testcluster",
-						remoteObjectNamespaceLabel: "",
-						remoteObjectNameLabel:      "my-test-thing",
+						agentNameLabel:            "textor-the-doctor",
+						remoteObjectClusterLabel:  "testcluster",
+						remoteObjectNameHashLabel: "c346c8ceb5d104cc783d09b95e8ea7032c190948",
+					},
+					Annotations: map[string]string{
+						remoteObjectNameAnnotation: "my-test-thing",
 					},
 				},
 				Spec: dummyv1alpha1.ThingSpec{
@@ -680,10 +768,12 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 					},
 					DeletionTimestamp: &nonEmptyTime,
 					Labels: map[string]string{
-						agentNameLabel:             "textor-the-doctor",
-						remoteObjectClusterLabel:   "testcluster",
-						remoteObjectNamespaceLabel: "",
-						remoteObjectNameLabel:      "my-test-thing",
+						agentNameLabel:            "textor-the-doctor",
+						remoteObjectClusterLabel:  "testcluster",
+						remoteObjectNameHashLabel: "c346c8ceb5d104cc783d09b95e8ea7032c190948",
+					},
+					Annotations: map[string]string{
+						remoteObjectNameAnnotation: "my-test-thing",
 					},
 				},
 				Spec: dummyv1alpha1.ThingSpec{
@@ -762,10 +852,9 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 					},
 					DeletionTimestamp: &nonEmptyTime,
 					Labels: map[string]string{
-						agentNameLabel:             "textor-the-doctor",
-						remoteObjectClusterLabel:   "testcluster",
-						remoteObjectNamespaceLabel: "",
-						remoteObjectNameLabel:      "my-test-thing",
+						agentNameLabel:            "textor-the-doctor",
+						remoteObjectClusterLabel:  "testcluster",
+						remoteObjectNameHashLabel: "c346c8ceb5d104cc783d09b95e8ea7032c190948",
 					},
 				},
 				Spec: dummyv1alpha1.ThingSpec{
@@ -793,10 +882,9 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 					},
 					DeletionTimestamp: &nonEmptyTime,
 					Labels: map[string]string{
-						agentNameLabel:             "textor-the-doctor",
-						remoteObjectClusterLabel:   "testcluster",
-						remoteObjectNamespaceLabel: "",
-						remoteObjectNameLabel:      "my-test-thing",
+						agentNameLabel:            "textor-the-doctor",
+						remoteObjectClusterLabel:  "testcluster",
+						remoteObjectNameHashLabel: "c346c8ceb5d104cc783d09b95e8ea7032c190948",
 					},
 				},
 				Spec: dummyv1alpha1.ThingSpec{
@@ -987,10 +1075,12 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
-						agentNameLabel:             "textor-the-doctor",
-						remoteObjectClusterLabel:   "testcluster",
-						remoteObjectNamespaceLabel: "",
-						remoteObjectNameLabel:      "my-test-thing",
+						agentNameLabel:            "textor-the-doctor",
+						remoteObjectClusterLabel:  "testcluster",
+						remoteObjectNameHashLabel: "c346c8ceb5d104cc783d09b95e8ea7032c190948",
+					},
+					Annotations: map[string]string{
+						remoteObjectNameAnnotation: "my-test-thing",
 					},
 				},
 				Spec: dummyv1alpha1.ThingSpec{
@@ -1020,10 +1110,12 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
-						agentNameLabel:             "textor-the-doctor",
-						remoteObjectClusterLabel:   "testcluster",
-						remoteObjectNamespaceLabel: "",
-						remoteObjectNameLabel:      "my-test-thing",
+						agentNameLabel:            "textor-the-doctor",
+						remoteObjectClusterLabel:  "testcluster",
+						remoteObjectNameHashLabel: "c346c8ceb5d104cc783d09b95e8ea7032c190948",
+					},
+					Annotations: map[string]string{
+						remoteObjectNameAnnotation: "my-test-thing",
 					},
 				},
 				Spec: dummyv1alpha1.ThingSpec{
@@ -1033,7 +1125,7 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 					CurrentVersion: "v1",
 				},
 			}),
-			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{},"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
+			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
 		},
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -1060,10 +1152,12 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
-						agentNameLabel:             "textor-the-doctor",
-						remoteObjectClusterLabel:   "testcluster",
-						remoteObjectNamespaceLabel: "",
-						remoteObjectNameLabel:      "my-test-thing",
+						agentNameLabel:            "textor-the-doctor",
+						remoteObjectClusterLabel:  "testcluster",
+						remoteObjectNameHashLabel: "c346c8ceb5d104cc783d09b95e8ea7032c190948",
+					},
+					Annotations: map[string]string{
+						remoteObjectNameAnnotation: "my-test-thing",
 					},
 				},
 				Spec: dummyv1alpha1.ThingSpec{
@@ -1093,10 +1187,12 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "testcluster-my-test-thing",
 					Labels: map[string]string{
-						agentNameLabel:             "textor-the-doctor",
-						remoteObjectClusterLabel:   "testcluster",
-						remoteObjectNamespaceLabel: "",
-						remoteObjectNameLabel:      "my-test-thing",
+						agentNameLabel:            "textor-the-doctor",
+						remoteObjectClusterLabel:  "testcluster",
+						remoteObjectNameHashLabel: "c346c8ceb5d104cc783d09b95e8ea7032c190948",
+					},
+					Annotations: map[string]string{
+						remoteObjectNameAnnotation: "my-test-thing",
 					},
 				},
 				Spec: dummyv1alpha1.ThingSpec{
@@ -1106,7 +1202,7 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 					CurrentVersion: "v1",
 				},
 			}),
-			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"annotations":{},"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
+			expectedState: `{"apiVersion":"remote.example.corp/v1alpha1","kind":"RemoteThing","metadata":{"name":"my-test-thing"},"spec":{"username":"Colonel Mustard"}}`,
 		},
 	}
 

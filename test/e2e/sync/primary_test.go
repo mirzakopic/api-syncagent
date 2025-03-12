@@ -518,6 +518,7 @@ apiVersion: kcp.example.com/v1
 kind: CronTab
 metadata:
   name: TBD
+  namespace: TBD
 spec:
   image: ubuntu:latest
 `)
@@ -536,7 +537,7 @@ spec:
 	copy.SetKind("CronTab")
 
 	err := wait.PollUntilContextTimeout(ctx, 500*time.Millisecond, 30*time.Second, false, func(ctx context.Context) (done bool, err error) {
-		copyKey := types.NamespacedName{Namespace: "synced-default", Name: "included"}
+		copyKey := types.NamespacedName{Namespace: fmt.Sprintf("synced-%s", namespace.Name), Name: ignoredCrontab.GetName()}
 		return envtestClient.Get(ctx, copyKey, copy) == nil, nil
 	})
 	if err != nil {

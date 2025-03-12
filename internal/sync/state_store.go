@@ -20,8 +20,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kcp-dev/api-syncagent/internal/crypto"
 	"github.com/kcp-dev/logicalcluster/v3"
+
+	"github.com/kcp-dev/api-syncagent/internal/crypto"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -82,7 +83,9 @@ func (op *objectStateStore) Put(obj *unstructured.Unstructured, clusterName logi
 
 func (op *objectStateStore) snapshotObject(obj *unstructured.Unstructured, subresources []string) (string, error) {
 	obj = obj.DeepCopy()
-	obj = stripMetadata(obj)
+	if err := stripMetadata(obj); err != nil {
+		return "", err
+	}
 
 	// besides metadata, we also do not care about the object's subresources
 	data := obj.UnstructuredContent()

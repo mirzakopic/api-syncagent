@@ -165,6 +165,10 @@ func (s *ResourceSyncer) Process(ctx Context, remoteObj *unstructured.Unstructur
 		mutator: s.mutator,
 		// make sure the syncer can remember the current state of any object
 		stateStore: stateStore,
+		// For the main resource, we need to store metadata on the destination copy
+		// (i.e. on the service cluster), so that the original and copy are linked
+		// together and can be found.
+		metadataOnDestination: true,
 	}
 
 	requeue, err = syncer.Sync(log, sourceSide, destSide)
