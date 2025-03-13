@@ -22,6 +22,8 @@ import (
 	"github.com/kcp-dev/logicalcluster/v3"
 	"go.uber.org/zap"
 
+	"github.com/kcp-dev/api-syncagent/internal/crypto"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
@@ -56,7 +58,7 @@ func ensureAnnotations(obj metav1.Object, desiredAnnotations map[string]string) 
 }
 
 func ensureFinalizer(ctx context.Context, log *zap.SugaredLogger, client ctrlruntimeclient.Client, obj *unstructured.Unstructured, finalizer string) (updated bool, err error) {
-	finalizers := sets.New[string](obj.GetFinalizers()...)
+	finalizers := sets.New(obj.GetFinalizers()...)
 	if finalizers.Has(deletionFinalizer) {
 		return false, nil
 	}
@@ -75,7 +77,7 @@ func ensureFinalizer(ctx context.Context, log *zap.SugaredLogger, client ctrlrun
 }
 
 func removeFinalizer(ctx context.Context, log *zap.SugaredLogger, client ctrlruntimeclient.Client, obj *unstructured.Unstructured, finalizer string) (updated bool, err error) {
-	finalizers := sets.New[string](obj.GetFinalizers()...)
+	finalizers := sets.New(obj.GetFinalizers()...)
 	if !finalizers.Has(deletionFinalizer) {
 		return false, nil
 	}
@@ -122,27 +124,32 @@ func (k objectKey) String() string {
 }
 
 func (k objectKey) Key() string {
-	result := k.Name
-	if k.Namespace != "" {
-		result = k.Namespace + "_" + result
-	}
-	if k.ClusterName != "" {
-		result = string(k.ClusterName) + "_" + result
-	}
-
-	return result
+	return crypto.Hash(k)
 }
 
 func (k objectKey) Labels() labels.Set {
-	return labels.Set{
-		remoteObjectClusterLabel:   string(k.ClusterName),
-		remoteObjectNamespaceLabel: k.Namespace,
-		remoteObjectNameLabel:      k.Name,
+	// Name and namespace can be more than 63 characters long, so we must hash them
+	// to turn them into valid label values. The full, original value is kept as an annotation.
+	s := labels.Set{
+		remoteObjectClusterLabel:  string(k.ClusterName),
+		remoteObjectNameHashLabel: crypto.Hash(k.Name),
 	}
+
+	if k.Namespace != "" {
+		s[remoteObjectNamespaceHashLabel] = crypto.Hash(k.Namespace)
+	}
+
+	return s
 }
 
 func (k objectKey) Annotations() labels.Set {
-	s := labels.Set{}
+	s := labels.Set{
+		remoteObjectNameAnnotation: k.Name,
+	}
+
+	if k.Namespace != "" {
+		s[remoteObjectNamespaceAnnotation] = k.Namespace
+	}
 
 	if !k.WorkspacePath.Empty() {
 		s[remoteObjectWorkspacePathAnnotation] = k.WorkspacePath.String()

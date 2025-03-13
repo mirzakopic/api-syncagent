@@ -17,13 +17,12 @@ limitations under the License.
 package projection
 
 import (
-	"crypto/sha1"
-	"encoding/hex"
 	"fmt"
 	"strings"
 
 	"github.com/kcp-dev/logicalcluster/v3"
 
+	"github.com/kcp-dev/api-syncagent/internal/crypto"
 	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -44,9 +43,9 @@ func GenerateLocalObjectName(pr *syncagentv1alpha1.PublishedResource, object met
 	replacer := strings.NewReplacer(
 		// order of elements is important here, "$fooHash" needs to be defined before "$foo"
 		syncagentv1alpha1.PlaceholderRemoteClusterName, clusterName.String(),
-		syncagentv1alpha1.PlaceholderRemoteNamespaceHash, shortSha1Hash(object.GetNamespace()),
+		syncagentv1alpha1.PlaceholderRemoteNamespaceHash, crypto.ShortHash(object.GetNamespace()),
 		syncagentv1alpha1.PlaceholderRemoteNamespace, object.GetNamespace(),
-		syncagentv1alpha1.PlaceholderRemoteNameHash, shortSha1Hash(object.GetName()),
+		syncagentv1alpha1.PlaceholderRemoteNameHash, crypto.ShortHash(object.GetName()),
 		syncagentv1alpha1.PlaceholderRemoteName, object.GetName(),
 	)
 
@@ -67,18 +66,4 @@ func GenerateLocalObjectName(pr *syncagentv1alpha1.PublishedResource, object met
 	result.Name = replacer.Replace(pattern)
 
 	return result
-}
-
-func shortSha1Hash(value string) string {
-	hash := sha1.New()
-	if _, err := hash.Write([]byte(value)); err != nil {
-		// This is not something that should ever happen at runtime and is also not
-		// something we can really gracefully handle, so crashing and restarting might
-		// be a good way to signal the service owner that something is up.
-		panic(fmt.Sprintf("Failed to hash string: %v", err))
-	}
-
-	encoded := hex.EncodeToString(hash.Sum(nil))
-
-	return encoded[:20]
 }

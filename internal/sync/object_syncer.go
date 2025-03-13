@@ -51,6 +51,8 @@ type objectSyncer struct {
 	syncStatusBack bool
 	// whether or not to add/expect a finalizer on the source
 	blockSourceDeletion bool
+	// whether or not to place sync-related metadata on the destination object
+	metadataOnDestination bool
 	// optional mutations for both directions of the sync
 	mutator mutation.Mutator
 	// stateStore is capable of remembering the state of a Kubernetes object
@@ -177,7 +179,9 @@ func (s *objectSyncer) syncObjectSpec(log *zap.SugaredLogger, source, dest syncS
 	}
 
 	sourceObjCopy := source.object.DeepCopy()
-	stripMetadata(sourceObjCopy)
+	if err = stripMetadata(sourceObjCopy); err != nil {
+		return false, fmt.Errorf("failed to strip metadata from source object: %w", err)
+	}
 
 	log = log.With("dest-object", newObjectKey(dest.object, dest.clusterName, logicalcluster.None))
 
@@ -187,10 +191,21 @@ func (s *objectSyncer) syncObjectSpec(log *zap.SugaredLogger, source, dest syncS
 		lastKnownSourceState.SetAPIVersion(sourceObjCopy.GetAPIVersion())
 		lastKnownSourceState.SetKind(sourceObjCopy.GetKind())
 
-		// update annotations (this is important if the admin later flipped the enableWorkspacePaths
-		// option in the PublishedResource)
-		sourceKey := newObjectKey(source.object, source.clusterName, source.workspacePath)
-		ensureAnnotations(sourceObjCopy, sourceKey.Annotations())
+		// We want to now restore/fix broken labels or annotations on the destination object. Not all
+		// of the sync-related metadata is relevant to _finding_ the destination object, so there is
+		// a chance that a user has fiddled with the metadata and would have broken some other part
+		// of the syncing.
+		// The lastKnownState is based on the source object, so just from looking at it we could not
+		// determine whether a label/annotation is missing/broken. However we do need to know this,
+		// because we later have to distinguish between empty and non-empty patches, so that we know
+		// when to requeue or stop syncing. So we cannot just blindly call ensureLabels() on the
+		// sourceObjCopy, as that could create meaningless patches.
+		// To achieve this, we individually check the labels/annotations on the destination object,
+		// which we thankfully already fetched earlier.
+		if s.metadataOnDestination {
+			sourceKey := newObjectKey(source.object, source.clusterName, source.workspacePath)
+			threeWayDiffMetadata(sourceObjCopy, dest.object, sourceKey.Labels(), sourceKey.Annotations())
+		}
 
 		// now we can diff the two versions and create a patch
 		rawPatch, err := s.createMergePatch(lastKnownSourceState, sourceObjCopy)
@@ -221,8 +236,8 @@ func (s *objectSyncer) syncObjectSpec(log *zap.SugaredLogger, source, dest syncS
 		}
 
 		// update selected metadata fields
-		ensureLabels(dest.object, filterRemoteLabels(sourceObjCopy.GetLabels()))
-		ensureAnnotations(dest.object, sourceObjCopy.GetAnnotations())
+		ensureLabels(dest.object, filterUnsyncableLabels(sourceObjCopy.GetLabels()))
+		ensureAnnotations(dest.object, filterUnsyncableAnnotations(sourceObjCopy.GetAnnotations()))
 
 		// TODO: Check if anything has changed and skip the .Update() call if source and dest
 		// are identical w.r.t. the fields we have copied (spec, annotations, labels, ..).
@@ -236,7 +251,8 @@ func (s *objectSyncer) syncObjectSpec(log *zap.SugaredLogger, source, dest syncS
 	}
 
 	if requeue {
-		// remember this object state for the next reconciliation
+		// remember this object state for the next reconciliation (this will strip any syncer-related
+		// metadata the 3-way diff may have added above)
 		if err := s.stateStore.Put(sourceObjCopy, source.clusterName, s.subresources); err != nil {
 			return true, fmt.Errorf("failed to update sync state: %w", err)
 		}
@@ -278,18 +294,19 @@ func (s *objectSyncer) ensureDestinationObject(log *zap.SugaredLogger, source, d
 		return fmt.Errorf("failed to ensure destination namespace: %w", err)
 	}
 
-	// remove source metadata (like UID and generation) to allow destination object creation to succeed
-	stripMetadata(destObj)
+	// remove source metadata (like UID and generation, but also labels and annotations belonging to
+	// the sync-agent) to allow destination object creation to succeed
+	if err := stripMetadata(destObj); err != nil {
+		return fmt.Errorf("failed to strip metadata from destination object: %w", err)
+	}
 
 	// remember the connection between the source and destination object
 	sourceObjKey := newObjectKey(source.object, source.clusterName, source.workspacePath)
 	ensureLabels(destObj, sourceObjKey.Labels())
+	ensureAnnotations(destObj, sourceObjKey.Annotations())
 
 	// remember what agent synced this object
 	s.labelWithAgent(destObj)
-
-	// put optional additional annotations on the new object
-	ensureAnnotations(destObj, sourceObjKey.Annotations())
 
 	// finally, we can create the destination object
 	objectLog := log.With("dest-object", newObjectKey(destObj, dest.clusterName, logicalcluster.None))
@@ -333,8 +350,9 @@ func (s *objectSyncer) adoptExistingDestinationObject(log *zap.SugaredLogger, de
 	// the destination object from another source object, which would then lead to the two source objects
 	// "fighting" about the one destination object.
 	ensureLabels(existingDestObj, sourceKey.Labels())
-	s.labelWithAgent(existingDestObj)
 	ensureAnnotations(existingDestObj, sourceKey.Annotations())
+
+	s.labelWithAgent(existingDestObj)
 
 	if err := dest.client.Update(dest.ctx, existingDestObj); err != nil {
 		return fmt.Errorf("failed to upsert current destination object labels: %w", err)

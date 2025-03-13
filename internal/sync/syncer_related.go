@@ -151,6 +151,8 @@ func (s *ResourceSyncer) processRelatedResource(log *zap.SugaredLogger, stateSto
 		blockSourceDeletion: relRes.Origin == "kcp",
 		// apply mutation rules configured for the related resource
 		mutator: mutation.NewMutator(relRes.Mutation),
+		// we never want to store sync-related metadata inside kcp
+		metadataOnDestination: false,
 	}
 
 	requeue, err = syncer.Sync(log, sourceSide, destSide)

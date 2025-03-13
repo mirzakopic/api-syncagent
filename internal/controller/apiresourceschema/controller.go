@@ -18,9 +18,6 @@ package apiresourceschema
 
 import (
 	"context"
-	"crypto/sha1"
-	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -29,6 +26,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/kcp-dev/api-syncagent/internal/controllerutil/predicate"
+	"github.com/kcp-dev/api-syncagent/internal/crypto"
 	"github.com/kcp-dev/api-syncagent/internal/discovery"
 	"github.com/kcp-dev/api-syncagent/internal/projection"
 	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
@@ -255,15 +253,7 @@ func (r *Reconciler) applyProjection(apiGroup string, crd *apiextensionsv1.Custo
 // getAPIResourceSchemaName generates the name for the ARS in kcp. Note that
 // kcp requires, just like CRDs, that ARS are named following a specific pattern.
 func (r *Reconciler) getAPIResourceSchemaName(apiGroup string, crd *apiextensionsv1.CustomResourceDefinition) string {
-	hash := sha1.New()
-	if err := json.NewEncoder(hash).Encode(crd.Spec.Names); err != nil {
-		// This is not something that should ever happen at runtime and is also not
-		// something we can really gracefully handle, so crashing and restarting might
-		// be a good way to signal the service owner that something is up.
-		panic(fmt.Sprintf("Failed to hash PublishedResource source: %v", err))
-	}
-
-	checksum := hex.EncodeToString(hash.Sum(nil))
+	checksum := crypto.Hash(crd.Spec.Names)
 
 	// include a leading "v" to prevent SHA-1 hashes with digits to break the name
 	return fmt.Sprintf("v%s.%s.%s", checksum[:8], crd.Spec.Names.Plural, apiGroup)

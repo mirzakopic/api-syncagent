@@ -32,6 +32,7 @@ import (
 	syncagentv1alpha1 "github.com/kcp-dev/api-syncagent/sdk/apis/syncagent/v1alpha1"
 	"github.com/kcp-dev/api-syncagent/test/utils"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -447,5 +448,99 @@ spec:
 	})
 	if err == nil {
 		t.Fatal("Expected no ignored object to be found on the service cluster, but did.")
+	}
+}
+
+func TestSyncingOverlyLongNames(t *testing.T) {
+	const (
+		apiExportName = "kcp.example.com"
+		orgWorkspace  = "sync-long-names"
+	)
+
+	ctx := context.Background()
+	ctrlruntime.SetLogger(logr.Discard())
+
+	// setup a test environment in kcp
+	orgKubconfig := utils.CreateOrganization(t, ctx, orgWorkspace, apiExportName)
+
+	// start a service cluster
+	envtestKubeconfig, envtestClient, _ := utils.RunEnvtest(t, []string{
+		"test/crds/crontab.yaml",
+	})
+
+	// publish Crontabs and Backups
+	t.Logf("Publishing CRDs…")
+	prCrontabs := &syncagentv1alpha1.PublishedResource{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "publish-crontabs",
+		},
+		Spec: syncagentv1alpha1.PublishedResourceSpec{
+			Resource: syncagentv1alpha1.SourceResourceDescriptor{
+				APIGroup: "example.com",
+				Version:  "v1",
+				Kind:     "CronTab",
+			},
+			// These rules make finding the local object easier, but should not be used in production.
+			Naming: &syncagentv1alpha1.ResourceNaming{
+				Name:      "$remoteName",
+				Namespace: "synced-$remoteNamespace",
+			},
+		},
+	}
+
+	if err := envtestClient.Create(ctx, prCrontabs); err != nil {
+		t.Fatalf("Failed to create PublishedResource: %v", err)
+	}
+
+	// start the agent in the background to update the APIExport with the CronTabs API
+	utils.RunAgent(ctx, t, "bob", orgKubconfig, envtestKubeconfig, apiExportName)
+
+	// wait until the API is available
+	teamCtx := kontext.WithCluster(ctx, logicalcluster.Name(fmt.Sprintf("root:%s:team-1", orgWorkspace)))
+	kcpClient := utils.GetKcpAdminClusterClient(t)
+	utils.WaitForBoundAPI(t, teamCtx, kcpClient, schema.GroupVersionResource{
+		Group:    apiExportName,
+		Version:  "v1",
+		Resource: "crontabs",
+	})
+
+	// create a namespace and CronTab with extremely long names
+	namespace := &corev1.Namespace{}
+	namespace.Name = strings.Repeat("yadda", 3) // 250 chars in total
+
+	if err := kcpClient.Create(teamCtx, namespace); err != nil {
+		t.Fatalf("Failed to create namespace in kcp: %v", err)
+	}
+
+	t.Log("Creating CronTab in kcp…")
+	ignoredCrontab := yamlToUnstructured(t, `
+apiVersion: kcp.example.com/v1
+kind: CronTab
+metadata:
+  name: TBD
+  namespace: TBD
+spec:
+  image: ubuntu:latest
+`)
+	ignoredCrontab.SetNamespace(namespace.Name)
+	ignoredCrontab.SetName(strings.Repeat("yotta", 50))
+
+	if err := kcpClient.Create(teamCtx, ignoredCrontab); err != nil {
+		t.Fatalf("Failed to create CronTab in kcp: %v", err)
+	}
+
+	// wait for the agent to sync the object down into the service cluster
+
+	t.Logf("Wait for CronTab to be synced…")
+	copy := &unstructured.Unstructured{}
+	copy.SetAPIVersion("example.com/v1")
+	copy.SetKind("CronTab")
+
+	err := wait.PollUntilContextTimeout(ctx, 500*time.Millisecond, 30*time.Second, false, func(ctx context.Context) (done bool, err error) {
+		copyKey := types.NamespacedName{Namespace: fmt.Sprintf("synced-%s", namespace.Name), Name: ignoredCrontab.GetName()}
+		return envtestClient.Get(ctx, copyKey, copy) == nil, nil
+	})
+	if err != nil {
+		t.Fatalf("Failed to wait for object to be synced down: %v", err)
 	}
 }
