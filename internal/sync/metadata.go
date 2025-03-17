@@ -94,7 +94,16 @@ var unsyncableLabels = sets.New(
 
 // filterUnsyncableLabels removes all unwanted remote labels and returns a new label set.
 func filterUnsyncableLabels(original labels.Set) labels.Set {
-	return filterLabels(original, unsyncableLabels)
+	filtered := filterLabels(original, unsyncableLabels)
+
+	out := labels.Set{}
+	for k, v := range filtered {
+		if !strings.HasPrefix(k, "claimed.internal.apis.kcp.io/") {
+			out[k] = v
+		}
+	}
+
+	return out
 }
 
 // unsyncableAnnotations are annotations we never want to copy from the remote to local objects.

@@ -29,6 +29,7 @@ import (
 
 	kcpdevcorev1alpha1 "github.com/kcp-dev/kcp/sdk/apis/core/v1alpha1"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
@@ -134,6 +135,10 @@ func NewCluster(address string, baseRestConfig *rest.Config) (*Cluster, error) {
 	})
 
 	scheme := runtime.NewScheme()
+
+	if err := corev1.AddToScheme(scheme); err != nil {
+		return nil, fmt.Errorf("failed to register scheme %s: %w", corev1.SchemeGroupVersion, err)
+	}
 
 	if err := kcpdevcorev1alpha1.AddToScheme(scheme); err != nil {
 		return nil, fmt.Errorf("failed to register scheme %s: %w", kcpdevcorev1alpha1.SchemeGroupVersion, err)
