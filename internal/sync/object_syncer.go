@@ -302,11 +302,13 @@ func (s *objectSyncer) ensureDestinationObject(log *zap.SugaredLogger, source, d
 
 	// remember the connection between the source and destination object
 	sourceObjKey := newObjectKey(source.object, source.clusterName, source.workspacePath)
-	ensureLabels(destObj, sourceObjKey.Labels())
-	ensureAnnotations(destObj, sourceObjKey.Annotations())
+	if s.metadataOnDestination {
+		ensureLabels(destObj, sourceObjKey.Labels())
+		ensureAnnotations(destObj, sourceObjKey.Annotations())
 
-	// remember what agent synced this object
-	s.labelWithAgent(destObj)
+		// remember what agent synced this object
+		s.labelWithAgent(destObj)
+	}
 
 	// finally, we can create the destination object
 	objectLog := log.With("dest-object", newObjectKey(destObj, dest.clusterName, logicalcluster.None))
