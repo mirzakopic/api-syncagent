@@ -81,11 +81,23 @@ func TestSyncSecretBackToKcp(t *testing.T) {
 				Identifier: "credentials",
 				Origin:     "service",
 				Kind:       "Secret",
-				Reference: syncagentv1alpha1.RelatedResourceReference{
-					Name: syncagentv1alpha1.ResourceLocator{
-						Path: "metadata.name", // irrelevant
-						Regex: &syncagentv1alpha1.RegexResourceLocator{
-							Replacement: "my-credentials",
+				Source: syncagentv1alpha1.RelatedResourceSource{
+					RelatedResourceSourceSpec: syncagentv1alpha1.RelatedResourceSourceSpec{
+						Reference: &syncagentv1alpha1.RelatedResourceReference{
+							Path: "metadata.name", // irrelevant
+							Regex: &syncagentv1alpha1.RegularExpression{
+								Replacement: "my-credentials",
+							},
+						},
+					},
+				},
+				Destination: syncagentv1alpha1.RelatedResourceDestination{
+					RelatedResourceDestinationSpec: syncagentv1alpha1.RelatedResourceDestinationSpec{
+						Reference: &syncagentv1alpha1.RelatedResourceReference{
+							Path: "metadata.name", // irrelevant
+							Regex: &syncagentv1alpha1.RegularExpression{
+								Replacement: "my-credentials",
+							},
 						},
 					},
 				},
