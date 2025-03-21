@@ -339,7 +339,7 @@ func resolveResourceDestination(side syncSide, relRes syncagentv1alpha1.RelatedR
 	}
 
 	namespace := side.object.GetNamespace()
-	if relRes.Source.Namespace != nil {
+	if relRes.Destination.Namespace != nil {
 		namespace, err = resolveResourceDestinationSpec(string(jsonData), *relRes.Destination.Namespace)
 		if err != nil {
 			return nil, fmt.Errorf("failed to resolve namespace: %w", err)
