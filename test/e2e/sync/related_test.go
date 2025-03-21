@@ -131,6 +131,69 @@ func TestSyncRelatedObjects(t *testing.T) {
 				Type: corev1.SecretTypeOpaque,
 			},
 		},
+
+		//////////////////////////////////////////////////////////////////////////////////////////////
+
+		{
+			name:      "sync referenced Secret down from kcp to the service cluster",
+			workspace: "sync-referenced-secret-down",
+			mainResource: crds.Crontab{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "my-crontab",
+					Namespace: "default",
+				},
+				Spec: crds.CrontabSpec{
+					CronSpec: "* * *",
+					Image:    "ubuntu:latest",
+				},
+			},
+			relatedConfig: syncagentv1alpha1.RelatedResourceSpec{
+				Identifier: "credentials",
+				Origin:     "kcp",
+				Kind:       "Secret",
+				Source: syncagentv1alpha1.RelatedResourceSource{
+					RelatedResourceSourceSpec: syncagentv1alpha1.RelatedResourceSourceSpec{
+						Reference: &syncagentv1alpha1.RelatedResourceReference{
+							Path: "metadata.name", // irrelevant
+							Regex: &syncagentv1alpha1.RegularExpression{
+								Replacement: "my-credentials",
+							},
+						},
+					},
+				},
+				Destination: syncagentv1alpha1.RelatedResourceDestination{
+					RelatedResourceDestinationSpec: syncagentv1alpha1.RelatedResourceDestinationSpec{
+						Reference: &syncagentv1alpha1.RelatedResourceReference{
+							Path: "metadata.name", // irrelevant
+							Regex: &syncagentv1alpha1.RegularExpression{
+								Replacement: "my-credentials",
+							},
+						},
+					},
+				},
+			},
+			sourceRelatedObject: corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "my-credentials",
+					Namespace: "default",
+				},
+				Data: map[string][]byte{
+					"password": []byte("hunter2"),
+				},
+				Type: corev1.SecretTypeOpaque,
+			},
+
+			expectedSyncedRelatedObject: corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "my-credentials",
+					Namespace: "synced-default",
+				},
+				Data: map[string][]byte{
+					"password": []byte("hunter2"),
+				},
+				Type: corev1.SecretTypeOpaque,
+			},
+		},
 	}
 
 	for _, testcase := range testcases {
