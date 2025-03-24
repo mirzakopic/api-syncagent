@@ -319,88 +319,6 @@ spec:
                 related:
                   items:
                     properties:
-                      destination:
-                        description: Destination describes where to place the copy of the object on the destination side.
-                        properties:
-                          expression:
-                            description: |-
-                              Expression is a Go templated string that can make use of variables to
-                              construct the resulting string.
-                            type: string
-                          namespace:
-                            description: |-
-                              Namespace configures in what namespace the related object should be created
-                              in. If not specified, the same namespace as the main object is assumed.
-                              If the main object is cluster-scoped, an error will be raised during
-                              syncing.
-                            properties:
-                              expression:
-                                description: |-
-                                  Expression is a Go templated string that can make use of variables to
-                                  construct the resulting string.
-                                type: string
-                              reference:
-                                description: |-
-                                  Reference points to a field inside the main object. This reference is
-                                  evaluated on both source and destination sides to find the related object.
-                                properties:
-                                  path:
-                                    description: |-
-                                      Path is a simplified JSONPath expression like "metadata.name". A reference
-                                      must always select at least _something_ in the object, even if the value
-                                      is discarded by the regular expression.
-                                    type: string
-                                  regex:
-                                    description: |-
-                                      Regex is a Go regular expression that is optionally applied to the selected
-                                      value from the path.
-                                    properties:
-                                      pattern:
-                                        description: |-
-                                          Pattern can be left empty to simply replace the entire value with the
-                                          replacement.
-                                        type: string
-                                      replacement:
-                                        description: |-
-                                          Replacement is the string that the matched pattern is replaced with. It
-                                          can contain references to groups in the pattern by using \N.
-                                        type: string
-                                    type: object
-                                required:
-                                  - path
-                                type: object
-                            type: object
-                          reference:
-                            description: |-
-                              Reference points to a field inside the main object. This reference is
-                              evaluated on both source and destination sides to find the related object.
-                            properties:
-                              path:
-                                description: |-
-                                  Path is a simplified JSONPath expression like "metadata.name". A reference
-                                  must always select at least _something_ in the object, even if the value
-                                  is discarded by the regular expression.
-                                type: string
-                              regex:
-                                description: |-
-                                  Regex is a Go regular expression that is optionally applied to the selected
-                                  value from the path.
-                                properties:
-                                  pattern:
-                                    description: |-
-                                      Pattern can be left empty to simply replace the entire value with the
-                                      replacement.
-                                    type: string
-                                  replacement:
-                                    description: |-
-                                      Replacement is the string that the matched pattern is replaced with. It
-                                      can contain references to groups in the pattern by using \N.
-                                    type: string
-                                type: object
-                            required:
-                              - path
-                            type: object
-                        type: object
                       identifier:
                         description: |-
                           Identifier is a unique name for this related resource. The name must be unique within one
@@ -489,28 +407,18 @@ spec:
                               type: object
                             type: array
                         type: object
-                      origin:
-                        description: '"service" or "kcp"'
-                        type: string
-                      source:
-                        description: Source describes how the related resource can be found on the side where it originates.
+                      object:
+                        description: |-
+                          Object describes how the related resource can be found on the origin side
+                          and where it is to supposed to be created on the destination side.
                         properties:
-                          expression:
-                            description: |-
-                              Expression is a Go templated string that can make use of variables to
-                              construct the resulting string.
-                            type: string
                           namespace:
                             description: |-
                               Namespace configures in what namespace the related object resides in. If
                               not specified, the same namespace as the main object is assumed. If the
-                              main object is cluster-scoped, an error will be raised during syncing.
+                              main object is cluster-scoped, this field is required and an error will be
+                              raised during syncing if the field is not specified.
                             properties:
-                              expression:
-                                description: |-
-                                  Expression is a Go templated string that can make use of variables to
-                                  construct the resulting string.
-                                type: string
                               reference:
                                 description: |-
                                   Reference points to a field inside the main object. This reference is
@@ -586,8 +494,45 @@ spec:
                                       map is equivalent to an element of matchExpressions, whose key field is "key", the
                                       operator is "In", and the values array contains only "value". The requirements are ANDed.
                                     type: object
+                                  rewrite:
+                                    properties:
+                                      regex:
+                                        description: |-
+                                          Regex is a Go regular expression that is optionally applied to the selected
+                                          value from the path.
+                                        properties:
+                                          pattern:
+                                            description: |-
+                                              Pattern can be left empty to simply replace the entire value with the
+                                              replacement.
+                                            type: string
+                                          replacement:
+                                            description: |-
+                                              Replacement is the string that the matched pattern is replaced with. It
+                                              can contain references to groups in the pattern by using \N.
+                                            type: string
+                                        type: object
+                                      template:
+                                        description: |-
+                                          TemplateExpression is a Go templated string that can make use of variables to
+                                          construct the resulting string.
+                                        properties:
+                                          template:
+                                            type: string
+                                        type: object
+                                    type: object
+                                required:
+                                  - rewrite
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              template:
+                                description: |-
+                                  Template is a Go templated string that can make use of variables to
+                                  construct the resulting string.
+                                properties:
+                                  template:
+                                    type: string
+                                type: object
                             type: object
                           reference:
                             description: |-
@@ -664,15 +609,54 @@ spec:
                                   map is equivalent to an element of matchExpressions, whose key field is "key", the
                                   operator is "In", and the values array contains only "value". The requirements are ANDed.
                                 type: object
+                              rewrite:
+                                properties:
+                                  regex:
+                                    description: |-
+                                      Regex is a Go regular expression that is optionally applied to the selected
+                                      value from the path.
+                                    properties:
+                                      pattern:
+                                        description: |-
+                                          Pattern can be left empty to simply replace the entire value with the
+                                          replacement.
+                                        type: string
+                                      replacement:
+                                        description: |-
+                                          Replacement is the string that the matched pattern is replaced with. It
+                                          can contain references to groups in the pattern by using \N.
+                                        type: string
+                                    type: object
+                                  template:
+                                    description: |-
+                                      TemplateExpression is a Go templated string that can make use of variables to
+                                      construct the resulting string.
+                                    properties:
+                                      template:
+                                        type: string
+                                    type: object
+                                type: object
+                            required:
+                              - rewrite
                             type: object
                             x-kubernetes-map-type: atomic
+                          template:
+                            description: |-
+                              Template is a Go templated string that can make use of variables to
+                              construct the resulting string.
+                            properties:
+                              template:
+                                type: string
+                            type: object
                         type: object
+                      origin:
+                        description: '"service" or "kcp"'
+                        type: string
                     required:
-                      - destination
                       - identifier
                       - kind
+                      - object
                       - origin
-                      - source
                     type: object
                   type: array
                 resource:

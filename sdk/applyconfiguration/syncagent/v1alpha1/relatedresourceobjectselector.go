@@ -22,23 +22,24 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// RelatedResourceSelectorApplyConfiguration represents a declarative configuration of the RelatedResourceSelector type for use
+// RelatedResourceObjectSelectorApplyConfiguration represents a declarative configuration of the RelatedResourceObjectSelector type for use
 // with apply.
-type RelatedResourceSelectorApplyConfiguration struct {
+type RelatedResourceObjectSelectorApplyConfiguration struct {
 	v1.LabelSelectorApplyConfiguration `json:",inline"`
+	Rewrite                            *RelatedResourceSelectorRewriteApplyConfiguration `json:"rewrite,omitempty"`
 }
 
-// RelatedResourceSelectorApplyConfiguration constructs a declarative configuration of the RelatedResourceSelector type for use with
+// RelatedResourceObjectSelectorApplyConfiguration constructs a declarative configuration of the RelatedResourceObjectSelector type for use with
 // apply.
-func RelatedResourceSelector() *RelatedResourceSelectorApplyConfiguration {
-	return &RelatedResourceSelectorApplyConfiguration{}
+func RelatedResourceObjectSelector() *RelatedResourceObjectSelectorApplyConfiguration {
+	return &RelatedResourceObjectSelectorApplyConfiguration{}
 }
 
 // WithMatchLabels puts the entries into the MatchLabels field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, the entries provided by each call will be put on the MatchLabels field,
 // overwriting an existing map entries in MatchLabels field with the same key.
-func (b *RelatedResourceSelectorApplyConfiguration) WithMatchLabels(entries map[string]string) *RelatedResourceSelectorApplyConfiguration {
+func (b *RelatedResourceObjectSelectorApplyConfiguration) WithMatchLabels(entries map[string]string) *RelatedResourceObjectSelectorApplyConfiguration {
 	if b.MatchLabels == nil && len(entries) > 0 {
 		b.MatchLabels = make(map[string]string, len(entries))
 	}
@@ -51,12 +52,20 @@ func (b *RelatedResourceSelectorApplyConfiguration) WithMatchLabels(entries map[
 // WithMatchExpressions adds the given value to the MatchExpressions field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the MatchExpressions field.
-func (b *RelatedResourceSelectorApplyConfiguration) WithMatchExpressions(values ...*v1.LabelSelectorRequirementApplyConfiguration) *RelatedResourceSelectorApplyConfiguration {
+func (b *RelatedResourceObjectSelectorApplyConfiguration) WithMatchExpressions(values ...*v1.LabelSelectorRequirementApplyConfiguration) *RelatedResourceObjectSelectorApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithMatchExpressions")
 		}
 		b.MatchExpressions = append(b.MatchExpressions, *values[i])
 	}
+	return b
+}
+
+// WithRewrite sets the Rewrite field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Rewrite field is set to the value of the last call.
+func (b *RelatedResourceObjectSelectorApplyConfiguration) WithRewrite(value *RelatedResourceSelectorRewriteApplyConfiguration) *RelatedResourceObjectSelectorApplyConfiguration {
+	b.Rewrite = value
 	return b
 }

@@ -18,23 +18,23 @@ limitations under the License.
 
 package v1alpha1
 
-// RelatedResourceSourceApplyConfiguration represents a declarative configuration of the RelatedResourceSource type for use
+// RelatedResourceObjectApplyConfiguration represents a declarative configuration of the RelatedResourceObject type for use
 // with apply.
-type RelatedResourceSourceApplyConfiguration struct {
-	RelatedResourceSourceSpecApplyConfiguration `json:",inline"`
-	Namespace                                   *RelatedResourceSourceSpecApplyConfiguration `json:"namespace,omitempty"`
+type RelatedResourceObjectApplyConfiguration struct {
+	RelatedResourceObjectSpecApplyConfiguration `json:",inline"`
+	Namespace                                   *RelatedResourceObjectSpecApplyConfiguration `json:"namespace,omitempty"`
 }
 
-// RelatedResourceSourceApplyConfiguration constructs a declarative configuration of the RelatedResourceSource type for use with
+// RelatedResourceObjectApplyConfiguration constructs a declarative configuration of the RelatedResourceObject type for use with
 // apply.
-func RelatedResourceSource() *RelatedResourceSourceApplyConfiguration {
-	return &RelatedResourceSourceApplyConfiguration{}
+func RelatedResourceObject() *RelatedResourceObjectApplyConfiguration {
+	return &RelatedResourceObjectApplyConfiguration{}
 }
 
 // WithSelector sets the Selector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Selector field is set to the value of the last call.
-func (b *RelatedResourceSourceApplyConfiguration) WithSelector(value *RelatedResourceSelectorApplyConfiguration) *RelatedResourceSourceApplyConfiguration {
+func (b *RelatedResourceObjectApplyConfiguration) WithSelector(value *RelatedResourceObjectSelectorApplyConfiguration) *RelatedResourceObjectApplyConfiguration {
 	b.Selector = value
 	return b
 }
@@ -42,23 +42,23 @@ func (b *RelatedResourceSourceApplyConfiguration) WithSelector(value *RelatedRes
 // WithReference sets the Reference field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Reference field is set to the value of the last call.
-func (b *RelatedResourceSourceApplyConfiguration) WithReference(value *RelatedResourceReferenceApplyConfiguration) *RelatedResourceSourceApplyConfiguration {
+func (b *RelatedResourceObjectApplyConfiguration) WithReference(value *RelatedResourceObjectReferenceApplyConfiguration) *RelatedResourceObjectApplyConfiguration {
 	b.Reference = value
 	return b
 }
 
-// WithExpression sets the Expression field in the declarative configuration to the given value
+// WithTemplate sets the Template field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Expression field is set to the value of the last call.
-func (b *RelatedResourceSourceApplyConfiguration) WithExpression(value string) *RelatedResourceSourceApplyConfiguration {
-	b.Expression = &value
+// If called multiple times, the Template field is set to the value of the last call.
+func (b *RelatedResourceObjectApplyConfiguration) WithTemplate(value *TemplateExpressionApplyConfiguration) *RelatedResourceObjectApplyConfiguration {
+	b.Template = value
 	return b
 }
 
 // WithNamespace sets the Namespace field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Namespace field is set to the value of the last call.
-func (b *RelatedResourceSourceApplyConfiguration) WithNamespace(value *RelatedResourceSourceSpecApplyConfiguration) *RelatedResourceSourceApplyConfiguration {
+func (b *RelatedResourceObjectApplyConfiguration) WithNamespace(value *RelatedResourceObjectSpecApplyConfiguration) *RelatedResourceObjectApplyConfiguration {
 	b.Namespace = value
 	return b
 }

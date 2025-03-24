@@ -18,23 +18,23 @@ limitations under the License.
 
 package v1alpha1
 
-// RelatedResourceReferenceApplyConfiguration represents a declarative configuration of the RelatedResourceReference type for use
+// RelatedResourceObjectReferenceApplyConfiguration represents a declarative configuration of the RelatedResourceObjectReference type for use
 // with apply.
-type RelatedResourceReferenceApplyConfiguration struct {
+type RelatedResourceObjectReferenceApplyConfiguration struct {
 	Path  *string                              `json:"path,omitempty"`
 	Regex *RegularExpressionApplyConfiguration `json:"regex,omitempty"`
 }
 
-// RelatedResourceReferenceApplyConfiguration constructs a declarative configuration of the RelatedResourceReference type for use with
+// RelatedResourceObjectReferenceApplyConfiguration constructs a declarative configuration of the RelatedResourceObjectReference type for use with
 // apply.
-func RelatedResourceReference() *RelatedResourceReferenceApplyConfiguration {
-	return &RelatedResourceReferenceApplyConfiguration{}
+func RelatedResourceObjectReference() *RelatedResourceObjectReferenceApplyConfiguration {
+	return &RelatedResourceObjectReferenceApplyConfiguration{}
 }
 
 // WithPath sets the Path field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Path field is set to the value of the last call.
-func (b *RelatedResourceReferenceApplyConfiguration) WithPath(value string) *RelatedResourceReferenceApplyConfiguration {
+func (b *RelatedResourceObjectReferenceApplyConfiguration) WithPath(value string) *RelatedResourceObjectReferenceApplyConfiguration {
 	b.Path = &value
 	return b
 }
@@ -42,7 +42,7 @@ func (b *RelatedResourceReferenceApplyConfiguration) WithPath(value string) *Rel
 // WithRegex sets the Regex field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Regex field is set to the value of the last call.
-func (b *RelatedResourceReferenceApplyConfiguration) WithRegex(value *RegularExpressionApplyConfiguration) *RelatedResourceReferenceApplyConfiguration {
+func (b *RelatedResourceObjectReferenceApplyConfiguration) WithRegex(value *RegularExpressionApplyConfiguration) *RelatedResourceObjectReferenceApplyConfiguration {
 	b.Regex = value
 	return b
 }

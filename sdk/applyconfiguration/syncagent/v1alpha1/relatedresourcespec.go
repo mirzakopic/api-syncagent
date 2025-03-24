@@ -21,12 +21,11 @@ package v1alpha1
 // RelatedResourceSpecApplyConfiguration represents a declarative configuration of the RelatedResourceSpec type for use
 // with apply.
 type RelatedResourceSpecApplyConfiguration struct {
-	Identifier  *string                                       `json:"identifier,omitempty"`
-	Origin      *string                                       `json:"origin,omitempty"`
-	Kind        *string                                       `json:"kind,omitempty"`
-	Source      *RelatedResourceSourceApplyConfiguration      `json:"source,omitempty"`
-	Destination *RelatedResourceDestinationApplyConfiguration `json:"destination,omitempty"`
-	Mutation    *ResourceMutationSpecApplyConfiguration       `json:"mutation,omitempty"`
+	Identifier *string                                  `json:"identifier,omitempty"`
+	Origin     *string                                  `json:"origin,omitempty"`
+	Kind       *string                                  `json:"kind,omitempty"`
+	Object     *RelatedResourceObjectApplyConfiguration `json:"object,omitempty"`
+	Mutation   *ResourceMutationSpecApplyConfiguration  `json:"mutation,omitempty"`
 }
 
 // RelatedResourceSpecApplyConfiguration constructs a declarative configuration of the RelatedResourceSpec type for use with
@@ -59,19 +58,11 @@ func (b *RelatedResourceSpecApplyConfiguration) WithKind(value string) *RelatedR
 	return b
 }
 
-// WithSource sets the Source field in the declarative configuration to the given value
+// WithObject sets the Object field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Source field is set to the value of the last call.
-func (b *RelatedResourceSpecApplyConfiguration) WithSource(value *RelatedResourceSourceApplyConfiguration) *RelatedResourceSpecApplyConfiguration {
-	b.Source = value
-	return b
-}
-
-// WithDestination sets the Destination field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Destination field is set to the value of the last call.
-func (b *RelatedResourceSpecApplyConfiguration) WithDestination(value *RelatedResourceDestinationApplyConfiguration) *RelatedResourceSpecApplyConfiguration {
-	b.Destination = value
+// If called multiple times, the Object field is set to the value of the last call.
+func (b *RelatedResourceSpecApplyConfiguration) WithObject(value *RelatedResourceObjectApplyConfiguration) *RelatedResourceSpecApplyConfiguration {
+	b.Object = value
 	return b
 }
 

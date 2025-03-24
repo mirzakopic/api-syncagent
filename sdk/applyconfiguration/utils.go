@@ -42,18 +42,16 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &syncagentv1alpha1.PublishedResourceStatusApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("RegularExpression"):
 		return &syncagentv1alpha1.RegularExpressionApplyConfiguration{}
-	case v1alpha1.SchemeGroupVersion.WithKind("RelatedResourceDestination"):
-		return &syncagentv1alpha1.RelatedResourceDestinationApplyConfiguration{}
-	case v1alpha1.SchemeGroupVersion.WithKind("RelatedResourceDestinationSpec"):
-		return &syncagentv1alpha1.RelatedResourceDestinationSpecApplyConfiguration{}
-	case v1alpha1.SchemeGroupVersion.WithKind("RelatedResourceReference"):
-		return &syncagentv1alpha1.RelatedResourceReferenceApplyConfiguration{}
-	case v1alpha1.SchemeGroupVersion.WithKind("RelatedResourceSelector"):
-		return &syncagentv1alpha1.RelatedResourceSelectorApplyConfiguration{}
-	case v1alpha1.SchemeGroupVersion.WithKind("RelatedResourceSource"):
-		return &syncagentv1alpha1.RelatedResourceSourceApplyConfiguration{}
-	case v1alpha1.SchemeGroupVersion.WithKind("RelatedResourceSourceSpec"):
-		return &syncagentv1alpha1.RelatedResourceSourceSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("RelatedResourceObject"):
+		return &syncagentv1alpha1.RelatedResourceObjectApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("RelatedResourceObjectReference"):
+		return &syncagentv1alpha1.RelatedResourceObjectReferenceApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("RelatedResourceObjectSelector"):
+		return &syncagentv1alpha1.RelatedResourceObjectSelectorApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("RelatedResourceObjectSpec"):
+		return &syncagentv1alpha1.RelatedResourceObjectSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("RelatedResourceSelectorRewrite"):
+		return &syncagentv1alpha1.RelatedResourceSelectorRewriteApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("RelatedResourceSpec"):
 		return &syncagentv1alpha1.RelatedResourceSpecApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ResourceDeleteMutation"):
@@ -74,6 +72,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &syncagentv1alpha1.ResourceTemplateMutationApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("SourceResourceDescriptor"):
 		return &syncagentv1alpha1.SourceResourceDescriptorApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("TemplateExpression"):
+		return &syncagentv1alpha1.TemplateExpressionApplyConfiguration{}
 
 	}
 	return nil
