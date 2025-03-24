@@ -204,7 +204,7 @@ type RelatedResourceObjectSpec struct {
 	Reference *RelatedResourceObjectReference `json:"reference,omitempty"`
 	// Template is a Go templated string that can make use of variables to
 	// construct the resulting string.
-	Template TemplateExpression `json:"template,omitempty"`
+	Template *TemplateExpression `json:"template,omitempty"`
 }
 
 // RelatedResourceObjectReference describes a path expression that is evaluated inside
