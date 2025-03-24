@@ -21,6 +21,8 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
+	"strings"
 
 	"github.com/tidwall/gjson"
 	"go.uber.org/zap"
@@ -61,243 +63,217 @@ type relatedObjectAnnotation struct {
 func (s *ResourceSyncer) processRelatedResource(log *zap.SugaredLogger, stateStore ObjectStateStore, remote, local syncSide, relRes syncagentv1alpha1.RelatedResourceSpec) (requeue bool, err error) {
 	// decide what direction to sync (local->remote vs. remote->local)
 	var (
-		source syncSide
+		origin syncSide
 		dest   syncSide
 	)
 
 	if relRes.Origin == "service" {
-		source = local
+		origin = local
 		dest = remote
 	} else {
-		source = remote
+		origin = remote
 		dest = local
 	}
 
-	// find the source object by applying the ResourceSourceSpec
-	sourceObj, err := resolveResourceSource(source, relRes)
+	// find the all objects on the origin side that match the given criteria
+	resolvedObjects, err := resolveRelatedResourceObjects(origin, dest, relRes)
 	if err != nil {
-		return false, fmt.Errorf("failed to get source object: %w", err)
+		return false, fmt.Errorf("failed to get resolve origin objects: %w", err)
 	}
 
-	// the source object doesn't exist yet, so we can just stop
-	if sourceObj == nil {
+	// no objects were found yet, that's okay
+	if len(resolvedObjects) == 0 {
 		return false, nil
 	}
 
-	// do the same to find the destination object
-	destKey, err := resolveResourceDestination(dest, relRes)
-	if err != nil {
-		return false, fmt.Errorf("failed to determine related object's destination key: %w", err)
-	}
+	slices.SortStableFunc(resolvedObjects, func(a, b resolvedObject) int {
+		aKey := ctrlruntimeclient.ObjectKeyFromObject(a.original).String()
+		bKey := ctrlruntimeclient.ObjectKeyFromObject(b.original).String()
 
-	destObj := &unstructured.Unstructured{}
-	destObj.SetAPIVersion("v1")
-	destObj.SetKind(relRes.Kind)
-
-	if err := dest.client.Get(dest.ctx, *destKey, destObj); err != nil {
-		if !apierrors.IsNotFound(err) {
-			return false, fmt.Errorf("failed to get destination object: %w", err)
-		}
-
-		// signal to the syncer that the destination object doesn't exist
-		destObj = nil
-	}
+		return strings.Compare(aKey, bKey)
+	})
 
 	// Synchronize objects the same way the parent object was synchronized.
+	for idx, resolved := range resolvedObjects {
+		destObject := &unstructured.Unstructured{}
+		destObject.SetAPIVersion("v1") // we only support ConfigMaps and Secrets, both are in core/v1
+		destObject.SetKind(relRes.Kind)
 
-	sourceSide := syncSide{
-		ctx:         source.ctx,
-		clusterName: source.clusterName,
-		client:      source.client,
-		object:      sourceObj,
-	}
-
-	destSide := syncSide{
-		ctx:         dest.ctx,
-		clusterName: dest.clusterName,
-		client:      dest.client,
-		object:      destObj,
-	}
-
-	syncer := objectSyncer{
-		// Related objects within kcp are not labelled with the agent name because it's unnecessary.
-		// agentName: "",
-		// use the same state store as we used for the main resource, to keep everything contained
-		// in one place, on the service cluster side
-		stateStore: stateStore,
-		// how to create a new destination object
-		destCreator: func(source *unstructured.Unstructured) *unstructured.Unstructured {
-			dest := source.DeepCopy()
-			dest.SetName(destKey.Name)
-			dest.SetNamespace(destKey.Namespace)
-
-			return dest
-		},
-		// ConfigMaps and Secrets have no subresources
-		subresources: nil,
-		// only sync the status back if the object originates in kcp,
-		// as the service side should never have to rely on new status infos coming
-		// from the kcp side
-		syncStatusBack: relRes.Origin == "kcp",
-		// if the origin is on the remote side, we want to add a finalizer to make
-		// sure we can clean up properly
-		blockSourceDeletion: relRes.Origin == "kcp",
-		// apply mutation rules configured for the related resource
-		mutator: mutation.NewMutator(relRes.Mutation),
-		// we never want to store sync-related metadata inside kcp
-		metadataOnDestination: false,
-	}
-
-	requeue, err = syncer.Sync(log, sourceSide, destSide)
-	if err != nil {
-		return false, fmt.Errorf("failed to sync related object: %w", err)
-	}
-
-	if requeue {
-		return true, nil
-	}
-
-	// now that the related object was successfully synced, we can remember its details on the
-	// main object
-	if relRes.Origin == "service" {
-		annotation := relatedObjectAnnotationPrefix + relRes.Identifier
-
-		value, err := json.Marshal(relatedObjectAnnotation{
-			Namespace:  destKey.Namespace,
-			Name:       destKey.Name,
-			APIVersion: "v1", // we only support ConfigMaps and Secrets
-			Kind:       relRes.Kind,
-		})
-		if err != nil {
-			return false, fmt.Errorf("failed to encode related object annotation: %w", err)
+		if err = dest.client.Get(dest.ctx, resolved.destination, destObject); err != nil {
+			destObject = nil
 		}
 
-		annotations := remote.object.GetAnnotations()
-		existing := annotations[annotation]
+		sourceSide := syncSide{
+			ctx:         origin.ctx,
+			clusterName: origin.clusterName,
+			client:      origin.client,
+			object:      resolved.original,
+		}
 
-		if existing != string(value) {
-			oldState := remote.object.DeepCopy()
+		destSide := syncSide{
+			ctx:         dest.ctx,
+			clusterName: dest.clusterName,
+			client:      dest.client,
+			object:      destObject,
+		}
 
-			annotations[annotation] = string(value)
-			remote.object.SetAnnotations(annotations)
+		syncer := objectSyncer{
+			// Related objects within kcp are not labelled with the agent name because it's unnecessary.
+			// agentName: "",
+			// use the same state store as we used for the main resource, to keep everything contained
+			// in one place, on the service cluster side
+			stateStore: stateStore,
+			// how to create a new destination object
+			destCreator: func(source *unstructured.Unstructured) *unstructured.Unstructured {
+				dest := source.DeepCopy()
+				dest.SetName(resolved.destination.Name)
+				dest.SetNamespace(resolved.destination.Namespace)
 
-			log.Debug("Remembering related object in main object…")
-			if err := remote.client.Patch(remote.ctx, remote.object, ctrlruntimeclient.MergeFrom(oldState)); err != nil {
-				return false, fmt.Errorf("failed to update related data in remote object: %w", err)
+				return dest
+			},
+			// ConfigMaps and Secrets have no subresources
+			subresources: nil,
+			// only sync the status back if the object originates in kcp,
+			// as the service side should never have to rely on new status infos coming
+			// from the kcp side
+			syncStatusBack: relRes.Origin == "kcp",
+			// if the origin is on the remote side, we want to add a finalizer to make
+			// sure we can clean up properly
+			blockSourceDeletion: relRes.Origin == "kcp",
+			// apply mutation rules configured for the related resource
+			mutator: mutation.NewMutator(relRes.Mutation),
+			// we never want to store sync-related metadata inside kcp
+			metadataOnDestination: false,
+		}
+
+		req, err := syncer.Sync(log, sourceSide, destSide)
+		if err != nil {
+			return false, fmt.Errorf("failed to sync related object: %w", err)
+		}
+
+		// Updating a related object should not immediately trigger a requeue,
+		// but only after all related objects are done. This is purely to not perform
+		// too many unnecessary requeues.
+		requeue = requeue || req
+
+		// now that the related object was successfully synced, we can remember its details on the
+		// main object
+		if relRes.Origin == "service" {
+			// TODO: Improve this logic, the added index is just a hack until we find a better solution
+			// to let the user know about the related object (this annotation is not relevant for the
+			// syncing logic, it's purely for the end-user).
+			annotation := fmt.Sprintf("%s%s.%d", relatedObjectAnnotationPrefix, relRes.Identifier, idx)
+
+			value, err := json.Marshal(relatedObjectAnnotation{
+				Namespace:  resolved.destination.Namespace,
+				Name:       resolved.destination.Name,
+				APIVersion: "v1", // we only support ConfigMaps and Secrets
+				Kind:       relRes.Kind,
+			})
+			if err != nil {
+				return false, fmt.Errorf("failed to encode related object annotation: %w", err)
 			}
 
-			// requeue
-			return true, nil
+			annotations := remote.object.GetAnnotations()
+			existing := annotations[annotation]
+
+			if existing != string(value) {
+				oldState := remote.object.DeepCopy()
+
+				annotations[annotation] = string(value)
+				remote.object.SetAnnotations(annotations)
+
+				log.Debug("Remembering related object in main object…")
+				if err := remote.client.Patch(remote.ctx, remote.object, ctrlruntimeclient.MergeFrom(oldState)); err != nil {
+					return false, fmt.Errorf("failed to update related data in remote object: %w", err)
+				}
+
+				// requeue (since this updated the main object, we do actually want to
+				// requeue immediately because successive patches would fail anyway)
+				return true, nil
+			}
 		}
 	}
 
-	return false, nil
+	return requeue, nil
 }
 
-func resolveResourceSource(side syncSide, relRes syncagentv1alpha1.RelatedResourceSpec) (*unstructured.Unstructured, error) {
-	jsonData, err := side.object.MarshalJSON()
-	if err != nil {
-		return nil, err
+// resolvedObject is the result of following the configuration of a related resources. It contains
+// the original object (on the origin side of the related resource) and the target name to be used
+// on the destination side of the sync.
+type resolvedObject struct {
+	original    *unstructured.Unstructured
+	destination types.NamespacedName
+}
+
+func resolveRelatedResourceObjects(relatedOrigin, relatedDest syncSide, relRes syncagentv1alpha1.RelatedResourceSpec) ([]resolvedObject, error) {
+	// resolving the originNamespace first allows us to scope down any .List() calls later
+	originNamespace := relatedOrigin.object.GetNamespace()
+	destNamespace := relatedDest.object.GetNamespace()
+
+	namespaceMap := map[string]string{
+		originNamespace: destNamespace,
 	}
 
-	// resolving the namespace first allows us to scope down any .List() calls
-	// for the name of the object
-	namespace := side.object.GetNamespace()
-	if relRes.Source.Namespace != nil {
-		namespace, err = resolveResourceSourceNamespace(side, string(jsonData), *relRes.Source.Namespace)
+	if nsSpec := relRes.Object.Namespace; nsSpec != nil {
+		var err error
+		namespaceMap, err = resolveRelatedResourceOriginNamespaces(relatedOrigin, relatedDest, *nsSpec)
 		if err != nil {
 			return nil, fmt.Errorf("failed to resolve namespace: %w", err)
 		}
 
-		if namespace == "" {
+		if len(namespaceMap) == 0 {
 			return nil, nil
 		}
-	} else if namespace == "" {
+	} else if originNamespace == "" {
 		return nil, errors.New("primary object is cluster-scoped and no source namespace configuration was provided")
+	} else if destNamespace == "" {
+		return nil, errors.New("primary object copy is cluster-scoped and no source namespace configuration was provided")
 	}
 
-	obj, err := resolveResourceSourceName(side, string(jsonData), relRes, relRes.Source.RelatedResourceSourceSpec, namespace)
+	// At this point we know all the namespaces in which can look for related objects.
+	// For all but the label selector-based specs, this map will have exactly 1 element, otherwise
+	// more. Empty maps are not possible at this point.
+	// The namespace map contains a mapping from origin side to destination side.
+	// Armed with this, we can now resolve the object names and thereby find all objects that match
+	// this related resource configuration. Again, for label selectors this can be multiple,
+	// otherwise at most 1.
+
+	objects, err := resolveRelatedResourceObjectsInNamespaces(relatedOrigin, relatedDest, relRes, relRes.Object.RelatedResourceObjectSpec, namespaceMap)
 	if err != nil {
-		return nil, fmt.Errorf("failed to resolve: %w", err)
+		return nil, fmt.Errorf("failed to resolve objects: %w", err)
 	}
 
-	return obj, nil
+	return objects, nil
 }
 
-func resolveResourceSourceNamespace(side syncSide, jsonData string, spec syncagentv1alpha1.RelatedResourceSourceSpec) (string, error) {
+func resolveRelatedResourceOriginNamespaces(relatedOrigin, relatedDest syncSide, spec syncagentv1alpha1.RelatedResourceObjectSpec) (map[string]string, error) {
 	switch {
 	case spec.Reference != nil:
-		return resolveResourceReference(jsonData, *spec.Reference)
-
-	case spec.Selector != nil:
-		namespaces := &corev1.NamespaceList{}
-
-		selector, err := metav1.LabelSelectorAsSelector(&spec.Selector.LabelSelector)
-		if err != nil {
-			return "", fmt.Errorf("invalid selector configured: %w", err)
-		}
-
-		opts := &ctrlruntimeclient.ListOptions{
-			LabelSelector: selector,
-			Limit:         2,
-		}
-
-		if err := side.client.List(side.ctx, namespaces, opts); err != nil {
-			return "", fmt.Errorf("failed to evaluate label selector: %w", err)
-		}
-
-		switch len(namespaces.Items) {
-		case 0:
-			// it's okay if the source namespace, and therefore the source related object, doesn't exist (yet)
-			return "", nil
-		case 1:
-			return namespaces.Items[0].Name, nil
-		default:
-			return "", fmt.Errorf("expected one namespace, but found %d matching the label selector", len(namespaces.Items))
-		}
-
-	case spec.Expression != "":
-		return "", errors.New("not yet implemented")
-
-	default:
-		return "", errors.New("invalid sourceSpec: no mechanism configured")
-	}
-}
-
-func resolveResourceSourceName(side syncSide, jsonData string, relRes syncagentv1alpha1.RelatedResourceSpec, spec syncagentv1alpha1.RelatedResourceSourceSpec, namespace string) (*unstructured.Unstructured, error) {
-	switch {
-	case spec.Reference != nil:
-		name, err := resolveResourceReference(jsonData, *spec.Reference)
+		originNamespace, err := resolveObjectReference(relatedOrigin.object, *spec.Reference)
 		if err != nil {
 			return nil, err
 		}
 
-		// we assume an operator on the service side will fill-in this value later
-		if name == "" {
+		if originNamespace == "" {
 			return nil, nil
 		}
 
-		// find the source related object
-		sourceObj := &unstructured.Unstructured{}
-		sourceObj.SetAPIVersion("v1") // we only support ConfigMaps and Secrets, both are in core/v1
-		sourceObj.SetKind(relRes.Kind)
-
-		err = side.client.Get(side.ctx, types.NamespacedName{Name: name, Namespace: namespace}, sourceObj)
+		destNamespace, err := resolveObjectReference(relatedDest.object, *spec.Reference)
 		if err != nil {
-			// the source object doesn't exist yet, so we can just stop
-			if apierrors.IsNotFound(err) {
-				return nil, nil
-			}
-
-			return nil, fmt.Errorf("failed to get source object: %w", err)
+			return nil, err
 		}
 
-		return sourceObj, nil
+		if destNamespace == "" {
+			return nil, nil
+		}
+
+		return map[string]string{
+			originNamespace: destNamespace,
+		}, nil
 
 	case spec.Selector != nil:
-		sourceObjs := &unstructured.UnstructuredList{}
-		sourceObjs.SetAPIVersion("v1") // we only support ConfigMaps and Secrets, both are in core/v1
-		sourceObjs.SetKind(relRes.Kind)
+		namespaces := &corev1.NamespaceList{}
 
 		selector, err := metav1.LabelSelectorAsSelector(&spec.Selector.LabelSelector)
 		if err != nil {
@@ -306,101 +282,218 @@ func resolveResourceSourceName(side syncSide, jsonData string, relRes syncagentv
 
 		opts := &ctrlruntimeclient.ListOptions{
 			LabelSelector: selector,
-			Limit:         2,
-			Namespace:     namespace,
 		}
 
-		if err := side.client.List(side.ctx, sourceObjs, opts); err != nil {
+		if err := relatedOrigin.client.List(relatedOrigin.ctx, namespaces, opts); err != nil {
 			return nil, fmt.Errorf("failed to evaluate label selector: %w", err)
 		}
 
-		switch len(sourceObjs.Items) {
-		case 0:
-			// it's okay if the source object doesn't exist (yet)
-			return nil, nil
-		case 1:
-			return &sourceObjs.Items[0], nil
-		default:
-			return nil, fmt.Errorf("expected one %s object, but found %d matching the label selector", relRes.Kind, len(sourceObjs.Items))
+		namespaceMap := map[string]string{}
+		for _, namespace := range namespaces.Items {
+			name := namespace.Name
+
+			destinationName, err := applyRewrites(relatedOrigin, relatedDest, name, spec.Selector.Rewrite)
+			if err != nil {
+				return nil, fmt.Errorf("failed to rewrite origin namespace: %w", err)
+			}
+
+			namespaceMap[name] = destinationName
 		}
 
-	case spec.Expression != "":
-		return nil, errors.New("not yet implemented")
+		return namespaceMap, nil
+
+	case spec.Template != nil:
+		originValue, destValue, err := applyTemplateBothSides(relatedOrigin, relatedDest, *spec.Template)
+		if err != nil {
+			return nil, fmt.Errorf("failed to apply template: %w", err)
+		}
+
+		if originValue == "" || destValue == "" {
+			return nil, nil
+		}
+
+		return map[string]string{
+			originValue: destValue,
+		}, nil
 
 	default:
 		return nil, errors.New("invalid sourceSpec: no mechanism configured")
 	}
 }
 
-func resolveResourceDestination(side syncSide, relRes syncagentv1alpha1.RelatedResourceSpec) (*types.NamespacedName, error) {
-	jsonData, err := side.object.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
+func resolveRelatedResourceObjectsInNamespaces(relatedOrigin, relatedDest syncSide, relRes syncagentv1alpha1.RelatedResourceSpec, spec syncagentv1alpha1.RelatedResourceObjectSpec, namespaceMap map[string]string) ([]resolvedObject, error) {
+	result := []resolvedObject{}
 
-	namespace := side.object.GetNamespace()
-	if relRes.Destination.Namespace != nil {
-		namespace, err = resolveResourceDestinationSpec(string(jsonData), *relRes.Destination.Namespace)
+	for originNamespace, destNamespace := range namespaceMap {
+		nameMap, err := resolveRelatedResourceObjectsInNamespace(relatedOrigin, relatedDest, relRes, spec, originNamespace)
 		if err != nil {
-			return nil, fmt.Errorf("failed to resolve namespace: %w", err)
+			return nil, fmt.Errorf("failed to find objects on origin side: %w", err)
 		}
 
-		if namespace == "" {
-			return nil, nil
+		for originName, destName := range nameMap {
+			originObj := &unstructured.Unstructured{}
+			originObj.SetAPIVersion("v1") // we only support ConfigMaps and Secrets, both are in core/v1
+			originObj.SetKind(relRes.Kind)
+
+			err = relatedOrigin.client.Get(relatedOrigin.ctx, types.NamespacedName{Name: originName, Namespace: originNamespace}, originObj)
+			if err != nil {
+				// this should rarely happen, only if an object was deleted in between the .List() call
+				// above and the .Get() call here.
+				if apierrors.IsNotFound(err) {
+					continue
+				}
+
+				return nil, fmt.Errorf("failed to get origin object: %w", err)
+			}
+
+			result = append(result, resolvedObject{
+				original: originObj,
+				destination: types.NamespacedName{
+					Namespace: destNamespace,
+					Name:      destName,
+				},
+			})
 		}
-	} else if namespace == "" {
-		return nil, errors.New("primary object is cluster-scoped and no source namespace configuration was provided")
 	}
 
-	name, err := resolveResourceDestinationSpec(string(jsonData), relRes.Destination.RelatedResourceDestinationSpec)
-	if err != nil {
-		return nil, fmt.Errorf("failed to resolve name: %w", err)
-	}
-
-	if name == "" {
-		return nil, nil
-	}
-
-	return &types.NamespacedName{
-		Namespace: namespace,
-		Name:      name,
-	}, nil
+	return result, nil
 }
 
-func resolveResourceDestinationSpec(jsonData string, spec syncagentv1alpha1.RelatedResourceDestinationSpec) (string, error) {
+func resolveRelatedResourceObjectsInNamespace(relatedOrigin, relatedDest syncSide, relRes syncagentv1alpha1.RelatedResourceSpec, spec syncagentv1alpha1.RelatedResourceObjectSpec, namespace string) (map[string]string, error) {
 	switch {
 	case spec.Reference != nil:
-		return resolveResourceReference(jsonData, *spec.Reference)
+		originName, err := resolveObjectReference(relatedOrigin.object, *spec.Reference)
+		if err != nil {
+			return nil, err
+		}
 
-	case spec.Expression != "":
-		return "", errors.New("not yet implemented")
+		if originName == "" {
+			return nil, nil
+		}
+
+		destName, err := resolveObjectReference(relatedDest.object, *spec.Reference)
+		if err != nil {
+			return nil, err
+		}
+
+		if destName == "" {
+			return nil, nil
+		}
+
+		return map[string]string{
+			originName: destName,
+		}, nil
+
+	case spec.Selector != nil:
+		originObjects := &unstructured.UnstructuredList{}
+		originObjects.SetAPIVersion("v1") // we only support ConfigMaps and Secrets, both are in core/v1
+		originObjects.SetKind(relRes.Kind)
+
+		selector, err := metav1.LabelSelectorAsSelector(&spec.Selector.LabelSelector)
+		if err != nil {
+			return nil, fmt.Errorf("invalid selector configured: %w", err)
+		}
+
+		opts := &ctrlruntimeclient.ListOptions{
+			LabelSelector: selector,
+			Namespace:     namespace,
+		}
+
+		if err := relatedOrigin.client.List(relatedOrigin.ctx, originObjects, opts); err != nil {
+			return nil, fmt.Errorf("failed to select origin objects based on label selector: %w", err)
+		}
+
+		nameMap := map[string]string{}
+		for _, originObject := range originObjects.Items {
+			name := originObject.GetName()
+
+			destinationName, err := applyRewrites(relatedOrigin, relatedDest, name, spec.Selector.Rewrite)
+			if err != nil {
+				return nil, fmt.Errorf("failed to rewrite origin name: %w", err)
+			}
+
+			nameMap[name] = destinationName
+		}
+
+		return nameMap, nil
+
+	case spec.Template != nil:
+		originValue, destValue, err := applyTemplateBothSides(relatedOrigin, relatedDest, *spec.Template)
+		if err != nil {
+			return nil, fmt.Errorf("failed to apply template: %w", err)
+		}
+
+		if originValue == "" || destValue == "" {
+			return nil, nil
+		}
+
+		return map[string]string{
+			originValue: destValue,
+		}, nil
 
 	default:
-		return "", errors.New("invalid sourceSpec: no mechanism configured")
+		return nil, errors.New("invalid objectSpec: no mechanism configured")
 	}
 }
 
-func resolveResourceReference(jsonData string, ref syncagentv1alpha1.RelatedResourceReference) (string, error) {
-	gval := gjson.Get(jsonData, ref.Path)
+func resolveObjectReference(object *unstructured.Unstructured, ref syncagentv1alpha1.RelatedResourceObjectReference) (string, error) {
+	data, err := object.MarshalJSON()
+	if err != nil {
+		return "", err
+	}
+
+	return resolveReference(data, ref)
+}
+
+func resolveReference(jsonData []byte, ref syncagentv1alpha1.RelatedResourceObjectReference) (string, error) {
+	gval := gjson.Get(string(jsonData), ref.Path)
 	if !gval.Exists() {
 		return "", fmt.Errorf("cannot find %s in document", ref.Path)
 	}
 
+	// this does apply some coalescing, like turning numbers into strings
+	strVal := gval.String()
+
 	if re := ref.Regex; re != nil {
-		if re.Pattern == "" {
-			return re.Replacement, nil
-		}
+		var err error
 
-		expr, err := regexp.Compile(re.Pattern)
+		strVal, err = applyRegularExpression(strVal, *re)
 		if err != nil {
-			return "", fmt.Errorf("invalid pattern %q: %w", re.Pattern, err)
+			return "", err
 		}
-
-		// this does apply some coalescing, like turning numbers into strings
-		strVal := gval.String()
-
-		return expr.ReplaceAllString(strVal, re.Replacement), nil
 	}
 
-	return gval.String(), nil
+	return strVal, nil
+}
+
+func applyRewrites(relatedOrigin, relatedDest syncSide, value string, rewrite syncagentv1alpha1.RelatedResourceSelectorRewrite) (string, error) {
+	switch {
+	case rewrite.Regex != nil:
+		return applyRegularExpression(value, *rewrite.Regex)
+	case rewrite.Template != nil:
+		return applyTemplate(relatedOrigin, relatedDest, *rewrite.Template, value)
+	default:
+		return "", errors.New("invalid rewrite: no mechanism configured")
+	}
+}
+
+func applyRegularExpression(value string, re syncagentv1alpha1.RegularExpression) (string, error) {
+	if re.Pattern == "" {
+		return re.Replacement, nil
+	}
+
+	expr, err := regexp.Compile(re.Pattern)
+	if err != nil {
+		return "", fmt.Errorf("invalid pattern %q: %w", re.Pattern, err)
+	}
+
+	return expr.ReplaceAllString(value, re.Replacement), nil
+}
+
+func applyTemplate(relatedOrigin, relatedDest syncSide, tpl syncagentv1alpha1.TemplateExpression, value string) (string, error) {
+	return "", errors.New("not yet implemented")
+}
+
+func applyTemplateBothSides(relatedOrigin, relatedDest syncSide, tpl syncagentv1alpha1.TemplateExpression) (originValue, destValue string, err error) {
+	return "", "", errors.New("not yet implemented")
 }

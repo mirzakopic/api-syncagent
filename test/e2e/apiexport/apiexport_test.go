@@ -133,26 +133,14 @@ func TestPermissionsClaims(t *testing.T) {
 			Identifier: "super-secret",
 			Origin:     "kcp",
 			Kind:       "Secret",
-			Source: syncagentv1alpha1.RelatedResourceSource{
-				RelatedResourceSourceSpec: syncagentv1alpha1.RelatedResourceSourceSpec{
-					Reference: &syncagentv1alpha1.RelatedResourceReference{
+			Object: syncagentv1alpha1.RelatedResourceObject{
+				RelatedResourceObjectSpec: syncagentv1alpha1.RelatedResourceObjectSpec{
+					Reference: &syncagentv1alpha1.RelatedResourceObjectReference{
 						Path: "spec.test.name",
 					},
 				},
-				Namespace: &syncagentv1alpha1.RelatedResourceSourceSpec{
-					Reference: &syncagentv1alpha1.RelatedResourceReference{
-						Path: "spec.test.namespace",
-					},
-				},
-			},
-			Destination: syncagentv1alpha1.RelatedResourceDestination{
-				RelatedResourceDestinationSpec: syncagentv1alpha1.RelatedResourceDestinationSpec{
-					Reference: &syncagentv1alpha1.RelatedResourceReference{
-						Path: "spec.test.name",
-					},
-				},
-				Namespace: &syncagentv1alpha1.RelatedResourceDestinationSpec{
-					Reference: &syncagentv1alpha1.RelatedResourceReference{
+				Namespace: &syncagentv1alpha1.RelatedResourceObjectSpec{
+					Reference: &syncagentv1alpha1.RelatedResourceObjectReference{
 						Path: "spec.test.namespace",
 					},
 				},
@@ -162,26 +150,14 @@ func TestPermissionsClaims(t *testing.T) {
 			Identifier: "other-super-secret",
 			Origin:     "service",
 			Kind:       "Secret",
-			Source: syncagentv1alpha1.RelatedResourceSource{
-				RelatedResourceSourceSpec: syncagentv1alpha1.RelatedResourceSourceSpec{
-					Reference: &syncagentv1alpha1.RelatedResourceReference{
+			Object: syncagentv1alpha1.RelatedResourceObject{
+				RelatedResourceObjectSpec: syncagentv1alpha1.RelatedResourceObjectSpec{
+					Reference: &syncagentv1alpha1.RelatedResourceObjectReference{
 						Path: "spec.otherTest.name",
 					},
 				},
-				Namespace: &syncagentv1alpha1.RelatedResourceSourceSpec{
-					Reference: &syncagentv1alpha1.RelatedResourceReference{
-						Path: "spec.otherTest.namespace",
-					},
-				},
-			},
-			Destination: syncagentv1alpha1.RelatedResourceDestination{
-				RelatedResourceDestinationSpec: syncagentv1alpha1.RelatedResourceDestinationSpec{
-					Reference: &syncagentv1alpha1.RelatedResourceReference{
-						Path: "spec.otherTest.name",
-					},
-				},
-				Namespace: &syncagentv1alpha1.RelatedResourceDestinationSpec{
-					Reference: &syncagentv1alpha1.RelatedResourceReference{
+				Namespace: &syncagentv1alpha1.RelatedResourceObjectSpec{
+					Reference: &syncagentv1alpha1.RelatedResourceObjectReference{
 						Path: "spec.otherTest.namespace",
 					},
 				},
@@ -194,26 +170,14 @@ func TestPermissionsClaims(t *testing.T) {
 			Identifier: "config",
 			Origin:     "kcp",
 			Kind:       "ConfigMap",
-			Source: syncagentv1alpha1.RelatedResourceSource{
-				RelatedResourceSourceSpec: syncagentv1alpha1.RelatedResourceSourceSpec{
-					Reference: &syncagentv1alpha1.RelatedResourceReference{
+			Object: syncagentv1alpha1.RelatedResourceObject{
+				RelatedResourceObjectSpec: syncagentv1alpha1.RelatedResourceObjectSpec{
+					Reference: &syncagentv1alpha1.RelatedResourceObjectReference{
 						Path: "spec.secretTest.name",
 					},
 				},
-				Namespace: &syncagentv1alpha1.RelatedResourceSourceSpec{
-					Reference: &syncagentv1alpha1.RelatedResourceReference{
-						Path: "spec.secretTest.namespace",
-					},
-				},
-			},
-			Destination: syncagentv1alpha1.RelatedResourceDestination{
-				RelatedResourceDestinationSpec: syncagentv1alpha1.RelatedResourceDestinationSpec{
-					Reference: &syncagentv1alpha1.RelatedResourceReference{
-						Path: "spec.secretTest.name",
-					},
-				},
-				Namespace: &syncagentv1alpha1.RelatedResourceDestinationSpec{
-					Reference: &syncagentv1alpha1.RelatedResourceReference{
+				Namespace: &syncagentv1alpha1.RelatedResourceObjectSpec{
+					Reference: &syncagentv1alpha1.RelatedResourceObjectReference{
 						Path: "spec.secretTest.namespace",
 					},
 				},
@@ -332,26 +296,14 @@ func TestExistingPermissionsClaimsAreKept(t *testing.T) {
 					Identifier: "super-secret",
 					Origin:     "kcp",
 					Kind:       "Secret",
-					Source: syncagentv1alpha1.RelatedResourceSource{
-						RelatedResourceSourceSpec: syncagentv1alpha1.RelatedResourceSourceSpec{
-							Reference: &syncagentv1alpha1.RelatedResourceReference{
+					Object: syncagentv1alpha1.RelatedResourceObject{
+						RelatedResourceObjectSpec: syncagentv1alpha1.RelatedResourceObjectSpec{
+							Reference: &syncagentv1alpha1.RelatedResourceObjectReference{
 								Path: "spec.test.name",
 							},
 						},
-						Namespace: &syncagentv1alpha1.RelatedResourceSourceSpec{
-							Reference: &syncagentv1alpha1.RelatedResourceReference{
-								Path: "spec.test.namespace",
-							},
-						},
-					},
-					Destination: syncagentv1alpha1.RelatedResourceDestination{
-						RelatedResourceDestinationSpec: syncagentv1alpha1.RelatedResourceDestinationSpec{
-							Reference: &syncagentv1alpha1.RelatedResourceReference{
-								Path: "spec.test.name",
-							},
-						},
-						Namespace: &syncagentv1alpha1.RelatedResourceDestinationSpec{
-							Reference: &syncagentv1alpha1.RelatedResourceReference{
+						Namespace: &syncagentv1alpha1.RelatedResourceObjectSpec{
+							Reference: &syncagentv1alpha1.RelatedResourceObjectReference{
 								Path: "spec.test.namespace",
 							},
 						},
