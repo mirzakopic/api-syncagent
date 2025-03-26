@@ -178,7 +178,7 @@ func TestSyncRelatedObjects(t *testing.T) {
 		//////////////////////////////////////////////////////////////////////////////////////////////
 
 		// {
-		// 	name:      "sync referenced Secret up into a new namspace",
+		// 	name:      "sync referenced Secret up into a new namespace",
 		// 	workspace: "sync-referenced-secret-up-namespace",
 		// 	mainResource: crds.Crontab{
 		// 		ObjectMeta: metav1.ObjectMeta{
@@ -249,7 +249,7 @@ func TestSyncRelatedObjects(t *testing.T) {
 		// //////////////////////////////////////////////////////////////////////////////////////////////
 
 		// {
-		// 	name:      "sync referenced Secret down into a new namspace",
+		// 	name:      "sync referenced Secret down into a new namespace",
 		// 	workspace: "sync-referenced-secret-down-namespace",
 		// 	mainResource: crds.Crontab{
 		// 		ObjectMeta: metav1.ObjectMeta{
@@ -320,7 +320,7 @@ func TestSyncRelatedObjects(t *testing.T) {
 		// //////////////////////////////////////////////////////////////////////////////////////////////
 
 		// {
-		// 	name:      "sync referenced Secret up from a foreign namspace",
+		// 	name:      "sync referenced Secret up from a foreign namespace",
 		// 	workspace: "sync-referenced-secret-up-foreign-namespace",
 		// 	mainResource: crds.Crontab{
 		// 		ObjectMeta: metav1.ObjectMeta{
