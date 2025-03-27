@@ -285,6 +285,9 @@ spec:
                       items:
                         type: string
                       type: array
+                    group:
+                      description: The API group, for example "myservice.example.com".
+                      type: string
                     kind:
                       description: |-
                         The resource Kind, for example "Database". Setting this field will also overwrite

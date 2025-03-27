@@ -282,6 +282,8 @@ const (
 
 // ResourceProjection describes how the source GVK should be modified before it's published in kcp.
 type ResourceProjection struct {
+	// The API group, for example "myservice.example.com".
+	Group string `json:"group,omitempty"`
 	// The API version, for example "v1beta1".
 	Version string `json:"version,omitempty"`
 	// Whether or not the resource is namespaced.
