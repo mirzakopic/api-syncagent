@@ -131,7 +131,7 @@ func run(ctx context.Context, log *zap.SugaredLogger, opts *Options) error {
 		return fmt.Errorf("failed to add kcp cluster runnable: %w", err)
 	}
 
-	if err := apiresourceschema.Add(mgr, kcpCluster, lcName, log, 4, opts.AgentName, opts.APIExportRef, opts.PublishedResourceSelector); err != nil {
+	if err := apiresourceschema.Add(mgr, kcpCluster, lcName, log, 4, opts.AgentName, opts.PublishedResourceSelector); err != nil {
 		return fmt.Errorf("failed to add apiresourceschema controller: %w", err)
 	}
 

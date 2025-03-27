@@ -124,7 +124,6 @@ func newUnstructured(obj runtime.Object, modifiers ...func(*unstructured.Unstruc
 func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 	type testcase struct {
 		name                 string
-		remoteAPIGroup       string
 		localCRD             *apiextensionsv1.CustomResourceDefinition
 		pubRes               *syncagentv1alpha1.PublishedResource
 		remoteObject         *unstructured.Unstructured
@@ -147,7 +146,8 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				Kind:     "Thing",
 			},
 			Projection: &syncagentv1alpha1.ResourceProjection{
-				Kind: "RemoteThing",
+				Group: "remote.example.corp",
+				Kind:  "RemoteThing",
 			},
 			// include explicit naming rules to be independent of possible changes to the defaults
 			Naming: &syncagentv1alpha1.ResourceNaming{
@@ -162,7 +162,6 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 
 		{
 			name:            "everything is already in perfect shape, nothing to do",
-			remoteAPIGroup:  "remote.example.corp",
 			localCRD:        loadCRD("thingwithstatussubresources"),
 			pubRes:          remoteThingPR,
 			performRequeues: true,
@@ -230,7 +229,6 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 
 		{
 			name:            "a new remote object is created",
-			remoteAPIGroup:  "remote.example.corp",
 			localCRD:        loadCRD("things"),
 			pubRes:          remoteThingPR,
 			performRequeues: true,
@@ -280,7 +278,6 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 
 		{
 			name:            "a new remote object is created that maps to an existing local one, which should be adopted",
-			remoteAPIGroup:  "remote.example.corp",
 			localCRD:        loadCRD("things"),
 			pubRes:          remoteThingPR,
 			performRequeues: true,
@@ -340,7 +337,6 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 
 		{
 			name:            "changes to the spec should be copied to the local object",
-			remoteAPIGroup:  "remote.example.corp",
 			localCRD:        loadCRD("things"),
 			pubRes:          remoteThingPR,
 			performRequeues: true,
@@ -408,7 +404,6 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 
 		{
 			name:            "a broken last-state should be fixed automatically",
-			remoteAPIGroup:  "remote.example.corp",
 			localCRD:        loadCRD("things"),
 			pubRes:          remoteThingPR,
 			performRequeues: true,
@@ -476,7 +471,6 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 
 		{
 			name:            "labels and annotations should be copied to the local object, except for syncagent-relevant fields",
-			remoteAPIGroup:  "remote.example.corp",
 			localCRD:        loadCRD("things"),
 			pubRes:          remoteThingPR,
 			performRequeues: true,
@@ -570,7 +564,6 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 
 		{
 			name:            "missing syncagent-related annotations should be patched on the destination object",
-			remoteAPIGroup:  "remote.example.corp",
 			localCRD:        loadCRD("things"),
 			pubRes:          remoteThingPR,
 			performRequeues: true,
@@ -636,7 +629,6 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 
 		{
 			name:            "local updates should be based on the last-state annotation and ignore defaulted fields",
-			remoteAPIGroup:  "remote.example.corp",
 			localCRD:        loadCRD("things"),
 			pubRes:          remoteThingPR,
 			performRequeues: true,
@@ -706,10 +698,9 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 		/////////////////////////////////////////////////////////////////////////////////
 
 		{
-			name:           "remote deletions should be mirrored to the local object",
-			remoteAPIGroup: "remote.example.corp",
-			localCRD:       loadCRD("things"),
-			pubRes:         remoteThingPR,
+			name:     "remote deletions should be mirrored to the local object",
+			localCRD: loadCRD("things"),
+			pubRes:   remoteThingPR,
 
 			// nothing will actually release the finalizer on the local object, so we cannot
 			// requeue ad infinitum
@@ -787,7 +778,6 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 
 		{
 			name:            "when the local object is gone, release the remote one",
-			remoteAPIGroup:  "remote.example.corp",
 			localCRD:        loadCRD("things"),
 			pubRes:          remoteThingPR,
 			performRequeues: false,
@@ -828,7 +818,6 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 
 		{
 			name:            "do not attempt to update a local object that is in deletion",
-			remoteAPIGroup:  "remote.example.corp",
 			localCRD:        loadCRD("things"),
 			pubRes:          remoteThingPR,
 			performRequeues: true,
@@ -910,7 +899,6 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 				remoteClient,
 				testcase.pubRes,
 				testcase.localCRD,
-				testcase.remoteAPIGroup,
 				nil,
 				stateNamespace,
 				"textor-the-doctor",
@@ -1014,7 +1002,6 @@ func TestSyncerProcessingSingleResourceWithoutStatus(t *testing.T) {
 func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 	type testcase struct {
 		name                 string
-		remoteAPIGroup       string
 		localCRD             *apiextensionsv1.CustomResourceDefinition
 		pubRes               *syncagentv1alpha1.PublishedResource
 		remoteObject         *unstructured.Unstructured
@@ -1052,7 +1039,6 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 
 		{
 			name:            "everything is already in perfect shape, nothing to do",
-			remoteAPIGroup:  "remote.example.corp",
 			localCRD:        loadCRD("thingwithstatussubresources"),
 			pubRes:          remoteThingPR,
 			performRequeues: true,
@@ -1132,7 +1118,6 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 
 		{
 			name:            "spec is in-sync, but status is not yet updated in remote object",
-			remoteAPIGroup:  "remote.example.corp",
 			localCRD:        loadCRD("thingwithstatussubresources"),
 			pubRes:          remoteThingPR,
 			performRequeues: true,
@@ -1220,7 +1205,6 @@ func TestSyncerProcessingSingleResourceWithStatus(t *testing.T) {
 				remoteClient,
 				testcase.pubRes,
 				testcase.localCRD,
-				testcase.remoteAPIGroup,
 				nil,
 				stateNamespace,
 				"textor-the-doctor",

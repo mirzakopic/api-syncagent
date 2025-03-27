@@ -34,7 +34,7 @@ import (
 func (r *Reconciler) createAPIExportReconciler(availableResourceSchemas sets.Set[string], claimedResourceKinds sets.Set[string], agentName string, apiExportName string) reconciling.NamedAPIExportReconcilerFactory {
 	return func() (string, reconciling.APIExportReconciler) {
 		return apiExportName, func(existing *kcpdevv1alpha1.APIExport) (*kcpdevv1alpha1.APIExport, error) {
-			known := sets.New[string](existing.Spec.LatestResourceSchemas...)
+			known := sets.New(existing.Spec.LatestResourceSchemas...)
 
 			if existing.Annotations == nil {
 				existing.Annotations = map[string]string{}

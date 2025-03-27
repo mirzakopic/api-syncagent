@@ -34,11 +34,16 @@ func PublishedResourceSourceGVK(pubRes *syncagentv1alpha1.PublishedResource) sch
 
 // PublishedResourceProjectedGVK returns the effective GVK after the projection
 // rules have been applied according to the PublishedResource.
-func PublishedResourceProjectedGVK(pubRes *syncagentv1alpha1.PublishedResource, kcpAPIGroup string) schema.GroupVersionKind {
+func PublishedResourceProjectedGVK(pubRes *syncagentv1alpha1.PublishedResource) schema.GroupVersionKind {
+	apiGroup := pubRes.Spec.Resource.APIGroup
 	apiVersion := pubRes.Spec.Resource.Version
 	kind := pubRes.Spec.Resource.Kind
 
 	if projection := pubRes.Spec.Projection; projection != nil {
+		if v := projection.Group; v != "" {
+			apiGroup = v
+		}
+
 		if v := projection.Version; v != "" {
 			apiVersion = v
 		}
@@ -49,7 +54,7 @@ func PublishedResourceProjectedGVK(pubRes *syncagentv1alpha1.PublishedResource, 
 	}
 
 	return schema.GroupVersionKind{
-		Group:   kcpAPIGroup,
+		Group:   apiGroup,
 		Version: apiVersion,
 		Kind:    kind,
 	}
