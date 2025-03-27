@@ -117,7 +117,7 @@ func run(ctx context.Context, log *zap.SugaredLogger, opts *Options) error {
 		return fmt.Errorf("failed to resolve APIExport: %w", err)
 	}
 
-	log.Infow("Resolved APIExport", "apigroup", opts.APIExportRef, "workspace", lcPath, "logicalcluster", lcName)
+	log.Infow("Resolved APIExport", "workspace", lcPath, "logicalcluster", lcName)
 
 	// init the "permanent" kcp cluster connection
 	kcpCluster, err := setupKcpCluster(kcpRestConfig, opts)
