@@ -28,7 +28,7 @@ SDK_PKG="$MODULE"
 APIS_PKG="$MODULE/apis"
 
 set -x
-rm -rf -- "$SDK_DIR/{applyconfiguration,clientset,informers,listers}"
+rm -rf -- $SDK_DIR/{applyconfiguration,clientset,informers,listers}
 
 go run k8s.io/code-generator/cmd/applyconfiguration-gen \
   --go-header-file "$BOILERPLATE_HEADER" \
