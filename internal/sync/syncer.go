@@ -58,7 +58,6 @@ func NewResourceSyncer(
 	remoteClient ctrlruntimeclient.Client,
 	pubRes *syncagentv1alpha1.PublishedResource,
 	localCRD *apiextensionsv1.CustomResourceDefinition,
-	remoteAPIGroup string,
 	mutator mutation.Mutator,
 	stateNamespace string,
 	agentName string,
@@ -69,7 +68,7 @@ func NewResourceSyncer(
 	localDummy.SetGroupVersionKind(localGVK)
 
 	// create a dummy unstructured object with the projected GVK inside the workspace
-	remoteGVK := projection.PublishedResourceProjectedGVK(pubRes, remoteAPIGroup)
+	remoteGVK := projection.PublishedResourceProjectedGVK(pubRes)
 
 	// determine whether the CRD has a status subresource in the relevant version
 	subresources := []string{}

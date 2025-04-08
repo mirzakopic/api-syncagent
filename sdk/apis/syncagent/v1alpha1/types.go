@@ -24,7 +24,4 @@ const (
 	// what generation of the CRD it was based on. This can be helpful in debugging,
 	// as ARS resources cannot be updated, i.e. changes to CRDs are not reflected in ARS.
 	SourceGenerationAnnotation = "syncagent.kcp.io/source-generation"
-
-	// APIGroupLabel contains the API Group an APIResourceSchema is meant for.
-	APIGroupLabel = "syncagent.kcp.io/api-group"
 )

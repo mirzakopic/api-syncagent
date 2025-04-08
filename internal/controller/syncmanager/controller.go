@@ -286,7 +286,6 @@ func (r *Reconciler) ensureSyncControllers(ctx context.Context, log *zap.Sugared
 			r.vwCluster.GetCluster(),
 			&pubRes,
 			r.discoveryClient,
-			r.apiExport.Name,
 			r.stateNamespace,
 			r.agentName,
 			r.log,

@@ -25,6 +25,7 @@ import (
 // ResourceProjectionApplyConfiguration represents a declarative configuration of the ResourceProjection type for use
 // with apply.
 type ResourceProjectionApplyConfiguration struct {
+	Group      *string                 `json:"group,omitempty"`
 	Version    *string                 `json:"version,omitempty"`
 	Scope      *v1alpha1.ResourceScope `json:"scope,omitempty"`
 	Kind       *string                 `json:"kind,omitempty"`
@@ -37,6 +38,14 @@ type ResourceProjectionApplyConfiguration struct {
 // apply.
 func ResourceProjection() *ResourceProjectionApplyConfiguration {
 	return &ResourceProjectionApplyConfiguration{}
+}
+
+// WithGroup sets the Group field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Group field is set to the value of the last call.
+func (b *ResourceProjectionApplyConfiguration) WithGroup(value string) *ResourceProjectionApplyConfiguration {
+	b.Group = &value
+	return b
 }
 
 // WithVersion sets the Version field in the declarative configuration to the given value

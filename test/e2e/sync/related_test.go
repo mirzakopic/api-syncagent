@@ -484,6 +484,9 @@ func TestSyncRelatedObjects(t *testing.T) {
 						Name:      "$remoteName",
 						Namespace: "synced-$remoteNamespace",
 					},
+					Projection: &syncagentv1alpha1.ResourceProjection{
+						Group: "kcp.example.com",
+					},
 					Related: []syncagentv1alpha1.RelatedResourceSpec{testcase.relatedConfig},
 				},
 			}

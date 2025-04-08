@@ -58,10 +58,9 @@ func TestPublishedResourceSourceGVK(t *testing.T) {
 
 func TestPublishedResourceProjectedGVK(t *testing.T) {
 	const (
-		apiGroup         = "testgroup"
-		overrideAPIGroup = "newgroup"
-		version          = "v1"
-		kind             = "test"
+		apiGroup = "testgroup"
+		version  = "v1"
+		kind     = "test"
 	)
 
 	pubRes := &syncagentv1alpha1.PublishedResource{
@@ -82,22 +81,27 @@ func TestPublishedResourceProjectedGVK(t *testing.T) {
 		{
 			name:       "no projection",
 			projection: nil,
-			expected:   schema.GroupVersionKind{Group: overrideAPIGroup, Version: version, Kind: kind},
+			expected:   schema.GroupVersionKind{Group: apiGroup, Version: version, Kind: kind},
 		},
 		{
 			name:       "override version",
 			projection: &syncagentv1alpha1.ResourceProjection{Version: "v2"},
-			expected:   schema.GroupVersionKind{Group: overrideAPIGroup, Version: "v2", Kind: kind},
+			expected:   schema.GroupVersionKind{Group: apiGroup, Version: "v2", Kind: kind},
 		},
 		{
 			name:       "override kind",
 			projection: &syncagentv1alpha1.ResourceProjection{Kind: "dummy"},
-			expected:   schema.GroupVersionKind{Group: overrideAPIGroup, Version: version, Kind: "dummy"},
+			expected:   schema.GroupVersionKind{Group: apiGroup, Version: version, Kind: "dummy"},
 		},
 		{
 			name:       "override both",
 			projection: &syncagentv1alpha1.ResourceProjection{Version: "v2", Kind: "dummy"},
-			expected:   schema.GroupVersionKind{Group: overrideAPIGroup, Version: "v2", Kind: "dummy"},
+			expected:   schema.GroupVersionKind{Group: apiGroup, Version: "v2", Kind: "dummy"},
+		},
+		{
+			name:       "override group",
+			projection: &syncagentv1alpha1.ResourceProjection{Group: "projected.com"},
+			expected:   schema.GroupVersionKind{Group: "projected.com", Version: version, Kind: kind},
 		},
 	}
 
@@ -106,7 +110,7 @@ func TestPublishedResourceProjectedGVK(t *testing.T) {
 			pr := pubRes.DeepCopy()
 			pr.Spec.Projection = testcase.projection
 
-			gvk := PublishedResourceProjectedGVK(pr, overrideAPIGroup)
+			gvk := PublishedResourceProjectedGVK(pr)
 
 			if gvk.Group != testcase.expected.Group {
 				t.Errorf("Expected API group to be %q, but got %q.", testcase.expected.Group, gvk.Group)
