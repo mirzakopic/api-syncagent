@@ -247,7 +247,7 @@ existing" and not create an error.
 #### References
 
 A reference is a JSONPath-like expression that are evaluated on both sides of the synchronization.
-You configure a single path expression (like `spec.secretName`) and the sync agent will evlauate it
+You configure a single path expression (like `spec.secretName`) and the sync agent will evaluate it
 in the original primary object (in kcp) and again in the copied primary object (on the service
 cluster). Since the primary object has already been mutated, the `spec.secretName` is already
 rewritten/adjusted to work on the service cluster (for example it was changed from `my-secret` to
