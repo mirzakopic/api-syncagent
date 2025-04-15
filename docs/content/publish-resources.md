@@ -1,0 +1,1 @@
+../publish-resources.md
