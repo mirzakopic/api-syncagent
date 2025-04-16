@@ -14,14 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package crds
 
-const (
-	// AgentNameAnnotation records which Sync Agent has created an APIResourceSchema.
-	AgentNameAnnotation = "syncagent.kcp.io/agent-name"
-
-	// SourceGenerationAnnotation is the annotation on APIResourceSchemas that tells us
-	// what generation of the CRD it was based on. This can be helpful in debugging,
-	// as ARS resources cannot be updated, i.e. changes to CRDs are not reflected in ARS.
-	SourceGenerationAnnotation = "syncagent.kcp.io/source-generation"
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+type Crontab struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec CrontabSpec `json:"spec"`
+}
+
+type CrontabSpec struct {
+	CronSpec string `json:"cronSpec"`
+	Image    string `json:"image"`
+	Replicas int    `json:"replicas"`
+}

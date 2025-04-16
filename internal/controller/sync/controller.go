@@ -71,7 +71,6 @@ func Create(
 	virtualWorkspaceCluster cluster.Cluster,
 	pubRes *syncagentv1alpha1.PublishedResource,
 	discoveryClient *discovery.Client,
-	apiExportName string,
 	stateNamespace string,
 	agentName string,
 	log *zap.SugaredLogger,
@@ -85,7 +84,7 @@ func Create(
 	localDummy.SetGroupVersionKind(localGVK)
 
 	// create a dummy unstructured object with the projected GVK inside the workspace
-	remoteGVK := projection.PublishedResourceProjectedGVK(pubRes, apiExportName)
+	remoteGVK := projection.PublishedResourceProjectedGVK(pubRes)
 	remoteDummy := &unstructured.Unstructured{}
 	remoteDummy.SetGroupVersionKind(remoteGVK)
 
@@ -97,7 +96,7 @@ func Create(
 
 	// create the syncer that holds the meat&potatoes of the synchronization logic
 	mutator := mutation.NewMutator(pubRes.Spec.Mutation)
-	syncer, err := sync.NewResourceSyncer(log, localManager.GetClient(), virtualWorkspaceCluster.GetClient(), pubRes, localCRD, apiExportName, mutator, stateNamespace, agentName)
+	syncer, err := sync.NewResourceSyncer(log, localManager.GetClient(), virtualWorkspaceCluster.GetClient(), pubRes, localCRD, mutator, stateNamespace, agentName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create syncer: %w", err)
 	}

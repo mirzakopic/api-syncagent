@@ -49,6 +49,7 @@ import (
 func TestSyncSimpleObject(t *testing.T) {
 	const (
 		apiExportName = "kcp.example.com"
+		kcpGroupName  = "kcp.example.com"
 		orgWorkspace  = "sync-simple"
 	)
 
@@ -80,6 +81,9 @@ func TestSyncSimpleObject(t *testing.T) {
 				Name:      "$remoteName",
 				Namespace: "synced-$remoteNamespace",
 			},
+			Projection: &syncagentv1alpha1.ResourceProjection{
+				Group: kcpGroupName,
+			},
 		},
 	}
 
@@ -94,7 +98,7 @@ func TestSyncSimpleObject(t *testing.T) {
 	teamCtx := kontext.WithCluster(ctx, logicalcluster.Name(fmt.Sprintf("root:%s:team-1", orgWorkspace)))
 	kcpClient := utils.GetKcpAdminClusterClient(t)
 	utils.WaitForBoundAPI(t, teamCtx, kcpClient, schema.GroupVersionResource{
-		Group:    apiExportName,
+		Group:    kcpGroupName,
 		Version:  "v1",
 		Resource: "crontabs",
 	})
@@ -135,6 +139,7 @@ spec:
 func TestLocalChangesAreKept(t *testing.T) {
 	const (
 		apiExportName = "kcp.example.com"
+		kcpGroupName  = "kcp.example.com"
 		orgWorkspace  = "sync-undo-local-changes"
 	)
 
@@ -166,6 +171,9 @@ func TestLocalChangesAreKept(t *testing.T) {
 				Name:      "$remoteName",
 				Namespace: "synced-$remoteNamespace",
 			},
+			Projection: &syncagentv1alpha1.ResourceProjection{
+				Group: kcpGroupName,
+			},
 		},
 	}
 
@@ -180,7 +188,7 @@ func TestLocalChangesAreKept(t *testing.T) {
 	teamCtx := kontext.WithCluster(ctx, logicalcluster.Name(fmt.Sprintf("root:%s:team-1", orgWorkspace)))
 	kcpClient := utils.GetKcpAdminClusterClient(t)
 	utils.WaitForBoundAPI(t, teamCtx, kcpClient, schema.GroupVersionResource{
-		Group:    apiExportName,
+		Group:    kcpGroupName,
 		Version:  "v1",
 		Resource: "crontabs",
 	})
@@ -337,6 +345,7 @@ func yamlToUnstructured(t *testing.T, data string) *unstructured.Unstructured {
 func TestResourceFilter(t *testing.T) {
 	const (
 		apiExportName = "kcp.example.com"
+		kcpGroupName  = "kcp.example.com"
 		orgWorkspace  = "sync-resource-filter"
 	)
 
@@ -368,6 +377,9 @@ func TestResourceFilter(t *testing.T) {
 				Name:      "$remoteName",
 				Namespace: "synced-$remoteNamespace",
 			},
+			Projection: &syncagentv1alpha1.ResourceProjection{
+				Group: kcpGroupName,
+			},
 			Filter: &syncagentv1alpha1.ResourceFilter{
 				Resource: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
@@ -389,7 +401,7 @@ func TestResourceFilter(t *testing.T) {
 	teamCtx := kontext.WithCluster(ctx, logicalcluster.Name(fmt.Sprintf("root:%s:team-1", orgWorkspace)))
 	kcpClient := utils.GetKcpAdminClusterClient(t)
 	utils.WaitForBoundAPI(t, teamCtx, kcpClient, schema.GroupVersionResource{
-		Group:    apiExportName,
+		Group:    kcpGroupName,
 		Version:  "v1",
 		Resource: "crontabs",
 	})
@@ -454,6 +466,7 @@ spec:
 func TestSyncingOverlyLongNames(t *testing.T) {
 	const (
 		apiExportName = "kcp.example.com"
+		kcpGroupName  = "kcp.example.com"
 		orgWorkspace  = "sync-long-names"
 	)
 
@@ -485,6 +498,9 @@ func TestSyncingOverlyLongNames(t *testing.T) {
 				Name:      "$remoteName",
 				Namespace: "synced-$remoteNamespace",
 			},
+			Projection: &syncagentv1alpha1.ResourceProjection{
+				Group: kcpGroupName,
+			},
 		},
 	}
 
@@ -499,7 +515,7 @@ func TestSyncingOverlyLongNames(t *testing.T) {
 	teamCtx := kontext.WithCluster(ctx, logicalcluster.Name(fmt.Sprintf("root:%s:team-1", orgWorkspace)))
 	kcpClient := utils.GetKcpAdminClusterClient(t)
 	utils.WaitForBoundAPI(t, teamCtx, kcpClient, schema.GroupVersionResource{
-		Group:    apiExportName,
+		Group:    kcpGroupName,
 		Version:  "v1",
 		Resource: "crontabs",
 	})

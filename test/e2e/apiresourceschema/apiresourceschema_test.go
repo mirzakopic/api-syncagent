@@ -405,6 +405,11 @@ func TestNonCRDResource(t *testing.T) {
 				Version:  "v1",
 				Kind:     "Role",
 			},
+			Projection: &syncagentv1alpha1.ResourceProjection{
+				// must project to a different API group, because kubernetes will reject CRDs in those
+				// known core groups with the "api-approved.kubernetes.io" annotation on them.
+				Group: apiExportName,
+			},
 		},
 	}
 
