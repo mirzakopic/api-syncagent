@@ -396,8 +396,10 @@ spec:
               replacement: "bar-\\1"
 
             # or
+{% raw %}
             template:
               template: "{{ .Name }}-foo"
+{% endraw %}
 
         # Like with references, the namespace can (or must) be configured explicitly.
         # You do not need to also use label selectors here, you can mix and match
@@ -413,7 +415,7 @@ spec:
 #### Templates
 
 The third option to configure how to find/create related objects are templates. These are simple
-Go template strings (like `{{ .Variable }}`) that allow to easily configure static values with a
+Go template strings (like `{% raw %}{{ .Variable }}{% endraw %}`) that allow to easily configure static values with a
 sprinkling of dynamic values.
 
 This feature has not been fully implemented yet.
